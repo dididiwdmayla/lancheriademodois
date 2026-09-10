@@ -37,8 +37,6 @@ const REDONDOS = ['x-salada', 'x-tudo']
 const EXPOSICAO_MIN = 0.45
 /** Depois de mandar prensar: 60ms de espera + 340ms de prensa. Antes do despacho, aos 660ms. */
 const ESPERA_PRENSA_MS = 430
-/** O mesmo scaleX da prensa (components/raio-x/prensa.ts). */
-const ESPALHA_X = 1.14
 
 mkdirSync('qa', { recursive: true })
 
@@ -73,9 +71,6 @@ const linhas = []
 const recortes = []
 const diz = (ok, txt) => linhas.push(`${ok ? 'ok  ' : 'FALHA'} ${txt}`)
 const pula = (txt, fase) => linhas.push(`pula  ${txt} — chega na fase: ${fase}`)
-// Medida sem veredito: número que ninguém calibrou ainda. Reportar move o assunto;
-// inventar um limiar aqui seria fabricar calibragem.
-const mede = (txt) => linhas.push(`medida ${txt}`)
 
 async function recorte(nome, seletor) {
   const el = await pg.$(seletor)
@@ -143,15 +138,39 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
   // a largura do pão — senão as duas metades se encostam sem nada entre elas nas pontas.
   // A composição sai dos próprios ids da pilha desenhada, não de uma segunda lista.
   if (!PRENSADOS.includes(slug)) continue
-  const naPilha = camadas.map((c) => c.id.replace(/-\d+$/, ''))
-  const pao = larguraDe(naPilha[0])
+  const naPilha = camadas.map((c) => ({ inst: c.id, slug: c.id.replace(/-\d+$/, '') }))
+  const pao = larguraDe(naPilha[0].slug)
   const maisLargo = naPilha
-    .filter((s) => !s.startsWith('pao-'))
-    .reduce((a, s) => (larguraDe(s) > larguraDe(a) ? s : a))
-  const alcance = Math.round(larguraDe(maisLargo) * ESPALHA_X)
-  mede(
-    `${slug}: recheio mais largo é ${maisLargo}, alcança ${alcance} de ${pao} do pão` +
-      ` (${alcance >= pao ? 'cobre' : `${pao - alcance}px a menos`})`,
+    .filter((c) => !c.slug.startsWith('pao-'))
+    .reduce((a, c) => (larguraDe(c.slug) > larguraDe(a.slug) ? c : a))
+
+  // Sela e lê o scaleX do próprio DOM. Repetir a constante aqui daria uma segunda cópia
+  // de 1.16 no QA, livre para divergir de prensa.ts sem ninguém notar — e é justamente
+  // esta asserção que existe para pegar divergência.
+  //
+  // Lê o `style` declarado, não o computado: o computado devolve o valor no meio da
+  // transição de 340ms, e um relógio fixo aqui corre contra a máquina de estados — na
+  // navegação mais pesada do loop ele chegava a ler 1.000, com a prensa ainda parada.
+  // O alvo declarado não tem quadro intermediário; esperar por ele dispensa o relógio.
+  await pg.waitForSelector('#rx-selar:not([disabled])', { timeout: 5000 })
+  await pg.click('#rx-selar')
+  const escalaX = await pg
+    .waitForFunction(
+      (inst) => {
+        const el = document.getElementById(`rx-camada-${inst}`)
+        const m = el && /scaleX\(([\d.]+)\)/.exec(el.style.transform || '')
+        return m ? Number(m[1]) : false
+      },
+      maisLargo.inst,
+      { timeout: 3000, polling: 16 },
+    )
+    .then((h) => h.jsonValue())
+  const alcance = Math.round(larguraDe(maisLargo.slug) * escalaX)
+  diz(
+    alcance >= pao,
+    `${slug}: prensado, recheio mais largo é ${maisLargo.slug}, alcança ${alcance}` +
+      ` de ${pao} do pão (scaleX ${escalaX.toFixed(3)}` +
+      `${alcance >= pao ? '' : `, ${pao - alcance}px a menos`})`,
   )
 }
 

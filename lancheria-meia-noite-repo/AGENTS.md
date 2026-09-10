@@ -74,10 +74,14 @@ afundamentoEfetivo = min(alturaPx_propria × afundamento, alturaPx_abaixo × 0.5
 ```
 Sem esse limite, camada grossa engole camada fina. O tomate sumiu no primeiro teste.
 
+Este `min` é estrutural, não margem de segurança. Nos seis lanches a menor exposição bate
+exatamente 45,0%, ou seja, o limite é a restrição ativa em todos. Alterar qualquer
+`alturaPx` move várias camadas de uma vez. Não trate esses números como cosméticos.
+
 **Prensa (só prensado), 340ms, aceleração forte e parada seca — sem mola:**
 ```
 espacamento = espacamento_explodido × 0.30
-recheio (não-pão): scaleX(1.14) scaleY(0.80)
+recheio (não-pão): scaleX(1.16) scaleY(0.80)
 ```
 O `scaleX` não é enfeite: sem ele sobra fresta entre os dois pães nas pontas e o lanche não
 lê como prensado.
@@ -102,8 +106,11 @@ deriva de até 40px; chegada 560–640ms com solavanco na barra do pedido.
 Rotação sorteada **uma vez por lanche e memorizada** — o mesmo lanche cai igual sempre.
 Sem rastro, sem borrão, sem partícula. As camadas são fotografia.
 
-**Sombra de contato:** vem de `/data/baselines.json`. Curva de 64 amostras por camada,
+**Sombra de contato:** vem de `/data/baselines.json`. Curva de 240 amostras por camada,
 borrão 10px, opacidade 37%, deslocamento 14px. Nunca `getImageData` em runtime.
+
+`sombra.ts` lê `b.base.length` e não assume contagem fixa. Ao trocar o `baselines.json`,
+não é preciso mexer no código.
 
 ---
 

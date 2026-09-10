@@ -18,8 +18,14 @@ export const MEDIDA_MAX_U = 2200
 export const PRENSA_MS = 340
 /** Aceleração forte e parada seca. Sem mola: prensa de chapa não balança. */
 export const PRENSA_CURVA = 'cubic-bezier(.14,.92,.24,1)'
-/** O recheio espalha para os lados. Sem isso sobra fresta entre os pães nas pontas. */
-export const ESPALHA_X = 1.14
+/**
+ * O recheio espalha para os lados. Sem isso sobra fresta entre os pães nas pontas.
+ *
+ * 1.16 e não 1.14: em 1.14 o bacon alcançava 1732 contra os 1749 do pão e o
+ * `prensado-meia-noite` ficava com fresta nas pontas — era o único dos quatro que não
+ * fechava. O mínimo para o bacon cobrir é 1.151; 1.16 dá 1763, com folga.
+ */
+export const ESPALHA_X = 1.16
 export const ESPALHA_Y = 0.8
 /** Redondo: as camadas moles assentam, sem espalhar. */
 export const ASSENTA_Y = 0.9
