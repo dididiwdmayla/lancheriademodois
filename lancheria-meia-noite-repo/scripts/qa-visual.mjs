@@ -3,8 +3,8 @@
 // Duas camadas, nesta ordem:
 //   1. Asserções numéricas em texto. Uma linha por checagem, custo desprezível.
 //      A maior parte dos defeitos aparece aqui e nunca precisa de imagem.
-//   2. UMA folha de contato: quatro recortes num único JPEG, qualidade 55.
-//      Quatro capturas separadas em 2x custariam mais de dez vezes mais tokens.
+//   2. UMA folha de contato: seis recortes num único JPEG, qualidade 55.
+//      Seis capturas separadas em 2x custariam mais de dez vezes mais tokens.
 //
 // Regra para o agente: leia o texto primeiro. Só abra a folha de contato se uma
 // asserção falhar ou se a tarefa for de julgamento visual. Nunca capture a página
@@ -12,6 +12,9 @@
 //
 // Linhas começadas por `pula` são checagens cujo alvo ainda não foi portado. Elas dizem
 // qual fase traz o alvo. Nunca transforme uma delas em `ok` sem o alvo existir.
+//
+// A passada principal é 390 × 844 — o alvo do contrato. No fim há uma segunda, em
+// 900 × 800, só para o que muda de comportamento do outro lado do corte.
 //
 // uso:  node scripts/qa-visual.mjs [url]
 
@@ -38,6 +41,13 @@ const REDONDOS = ['x-salada', 'x-tudo']
 
 /** Piso da exposição: nenhuma camada some atrás da de cima. */
 const EXPOSICAO_MIN = 0.45
+/** Alvo de toque mínimo do contrato, em px. Vale para camada, chamada, ficha e botão. */
+const TOQUE_MIN = 44
+/** O corte do AGENTS.md: abaixo dele o desenho é o do celular. */
+const CORTE_AMPLO = 900
+const CELULAR = { width: 390, height: 844 }
+/** A segunda passada, do outro lado do corte: as chamadas voltam todas. */
+const AMPLO = { width: 900, height: 800 }
 /** Depois de mandar prensar: 60ms de espera + 340ms de prensa. Antes do despacho, aos 660ms. */
 const ESPERA_PRENSA_MS = 430
 
@@ -52,7 +62,7 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
 
 const navegador = await chromium.launch(executablePath ? { executablePath } : undefined)
 const ctx = await navegador.newContext({
-  viewport: { width: 390, height: 844 },
+  viewport: CELULAR,
   deviceScaleFactor: 1, // nunca 2 — dobra o peso da imagem sem ajudar o julgamento
 })
 
@@ -94,10 +104,56 @@ async function abrir(slug) {
   await pg.waitForTimeout(120)
 }
 
-/** Rola o raio-x para dentro da viewport, para o recorte não precisar rolar depois. */
+/**
+ * Rola o raio-x para dentro da viewport. Alinha o TAKEOVER, não o painel: o terço inferior
+ * só quer dizer alguma coisa quando o raio-x está ocupando a tela como ocupa em uso — do
+ * topo até a barra do pedido. Alinhar o painel jogaria o cabeçalho para fora e mediria uma
+ * tela que ninguém vê.
+ */
 async function encarar() {
-  await pg.evaluate(() => document.getElementById('rx-painel')?.scrollIntoView({ block: 'start' }))
+  await pg.evaluate(() => document.getElementById('rx-takeover')?.scrollIntoView({ block: 'start' }))
   await pg.waitForTimeout(80)
+}
+
+/**
+ * Rolagem horizontal acidental — o defeito mais comum de mobile, e medível. Rolagem
+ * declarada (o trilho) é decisão de desenho e não conta; o que se procura é conteúdo
+ * estourando a caixa de quem não foi feito para rolar.
+ */
+async function estorvosHorizontais(pagina) {
+  return pagina.evaluate(() => {
+    const fora = []
+    const nome = (e) => e.id || `${e.tagName.toLowerCase()}${e.className ? '.' + String(e.className).split(' ')[0] : ''}`
+    for (const e of document.querySelectorAll('body, body *')) {
+      const cs = getComputedStyle(e)
+      if (cs.display === 'none' || cs.visibility === 'hidden') continue
+      if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') continue
+      if (e.clientWidth === 0) continue
+      if (e.scrollWidth > e.clientWidth + 1) fora.push(`${nome(e)} ${e.scrollWidth}>${e.clientWidth}`)
+    }
+    const raiz = document.documentElement
+    if (raiz.scrollWidth > raiz.clientWidth + 1) fora.push(`html ${raiz.scrollWidth}>${raiz.clientWidth}`)
+    return fora
+  })
+}
+
+/** Todo alvo acionável mede pelo menos 44 × 44. Contrato, e ele também é medível. */
+async function alvosPequenos(pagina, min) {
+  return pagina.evaluate((m) => {
+    const sel = 'button, [role="button"], a[href], input, select, textarea, summary'
+    return [...document.querySelectorAll(sel)]
+      .filter((e) => {
+        const cs = getComputedStyle(e)
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false
+        const r = e.getBoundingClientRect()
+        return r.width > 0 && r.height > 0 && (r.width < m - 0.5 || r.height < m - 0.5)
+      })
+      .map((e) => {
+        const r = e.getBoundingClientRect()
+        const quem = e.id || e.dataset.slug || (e.textContent || '').trim().slice(0, 16) || e.tagName
+        return `${quem} ${Math.round(r.width)}×${Math.round(r.height)}`
+      })
+  }, min)
 }
 
 /**
@@ -204,11 +260,19 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
 // confirmar que o fator bate no teto de 1.30 sem lançar exceção, não só nas seis
 // composições fixas.
 await abrir(LANCHE_MAGRO)
+// Em 390px as chamadas nascem ocultas, então o caminho de tirar camada é a lista de
+// composição — que é justamente o equivalente por toque exigido pelo contrato. O caminho
+// por teclado (Delete na chamada) é cobrado na passada de 900px, onde as chamadas moram.
+await pg.click('#rx-ver-composicao')
+await pg.waitForSelector('#rx-composicao', { timeout: 3000 })
 while ((await pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)) > 2) {
-  await pg.focus('[data-chamada="1"]')
-  await pg.keyboard.press('Delete')
+  const tirar = await pg.$('#rx-composicao [data-tirar]')
+  if (!tirar) break
+  await tirar.click()
   await pg.waitForTimeout(60)
 }
+await pg.click('#rx-fechar-composicao')
+await pg.waitForTimeout(60)
 await pg.click('#rx-trilho [data-slug="molho"]')
 await pg.waitForTimeout(80)
 await pg.click('#rx-trilho [data-slug="tomate"]')
@@ -261,12 +325,83 @@ const quebradas = await pg.evaluate(() =>
   [...document.images].filter((i) => !i.complete || i.naturalWidth === 0).length)
 diz(quebradas === 0, `imagens quebradas: ${quebradas}`)
 
-// ---------- 2. recortes ----------
+// ---------- 2. o desenho de celular, em 390 × 844 ----------
 
-// explodido e medidor normal saem do lanche cheio: dez camadas, dez chamadas.
 await encarar()
-await recorte('raio-x explodido · completo', '#rx-desenho')
-await recorte('medidor normal · 10 camadas', '#rx-medidor')
+
+// Rolagem horizontal acidental. O trilho rola de propósito e está de fora.
+const estorvos = await estorvosHorizontais(pg)
+diz(
+  estorvos.length === 0,
+  `sem rolagem horizontal acidental em ${CELULAR.width}px${estorvos.length ? `: ${estorvos.join(', ')}` : ''}`,
+)
+
+// Alvo de toque. Inclui as tiras de toque das camadas, que são o alvo de dedo da pilha.
+const pequenos = await alvosPequenos(pg, TOQUE_MIN)
+diz(
+  pequenos.length === 0,
+  `alvos acionáveis abaixo de ${TOQUE_MIN}×${TOQUE_MIN}: ${pequenos.length}${pequenos.length ? ` — ${pequenos.join(', ')}` : ''}`,
+)
+
+// Olhar em cima, tocar embaixo: medidor, trilho e botão inteiros no terço inferior.
+const terco = await pg.evaluate(() => {
+  const caixa = (id) => {
+    const r = document.getElementById(id)?.getBoundingClientRect()
+    return r ? { topo: r.top, base: r.bottom } : null
+  }
+  return {
+    altura: window.innerHeight,
+    medidor: caixa('rx-medidor'),
+    trilho: caixa('rx-trilho'),
+    selar: caixa('rx-selar'),
+  }
+})
+const linhaDoPolegar = (terco.altura * 2) / 3
+for (const [nome, c] of [['medidor', terco.medidor], ['trilho', terco.trilho], ['botão de prensar', terco.selar]]) {
+  diz(
+    !!c && c.topo >= linhaDoPolegar - 0.5 && c.base <= terco.altura + 0.5,
+    `${nome} no terço inferior: ${c ? `${c.topo.toFixed(0)}–${c.base.toFixed(0)}px` : 'não encontrado'}` +
+      ` (zona começa em ${linhaDoPolegar.toFixed(0)}px, tela ${terco.altura}px)`,
+  )
+}
+
+// Em repouso a pilha aparece limpa: nenhuma chamada na tela.
+const chamadasEmRepouso = await pg.evaluate(() => document.querySelectorAll('[data-chamada]').length)
+diz(chamadasEmRepouso === 0, `chamadas visíveis em repouso: ${chamadasEmRepouso} (esperado 0 no celular)`)
+
+// A menor faixa de camada da pilha desenhada. Não é asserção de aprovação: é o número que
+// diz por que a tira de toque precisa de piso de 44px, e por que a lista de composição é o
+// caminho garantido de toda camada. Ver o Risco do relatório.
+const faixas = await pg.evaluate(() =>
+  [...document.querySelectorAll('#rx-toques [data-toque]')].map((e) => Number(e.dataset.faixa)))
+if (faixas.length) {
+  linhas.push(
+    `      faixa das camadas na pilha: menor ${Math.min(...faixas).toFixed(0)}px,` +
+      ` maior ${Math.max(...faixas).toFixed(0)}px (tira de toque tem piso de ${TOQUE_MIN}px)`,
+  )
+}
+
+// ---------- 3. recortes ----------
+
+// explodido e medidor normal saem do lanche cheio: dez camadas.
+await recorte('raio-x em repouso · completo', '#rx-desenho')
+
+// Um toque na camada revela a chamada dela — e só a dela. O toque vai pelo mouse, em
+// coordenada: é o que um dedo faz. `click(seletor)` faria a checagem de acionabilidade do
+// Playwright, que não sabe que tira sobreposta é o desenho, não um defeito.
+const alvoToque = await pg.evaluate(() => {
+  const t = document.querySelector('#rx-toques [data-toque="4"]')
+  if (!t) return null
+  const r = t.getBoundingClientRect()
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+})
+if (alvoToque) await pg.mouse.click(alvoToque.x, alvoToque.y)
+await pg.waitForTimeout(120)
+const reveladas = await pg.evaluate(() => document.querySelectorAll('[data-chamada]').length)
+diz(reveladas === 1, `toque na camada revela ${reveladas} chamada (esperado 1)`)
+await recorte('raio-x com uma chamada revelada', '#rx-desenho')
+await recorte('medidor · faixa horizontal, 10 camadas', '#rx-medidor')
+await recorte('trilho · fichas de 56px', '#rx-trilho')
 
 // aviso: uma camada acima do limiar. Entra pelo trilho, que é o gesto sem arrasto.
 const ficha = await pg.$('#rx-trilho [data-slug="ovo"]:not([disabled])')
@@ -336,6 +471,52 @@ diz(
   `sob prefers-reduced-motion o lanche chega ao pedido: ${totalParado || 'nada'} (pedia ${precoParado})`,
 )
 await ctxParado.close()
+
+// ---------- o outro lado do corte: 900 × 800 ----------
+//
+// Acima de 900px sobra largura, e a leitura simultânea das chamadas é o ganho. É a única
+// coisa que muda de comportamento com o corte — o resto do layout é CSS e não precisa de
+// segunda passada. O caminho por teclado (Delete na chamada) também é cobrado aqui: no
+// celular ele mora na lista de composição, aqui mora na chamada.
+const ctxAmplo = await navegador.newContext({ viewport: AMPLO, deviceScaleFactor: 1 })
+const pgAmpla = await ctxAmplo.newPage()
+const excecoesAmplo = []
+pgAmpla.on('pageerror', (erro) => excecoesAmplo.push(String(erro)))
+await pgAmpla.goto(`${URL}/?lanche=${LANCHE_CHEIO}`, { waitUntil: 'networkidle' })
+await pgAmpla.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
+await pgAmpla.waitForTimeout(200)
+const noAmplo = await pgAmpla.evaluate(() => ({
+  camadas: document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length,
+  chamadas: document.querySelectorAll('[data-chamada]').length,
+  colunaW: Math.round(document.querySelector('[data-chamada]')?.getBoundingClientRect().width ?? 0),
+}))
+diz(
+  noAmplo.chamadas === noAmplo.camadas && noAmplo.camadas > 0,
+  `em ${AMPLO.width}px as chamadas voltam todas: ${noAmplo.chamadas} de ${noAmplo.camadas} camadas` +
+    ` (coluna de ${noAmplo.colunaW}px)`,
+)
+const estorvosAmplo = await estorvosHorizontais(pgAmpla)
+diz(
+  estorvosAmplo.length === 0,
+  `sem rolagem horizontal acidental em ${AMPLO.width}px${estorvosAmplo.length ? `: ${estorvosAmplo.join(', ')}` : ''}`,
+)
+const pequenosAmplo = await alvosPequenos(pgAmpla, TOQUE_MIN)
+diz(
+  pequenosAmplo.length === 0,
+  `alvos abaixo de ${TOQUE_MIN}×${TOQUE_MIN} em ${AMPLO.width}px: ${pequenosAmplo.length}` +
+    `${pequenosAmplo.length ? ` — ${pequenosAmplo.join(', ')}` : ''}`,
+)
+await pgAmpla.focus('[data-chamada="1"]')
+await pgAmpla.keyboard.press('Delete')
+await pgAmpla.waitForTimeout(120)
+const depoisDoDelete = await pgAmpla.evaluate(
+  () => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)
+diz(
+  depoisDoDelete === noAmplo.camadas - 1 && excecoesAmplo.length === 0,
+  `Delete na chamada tira uma camada: ${noAmplo.camadas} → ${depoisDoDelete}` +
+    `${excecoesAmplo.length ? `, ${excecoesAmplo.length} exceção(ões)` : ''}`,
+)
+await ctxAmplo.close()
 
 // ---------- resumo do espalhamento ----------
 //

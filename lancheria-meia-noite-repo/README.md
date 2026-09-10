@@ -17,13 +17,41 @@ não veio no pacote) e serve como leitura de código, não como demo.
 - `components/letreiro/` — o letreiro e a intro
 - `components/raio-x/` — a pilha explodida, a física de afundamento (`prensa.ts`), a
   sombra de contato (`sombra.ts`), a prensa e a gravidade, o salto (`salto.ts`), o medidor
-  e o trilho de ingredientes ("monte o seu")
+  (faixa horizontal), o trilho de ingredientes ("monte o seu") e a lista de composição
 - `components/pedido/` — o balcão e a barra do pedido
+
+**Desenho do raio-x, mobile-first** (corte em 900px, ver `AGENTS.md`):
+
+```
+390px                                 900px
+┌───────────────────┐                 ┌──────────────────────┬─────────┐
+│ nome do lanche    │                 │ nome do lanche       │         │
+├───────────────────┤                 ├──────────────────────┤ medidor │
+│                   │                 │ chamadas │           │ em      │
+│   pilha, largura  │  2/3 de cima:   │ todas    │  pilha    │ coluna  │
+│   cheia, chamadas │  para ver       │ visíveis │           ├─────────┤
+│   ocultas         │                 │          │           │ prensar │
+├───────────────────┤                 ├──────────────────────┴─────────┤
+│ preço   n camadas │  1/3 de baixo:  │ trilho ────────────────────────→│
+│ ▓▓▓▓▓░░░░░░░░░░░░ │  zona de        └────────────────────────────────-┘
+├───────────────────┤  polegar
+│ trilho 56px ─────→│
+├───────────────────┤
+│ Prensar na chapa  │
+└───────────────────┘
+```
+
+Onde as peças ficam mora no CSS (`app/globals.css`, bloco "Raio-x"); como elas parecem,
+nos componentes. Só o que muda de comportamento com o corte mora no JS: abaixo de 900px as
+chamadas nascem ocultas e um toque na camada revela a dela; `ver composição` abre a lista
+inteira em texto, que é também o caminho garantido de 44px para toda camada.
 
 **Incompleto:**
 - Barra do pedido: o botão "Abrir pedido" existe (`data-abrir-carrinho`) mas não abre nada
   — o carrinho é a fase seguinte
 - Única porta de entrada é `?lanche=<slug>`, direto no raio-x montado; não há cardápio
+- No celular a ficha do trilho é só a foto em 56px: nome e preço só aparecem a partir de
+  900px, e no `aria-label` abaixo disso
 
 **Não existe ainda:** cardápio em grade, filtro por ingrediente, trilho horizontal com
 deslize-que-prensa (Destaques/Sugestões/Bebidas/Acompanhamentos), carrinho aberto,

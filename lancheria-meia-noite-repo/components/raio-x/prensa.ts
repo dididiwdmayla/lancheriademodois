@@ -119,8 +119,16 @@ export function unidadesPilha(slugs: string[], fator: number): number {
   return u
 }
 
+/**
+ * O corte entre celular e desktop, em px. Abaixo dele as chamadas ficam ocultas e a pilha
+ * ocupa a largura inteira; acima, a coluna de chamadas volta. Está aqui, e não numa media
+ * query solta, porque a geometria da pilha depende dele: quem decide a largura da coluna
+ * é a mesma conta que decide `k`.
+ */
+export const CORTE_AMPLO = 900
+
 export type Geometria = {
-  /** Largura da coluna das chamadas, à esquerda. */
+  /** Largura da coluna das chamadas, à esquerda. Zero quando elas estão ocultas. */
   colW: number
   /** Onde a caixa da pilha começa, depois da coluna de chamadas. */
   x0: number
@@ -147,11 +155,13 @@ export function geometria(opcoes: {
   areaH: number
   comprimido: boolean
   forma: Forma
+  /** Coluna de chamadas à esquerda. Falsa no celular: lá a pilha usa a largura inteira. */
+  chamadas: boolean
 }): Geometria {
-  const { slugs, areaW, areaH, comprimido, forma } = opcoes
-  const colW = Math.min(200, Math.max(80, areaW * 0.28))
-  const x0 = colW + 18
-  const larguraPilha = Math.max(130, areaW - x0 - 10)
+  const { slugs, areaW, areaH, comprimido, forma, chamadas } = opcoes
+  const colW = chamadas ? Math.min(200, Math.max(80, areaW * 0.28)) : 0
+  const x0 = chamadas ? colW + 18 : 0
+  const larguraPilha = Math.max(130, areaW - x0 - (chamadas ? 10 : 0))
   const prensa = comprimido && forma === 'prensado'
   const assenta = comprimido && forma !== 'prensado'
 

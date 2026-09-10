@@ -93,3 +93,166 @@ html[data-lt-aceso='1'] #lt-svg {
   #lt-svg { --lt-acende: 1 !important; --lt-letras: 1 !important; animation: none !important; }
   #lt-tremor, #lt-tubo-a, #lt-tubo-b, #lt-texto { animation: none !important; }
 }
+
+/* ---------------------------------------------------------------------------
+   Raio-x — o layout, mobile-first.
+
+   Aqui mora ONDE as peças ficam; nos componentes mora COMO elas parecem. A
+   divisão não é estética: a posição é a única coisa que muda com a largura da
+   tela, e style inline não tem media query. Cor e tipografia continuam inline
+   porque não dependem do corte.
+
+   Abaixo de 900px (o corte do AGENTS.md): a pilha ocupa a largura inteira nos
+   dois terços de cima, e medidor, trilho e botão empilham no terço de baixo —
+   a zona de polegar. Acima de 900px o medidor volta para a coluna da direita.
+   --------------------------------------------------------------------------- */
+
+#rx-takeover {
+  display: grid;
+  height: 100%;
+  min-height: 320px;
+  background: var(--borra);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: 'cabeca' 'painel' 'medidor' 'trilho' 'selar';
+}
+
+#rx-cabeca { grid-area: cabeca; padding: 9px clamp(12px, 4vw, 20px); }
+
+#rx-painel {
+  grid-area: painel;
+  position: relative;
+  /* Contexto de empilhamento próprio: sem ele as tiras de toque (z 26) e as chamadas
+     (z 28) sobem para a raiz e passam por cima do medidor e da composição, que são
+     irmãos do painel na grade. O z-index das camadas é assunto interno do painel. */
+  z-index: 0;
+  /* Sem rolagem: a pilha se redimensiona para caber (k sai da altura da área).
+     "Se algo não cabe no celular, a solução é cortar, não rolar." */
+  overflow: hidden;
+  min-height: 180px;
+}
+#rx-desenho { position: absolute; inset: 0; touch-action: none; }
+
+#rx-medidor {
+  grid-area: medidor;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  padding: 8px clamp(12px, 4vw, 20px);
+  border-top: 1px solid var(--traco);
+  background: rgba(18, 13, 11, 0.92);
+}
+/* A faixa: preço à esquerda, contagem à direita, barra ocupando a largura toda
+   embaixo dos dois. Deitada ela é régua; em pé seria termômetro. */
+#rx-medidor-linha {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+#rx-ver-composicao { min-height: 44px; }
+/* Recado e aviso flutuam sobre a borda de baixo do desenho. Reservar linha para
+   eles na faixa custaria altura da pilha em toda tela, inclusive nas telas em que
+   não há recado nem risco — e são 22px que a pilha não tem para dar. */
+#rx-flutua {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  display: grid;
+}
+#rx-flutua > * {
+  padding: 7px clamp(12px, 4vw, 20px);
+  background: rgba(28, 21, 18, 0.94);
+  border-top: 1px solid var(--traco);
+}
+#rx-recado:empty { display: none; }
+/* No celular a linha de montagem só aparece quando é aviso de verdade. A garantia
+   ("até 10 camadas a pilha para em pé") é informação de ambiente e fica no desktop. */
+#rx-aviso:not([data-aviso]) { display: none; }
+/* A instrução de gesto não cabe na faixa. No celular ela vive dentro da lista de
+   composição, que é onde a pessoa vai procurar o que dá para fazer. */
+#rx-ajuda { display: none; }
+
+#rx-trilho {
+  grid-area: trilho;
+  display: flex;
+  gap: 8px;
+  padding: 8px clamp(12px, 4vw, 20px);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border-top: 1px solid var(--traco);
+  background: rgba(28, 21, 18, 0.85);
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+#rx-trilho::-webkit-scrollbar { display: none; }
+/* 56px de ficha: acima do mínimo de 44 e ainda cabem seis na largura de um 390. */
+#rx-trilho > button { position: relative; flex: 0 0 auto; width: 56px; min-height: 56px; padding: 0; }
+/* Quadrada e do tamanho do conteúdo da ficha: 56px de fora, menos o fio de 1px de
+   cada lado. Largura fixa aqui estouraria a caixa e criaria rolagem horizontal. */
+#rx-trilho [data-ficha-foto] { display: block; width: 100%; aspect-ratio: 1; }
+#rx-trilho [data-ficha-texto] { display: none; }
+#rx-trilho [data-ficha-conta] {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 1px 4px;
+  background: rgba(18, 13, 11, 0.86);
+  border-radius: 2px;
+}
+
+/* A ação principal é largura cheia na base. Não disputa espaço com ninguém. */
+#rx-selar {
+  grid-area: selar;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 20px;
+}
+
+/* A lista de composição: o texto inteiro, fora do desenho. É ela que garante
+   alvo de 44px para toda camada — inclusive as finas, cuja faixa na pilha é
+   menor que isso. */
+#rx-composicao {
+  grid-area: painel;
+  z-index: 6;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--borra);
+  border-top: 1px solid var(--traco);
+}
+
+@media (min-width: 900px) {
+  #rx-takeover {
+    grid-template-columns: minmax(0, 1fr) 288px;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'cabeca cabeca'
+      'painel medidor'
+      'painel selar'
+      'trilho trilho';
+  }
+  #rx-cabeca { padding: clamp(14px, 2vw, 22px) clamp(16px, 3vw, 32px); }
+  #rx-medidor {
+    gap: 18px;
+    padding: clamp(16px, 2.2vw, 28px);
+    align-content: start;
+    overflow-y: auto;
+    border-top: 0;
+    border-left: 1px solid var(--traco);
+  }
+  #rx-medidor-linha { display: grid; gap: 14px; justify-items: start; min-height: 0; }
+  #rx-flutua { position: static; gap: 16px; }
+  #rx-flutua > * { padding: 0; background: none; border-top: 0; }
+  #rx-recado { min-height: 2.6em; }
+  #rx-recado:empty { display: block; }
+  #rx-aviso:not([data-aviso]) { display: block; }
+  #rx-ajuda { display: block; }
+  #rx-trilho { gap: 10px; padding: 14px clamp(12px, 2vw, 20px); }
+  #rx-trilho > button { width: 128px; padding: 9px; }
+  #rx-trilho [data-ficha-foto] { width: 100%; height: 36px; aspect-ratio: auto; }
+  #rx-trilho [data-ficha-texto] { display: grid; gap: 2px; width: 100%; }
+  #rx-selar { border-left: 1px solid var(--traco); }
+}

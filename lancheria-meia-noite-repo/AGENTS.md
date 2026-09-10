@@ -21,6 +21,28 @@ com amor", "tradição que atravessa gerações".
 
 ---
 
+## Mobile-first, sem negociação
+
+Este é um site de lancheria. A pessoa está na rua, com uma mão, com fome. O celular é o
+alvo; o desktop é a adaptação, nunca o contrário.
+
+**Toda decisão de layout é tomada em 390 × 844 primeiro** e só depois expandida. Se algo
+não cabe no celular, a solução é cortar, não rolar.
+
+**Olhar em cima, tocar embaixo.** O terço inferior da tela é zona de polegar e recebe tudo
+que é acionável: trilho de ingredientes, medidor, botões, barra do pedido. Os dois terços
+de cima são para ver: a pilha, as chamadas, a foto. Nada que exija toque preciso mora no
+topo.
+
+**Alvo de toque mínimo de 44px.** Vale para camada, chamada, item de trilho e botão.
+
+Arrastar nunca é o único caminho. Todo gesto tem equivalente por toque.
+
+O corte é 900px. Abaixo dele vale tudo que está escrito aqui; acima, o desenho volta a
+espalhar — chamadas todas visíveis ao mesmo tempo, medidor em coluna à direita.
+
+---
+
 ## Regra de temperatura — nunca viole
 
 **Luz fria (`--letreiro`) = o sistema.** Medição, letreiro, estados de interface, filtro ativo.
@@ -56,6 +78,16 @@ lugar é erro.
 
 Proibido: rótulo em caixa-alta espaçada acima de título; meta unida por ponto médio
 ("Fresco · Artesanal"); uma palavra do título em cor diferente; seta "→" colada em botão.
+
+**Pisos do display em 390px.** O teto de cada `clamp` é desenho de desktop e nunca é
+alcançado no celular — quem manda ali é o piso. Os três que valem quando cada peça for
+portada:
+
+```
+hero               piso 2.75rem   (3.5rem estoura em 390px com WONK 1)
+título de seção    piso 2rem
+nome de lanche     piso 1.25rem
+```
 
 ## Lei do movimento
 
@@ -221,4 +253,11 @@ Regras:
 Os seletores usados pelo QA são contrato: `[data-cardapio]`, `[data-item-cardapio]`,
 `[data-filtro-ingrediente]`, `[data-barra-pedido]`, `[data-abrir-carrinho]`,
 `[data-carrinho]`, `[data-medida]`, `[data-preco]`, `[data-carimbo]`, `[data-prensado]`,
-mais os IDs `#rx-painel`, `#rx-medidor`, `#rx-selar` e os `#lt-*`.
+`[data-chamada]`, `[data-toque]`, `[data-tirar]`, mais os IDs `#rx-takeover`,
+`#rx-painel`, `#rx-desenho`, `#rx-medidor`, `#rx-selar`, `#rx-trilho`, `#rx-toques`,
+`#rx-composicao`, `#rx-ver-composicao` e os `#lt-*`.
+
+O QA roda em 390 × 844 e, no fim, uma segunda passada em 900 × 800 só para o que muda de
+comportamento no corte. Três asserções são de mobile e valem para toda peça nova: nenhuma
+rolagem horizontal acidental, nenhum alvo acionável abaixo de 44 × 44, e medidor, trilho e
+botão inteiros no terço inferior.
