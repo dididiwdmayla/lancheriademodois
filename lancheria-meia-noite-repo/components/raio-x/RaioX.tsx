@@ -102,8 +102,10 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
     })
   }, [])
 
-  const capturados = timers
-  useEffect(() => () => capturados.current.forEach(window.clearTimeout), [capturados])
+  useEffect(() => {
+    const pendentes = timers.current
+    return () => pendentes.forEach(window.clearTimeout)
+  }, [])
 
   // ---------- regras de posição ----------
 
