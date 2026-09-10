@@ -37,3 +37,13 @@ export const CAMADAS: Camada[] = [
     { slug: 'pao-topo', arquivo: 'camadas/pao-topo.webp', nome: 'Pão de cima', alt: 'Metade de cima do pão redondo com gergelim', alturaPx: 456, afundamento: 0.30, precoCent: 0, ordem: 12, obrigatorio: true, pao: 'redondo' },
     { slug: 'pao-prensado-topo', arquivo: 'camadas/pao-prensado-topo.webp', nome: 'Pão de cima', alt: 'Metade de cima do pão do prensado, marcada na chapa', alturaPx: 315, afundamento: 0.30, precoCent: 0, ordem: 12, obrigatorio: true, pao: 'prensado' }
 ]
+
+/** Índice por slug. Derivado, não uma segunda fonte da verdade. */
+export const MAPA_CAMADAS: Record<string, Camada> = Object.fromEntries(
+  CAMADAS.map((c) => [c.slug, c]),
+)
+
+/** Os arquivos moram em /public. O campo `arquivo` é relativo, como no export. */
+export function urlCamada(c: Camada): string {
+  return `/${c.arquivo}`
+}

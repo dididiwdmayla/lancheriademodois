@@ -11,20 +11,22 @@ import {
 } from './sequencia'
 import { prefersReducedMotion, umaVezPorSessao } from '@/lib/motion'
 
-// --lt-acende e --lt-letras são registradas com `inherits: true` (app/globals.css) e
-// escritas na raiz do documento, não no <svg>: cascateiam por herança até lt-halo e
-// lt-texto de qualquer jeito, e ficam num ponto único e medível de fora.
+// --lt-acende e --lt-letras moram no #lt-svg, como no export. Escrevê-las na raiz
+// poupava uma linha no QA e cobrava o preço errado: a animação de ignição vai no
+// shorthand `animation` do elemento que as escreve, e na raiz ela brigaria com qualquer
+// animação futura de <html>. O clock fica onde o letreiro está; quem mede vai até ele.
 export default function Letreiro() {
   const raizRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    const html = document.documentElement
+    const svg = raizRef.current?.querySelector<SVGSVGElement>('#lt-svg')
+    if (!svg) return
     const { jaAconteceu, marcar } = umaVezPorSessao(CHAVE_SESSAO)
 
     // Já acendeu nesta sessão: nasce aceso, sem sequência, sem frame apagado.
     if (jaAconteceu) {
-      html.style.setProperty('--lt-acende', '1')
-      html.style.setProperty('--lt-letras', '1')
+      svg.style.setProperty('--lt-acende', '1')
+      svg.style.setProperty('--lt-letras', '1')
       return
     }
 
@@ -35,8 +37,8 @@ export default function Letreiro() {
     }
 
     const travar = () => {
-      html.style.setProperty('--lt-acende', '1')
-      html.style.setProperty('--lt-letras', '1')
+      svg.style.setProperty('--lt-acende', '1')
+      svg.style.setProperty('--lt-letras', '1')
     }
 
     const acender = () => {
@@ -45,8 +47,8 @@ export default function Letreiro() {
         agendar(marcar, ATRASO_REDUZIDO_MS)
         return
       }
-      html.style.animation = `lt-ignicao ${DURACAO_IGNICAO_MS}ms linear forwards`
-      html.addEventListener(
+      svg.style.animation = `lt-ignicao ${DURACAO_IGNICAO_MS}ms linear forwards`
+      svg.addEventListener(
         'animationend',
         () => {
           travar()
