@@ -52,9 +52,12 @@ await pg.goto(URL, { waitUntil: 'networkidle' })
 
 // intro do letreiro concluída
 await pg.waitForTimeout(2200)
-const acende = await pg.evaluate(() =>
-  getComputedStyle(document.documentElement).getPropertyValue('--lt-acende').trim())
-diz(acende === '1' || acende === '', `letreiro estabilizado (--lt-acende=${acende || 'n/d'})`)
+// as propriedades moram no #lt-svg, não na raiz: a asserção vai onde o código está
+const acende = await pg.evaluate(() => {
+  const svg = document.getElementById('lt-svg')
+  return svg ? getComputedStyle(svg).getPropertyValue('--lt-acende').trim() : 'sem-svg'
+})
+diz(acende === '1', `letreiro estabilizado (#lt-svg --lt-acende=${acende || 'n/d'})`)
 
 // quantos itens do cardápio cabem sem rolagem
 const visiveis = await pg.evaluate(() => {

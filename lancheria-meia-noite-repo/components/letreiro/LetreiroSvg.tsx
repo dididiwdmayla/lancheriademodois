@@ -8,6 +8,18 @@ function animacaoTremor(id: (typeof TREMOR_GRUPOS)[number]['id']): CSSProperties
   return { animation: `lt-tremor ${g.duracaoS}s linear infinite`, animationDelay: `${g.atrasoS}s` }
 }
 
+// A aresta do acrílico cortado. É o detalhe que separa acrílico de neon a olho nu:
+// com o painel aceso em 0.42, um traço de 1px cai abaixo de um pixel de tela no tamanho
+// em que o letreiro é visto e chega antisserrilhado a meia tinta — some. 1.5px cobre
+// pixel inteiro, e stroke-opacity explícito garante que o traço não herde diluição de
+// ninguém: contra o fundo aceso ele precisa chegar em --traco cheio.
+const arestaDoCorte: CSSProperties = {
+  fill: 'none',
+  stroke: '#33251E',
+  strokeWidth: 1.5,
+  strokeOpacity: 1,
+}
+
 const fonteLetreiro: CSSProperties = {
   fontFamily: "'Fraunces', Georgia, serif",
   fontSize: '260px',
@@ -65,7 +77,7 @@ export default function LetreiroSvg() {
         </mask>
         <mask id="lt-recorte-bloom" maskUnits="userSpaceOnUse" x="60" y="40" width="880" height="680">
           <g
-            transform="translate(500 490) scale(1.035) translate(-500 -490)"
+            transform="translate(500 490) scale(1.015) translate(-500 -490)"
             style={fonteLetreiro}
           >
             <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#575757">
@@ -105,7 +117,7 @@ export default function LetreiroSvg() {
             clipPath="url(#lt-recorte-painel)"
             aria-hidden="true"
           >
-            <rect x="86" y="66" width="828" height="628" fill="url(#lt-luz-face)" style={{ opacity: 0.19 }} />
+            <rect x="86" y="66" width="828" height="628" fill="url(#lt-luz-face)" style={{ opacity: 0.42 }} />
             <g id="lt-tubo-a" style={animacaoTremor('lt-tubo-a')}>
               <rect x="86" y="112" width="828" height="220" fill="url(#lt-tubo-luz)" style={{ opacity: 0.26 }} />
             </g>
@@ -122,7 +134,7 @@ export default function LetreiroSvg() {
               lengthAdjust="spacingAndGlyphs"
               fill="#171110"
               stroke="#33251E"
-              strokeWidth="1"
+              strokeWidth="1.5"
             >
               MEIA
             </text>
@@ -133,7 +145,7 @@ export default function LetreiroSvg() {
               lengthAdjust="spacingAndGlyphs"
               fill="#171110"
               stroke="#33251E"
-              strokeWidth="1"
+              strokeWidth="1.5"
             >
               NOITE
             </text>
@@ -147,10 +159,10 @@ export default function LetreiroSvg() {
                 height="680"
                 fill="url(#lt-luz)"
                 mask="url(#lt-recorte-bloom)"
-                style={{ opacity: 0.3 }}
+                style={{ opacity: 0.15 }}
               />
               <rect x="86" y="66" width="828" height="628" fill="url(#lt-luz)" mask="url(#lt-recorte-acrilico)" />
-              <g style={{ ...fonteLetreiro, fill: 'none', stroke: '#33251E', strokeWidth: 1 }}>
+              <g style={{ ...fonteLetreiro, ...arestaDoCorte }}>
                 <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs">
                   MEIA
                 </text>

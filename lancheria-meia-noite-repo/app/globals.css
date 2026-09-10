@@ -51,12 +51,15 @@ body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-seri
 }
 
 /* Flag escrita antes do primeiro paint (script inline em Letreiro.tsx), não em
-   useEffect: cobre o intervalo entre o HTML bruto do servidor e a hidratação. */
-html[data-lt-aceso='1'] {
+   useEffect: cobre o intervalo entre o HTML bruto do servidor e a hidratação.
+   A flag mora no <html> porque é lá que o script chega antes da hidratação; as duas
+   propriedades, não — elas são escritas no #lt-svg, que é de quem elas são. */
+html[data-lt-aceso='1'] #lt-svg {
   --lt-acende: 1;
   --lt-letras: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { --lt-acende: 1 !important; --lt-letras: 1 !important; }
+  #lt-svg { --lt-acende: 1 !important; --lt-letras: 1 !important; animation: none !important; }
+  #lt-tremor, #lt-tubo-a, #lt-tubo-b, #lt-texto { animation: none !important; }
 }
