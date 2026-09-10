@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import RaioX, { type LancheFechado } from '@/components/raio-x/RaioX'
 import { salto, type Origem } from '@/components/raio-x/salto'
-import BarraPedido, { ALTURA_BARRA_PX, type ChegadaBarra } from './BarraPedido'
+import BarraPedido, { ALTURA_BARRA, type ChegadaBarra } from './BarraPedido'
 import type { Forma } from '@/components/raio-x/prensa'
 
 type ItemPedido = LancheFechado & { id: string; qtd: number }
@@ -59,7 +59,7 @@ export default function Balcao({ nome, forma, camadasIniciais }: Props) {
 
   return (
     <>
-      <div style={{ height: `calc(100dvh - ${ALTURA_BARRA_PX}px)` }}>
+      <div style={{ height: `calc(100dvh - ${ALTURA_BARRA})` }}>
         <RaioX nome={nome} forma={forma} camadasIniciais={camadasIniciais} onFechar={aoFechar} />
       </div>
       <BarraPedido

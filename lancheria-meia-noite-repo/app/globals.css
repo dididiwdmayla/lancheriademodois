@@ -7,6 +7,11 @@
   --osso: #E9E0D3;
   --latao: #A9762F;
   --letreiro: #A8C6D4;
+
+  /* Não é um token de cor — é a altura da barra do pedido: 46px de botão mais 11px de
+     folga em cima e embaixo, mais o fio. Fica aqui porque CSS e componente precisam do
+     mesmo número, e duas cópias divergem. */
+  --barra-altura: 70px;
 }
 
 @property --lt-acende { syntax: '<number>'; inherits: true; initial-value: 0; }
@@ -69,6 +74,11 @@ body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-seri
 
 /* As camadas são fotografia de fundo, não <img>: o navegador não deve oferecer arrastar. */
 #rx-pilha [data-foto-camada] { -webkit-user-drag: none; }
+
+/* A barra do pedido flutua sobre o conteúdo. Nada pode parar embaixo dela: o documento
+   reserva a folga no fim, e quem rola até o trilho ou o painel para acima da barra. */
+body { padding-bottom: calc(var(--barra-altura) + 8px); }
+#rx-trilho, #rx-painel { scroll-margin-bottom: calc(var(--barra-altura) + 8px); }
 
 /* Flag escrita antes do primeiro paint (script inline em Letreiro.tsx), não em
    useEffect: cobre o intervalo entre o HTML bruto do servidor e a hidratação.

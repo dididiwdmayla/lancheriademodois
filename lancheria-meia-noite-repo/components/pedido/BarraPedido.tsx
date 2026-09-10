@@ -23,9 +23,8 @@ type Props = {
 
 const CONTAGEM_MS = 320
 
-/** Altura da barra: 46px de botão mais 11px de folga em cima e embaixo, mais o fio.
- *  Quem monta o raio-x desconta isto da viewport para o trilho não sumir atrás dela. */
-export const ALTURA_BARRA_PX = 70
+/** A altura mora em --barra-altura (app/globals.css): CSS e componente precisam dela. */
+export const ALTURA_BARRA = 'var(--barra-altura)'
 
 export default function BarraPedido({ itens, totalCent, ref }: Props) {
   const totalRef = useRef<HTMLSpanElement>(null)
@@ -83,7 +82,7 @@ export default function BarraPedido({ itens, totalCent, ref }: Props) {
         right: 0,
         bottom: 0,
         zIndex: 20,
-        minHeight: ALTURA_BARRA_PX,
+        minHeight: ALTURA_BARRA,
         background: 'rgba(28,21,18,0.97)',
         borderTop: '1px solid var(--traco)',
       }}
