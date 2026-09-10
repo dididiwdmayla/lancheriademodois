@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lancheria Meia-Noite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,700..900,0..100,0..1&amp;family=Archivo:wdth,wght@62..125,400..600&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --borra: #120D0B;
+    --fumo: #1C1512;
+    --traco: #33251E;
+    --osso: #E9E0D3;
+    --latao: #A9762F;
+    --letreiro: #A8C6D4;
+  }
+  @property --lt-acende { syntax: '<number>'; inherits: true; initial-value: 0; }
+  @property --lt-letras { syntax: '<number>'; inherits: true; initial-value: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #120D0B; }
+  body {
+    color: #E9E0D3;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-variation-settings: 'wdth' 100, 'wght' 400;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-wrap: pretty;
+  }
+  a { color: #A8C6D4; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { color: #E9E0D3; }
+  ::selection { background: #33251E; color: #E9E0D3; }
+  :focus-visible { outline: 2px solid #A8C6D4; outline-offset: 3px; }
+  img { max-width: 100%; }
+
+  @keyframes lt-ignicao {
+    0%    { --lt-acende: 0;    --lt-letras: 0; }
+    4.9%  { --lt-acende: 0;    --lt-letras: 0; }
+    5%    { --lt-acende: 0.40; --lt-letras: 0; }
+    10.9% { --lt-acende: 0.40; --lt-letras: 0; }
+    11%   { --lt-acende: 0;    --lt-letras: 0; }
+    42%   { --lt-acende: 0;    --lt-letras: 0; }
+    47%   { --lt-acende: 0.90; --lt-letras: 0.30; }
+    53%   { --lt-acende: 0.44; --lt-letras: 0.16; }
+    64%   { --lt-acende: 0.97; --lt-letras: 0.86; }
+    73%   { --lt-acende: 0.78; --lt-letras: 0.70; }
+    100%  { --lt-acende: 1;    --lt-letras: 1; }
+  }
+  @keyframes lt-tremor {
+    0%, 100% { opacity: 1; }
+    17% { opacity: 0.983; }
+    23% { opacity: 0.999; }
+    41% { opacity: 0.987; }
+    55% { opacity: 1; }
+    68% { opacity: 0.980; }
+    79% { opacity: 0.996; }
+  }
+  @keyframes rx-osc {
+    0%, 100% { transform: translateY(-3px); }
+    50% { transform: translateY(3px); }
+  }
+  @keyframes rx-varredura {
+    0%   { transform: translateY(10%); opacity: 0; }
+    14%  { opacity: 0.9; }
+    82%  { opacity: 0.62; }
+    100% { transform: translateY(-205%); opacity: 0; }
+  }
+  @keyframes rx-ar {
+    0%, 100% { opacity: 0; transform: scaleY(1); }
+    45% { opacity: 0.5; transform: scaleY(1.06); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #lt-svg { --lt-acende: 1 !important; --lt-letras: 1 !important; animation: none !important; }
+    #lt-tremor, #lt-tubo-a, #lt-tubo-b, #lt-texto, #lt-rod-tremor { animation: none !important; }
+    #intro { transition: none !important; }
+    [data-osc] { animation: none !important; }
+  }
+</style>
+<script>
+  /* Uma vez por sessão, antes do primeiro paint: se já acendeu, a intro não existe. */
+  try {
+    if (sessionStorage.getItem('lm:letreiro-aceso') === '1') {
+      document.documentElement.setAttribute('data-lt-aceso', '1');
+    }
+  } catch (e) {}
+</script>
+</helmet>
+<div style="background: #120D0B; overflow-x: clip; padding-bottom: 92px;">
+  <!-- INTRO: letreiro + preloader no mesmo elemento -->
+  <sc-if value="{{ introViva }}" hint-placeholder-val="{{ true }}">
+    <div id="intro" style="{{ estiloIntro }}">
+      <div style="width: 100%; max-width: min(620px, 62vh); display: grid; place-items: center;">
+        <svg id="lt-svg" viewBox="0 0 1000 800" role="img" aria-label="Letreiro da Lancheria Meia-Noite" style="width: 100%; height: auto; display: block;">
+          <defs>
+            <radialGradient id="lt-luz" cx="50%" cy="47%" r="70%">
+              <stop offset="0%" stop-color="#A8C6D4" stop-opacity="0.98"></stop>
+              <stop offset="55%" stop-color="#A8C6D4" stop-opacity="0.93"></stop>
+              <stop offset="100%" stop-color="#A8C6D4" stop-opacity="0.82"></stop>
+            </radialGradient>
+            <radialGradient id="lt-luz-face" cx="50%" cy="47%" r="62%" gradientTransform="translate(0.5 0.5) scale(1 0.80) translate(-0.5 -0.5)">
+              <stop offset="0%" stop-color="#A8C6D4" stop-opacity="0.90"></stop>
+              <stop offset="45%" stop-color="#A8C6D4" stop-opacity="0.54"></stop>
+              <stop offset="78%" stop-color="#A8C6D4" stop-opacity="0.20"></stop>
+              <stop offset="100%" stop-color="#A8C6D4" stop-opacity="0.02"></stop>
+            </radialGradient>
+            <linearGradient id="lt-tubo-luz" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#A8C6D4" stop-opacity="0"></stop>
+              <stop offset="50%" stop-color="#A8C6D4" stop-opacity="1"></stop>
+              <stop offset="100%" stop-color="#A8C6D4" stop-opacity="0"></stop>
+            </linearGradient>
+            <mask id="lt-recorte-acrilico" maskUnits="userSpaceOnUse" x="86" y="66" width="828" height="628">
+              <g style="font-family: 'Fraunces', Georgia, serif; font-size: 260px; font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 12, 'WONK' 1; text-anchor: middle;">
+                <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#ffffff">MEIA</text>
+                <text x="500" y="620" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#ffffff">NOITE</text>
+              </g>
+            </mask>
+            <mask id="lt-recorte-bloom" maskUnits="userSpaceOnUse" x="60" y="40" width="880" height="680">
+              <g transform="translate(500 490) scale(1.035) translate(-500 -490)" style="font-family: 'Fraunces', Georgia, serif; font-size: 260px; font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 12, 'WONK' 1; text-anchor: middle;">
+                <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#575757">MEIA</text>
+                <text x="500" y="620" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#575757">NOITE</text>
+              </g>
+            </mask>
+            <radialGradient id="lt-vinheta" cx="50%" cy="50%" r="58%" gradientTransform="translate(0.5 0.5) scale(1 0.78) translate(-0.5 -0.5)">
+              <stop offset="0%" stop-color="#120D0B" stop-opacity="0"></stop>
+              <stop offset="62%" stop-color="#120D0B" stop-opacity="0"></stop>
+              <stop offset="100%" stop-color="#120D0B" stop-opacity="0.92"></stop>
+            </radialGradient>
+            <clipPath id="lt-recorte-painel">
+              <rect x="86" y="66" width="828" height="628" rx="3"></rect>
+            </clipPath>
+          </defs>
+          <g transform="rotate(-0.4 500 400)">
+            <g id="lt-caixa">
+              <rect x="60" y="40" width="880" height="680" rx="4" fill="#1C1512" stroke="#33251E" stroke-width="2"></rect>
+              <path d="M938 42 L938 718" stroke="#33251E" stroke-width="5"></path>
+              <rect x="86" y="66" width="828" height="628" rx="3" fill="#120D0B" stroke="#33251E" stroke-width="1"></rect>
+              <path d="M120 720 L120 764 M880 720 L880 764" stroke="#33251E" stroke-width="2"></path>
+            </g>
+            <g id="lt-tremor" style="animation: lt-tremor 4s linear infinite; animation-delay: -1.2s;">
+              <g id="lt-halo" style="opacity: calc(var(--lt-acende));" clip-path="url(#lt-recorte-painel)" aria-hidden="true">
+                <rect x="86" y="66" width="828" height="628" fill="url(#lt-luz-face)" style="opacity: 0.19;"></rect>
+                <g id="lt-tubo-a" style="animation: lt-tremor 4.3s linear infinite; animation-delay: -2.6s;">
+                  <rect x="86" y="112" width="828" height="220" fill="url(#lt-tubo-luz)" style="opacity: 0.26;"></rect>
+                </g>
+                <g id="lt-tubo-b" style="animation: lt-tremor 3.7s linear infinite; animation-delay: -0.4s;">
+                  <rect x="86" y="424" width="828" height="220" fill="url(#lt-tubo-luz)" style="opacity: 0.244;"></rect>
+                </g>
+                <rect x="86" y="66" width="828" height="628" fill="url(#lt-vinheta)"></rect>
+              </g>
+              <g aria-hidden="true" style="font-family: 'Fraunces', Georgia, serif; font-size: 260px; font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 12, 'WONK' 1; text-anchor: middle;">
+                <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#171110" stroke="#33251E" stroke-width="1">MEIA</text>
+                <text x="500" y="620" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#171110" stroke="#33251E" stroke-width="1">NOITE</text>
+              </g>
+              <g id="lt-texto" style="animation: lt-tremor 4.6s linear infinite; animation-delay: -3.1s;">
+                <g style="opacity: calc(var(--lt-letras));">
+                  <rect x="60" y="40" width="880" height="680" fill="url(#lt-luz)" mask="url(#lt-recorte-bloom)" style="opacity: 0.3;"></rect>
+                  <rect x="86" y="66" width="828" height="628" fill="url(#lt-luz)" mask="url(#lt-recorte-acrilico)"></rect>
+                  <g style="font-family: 'Fraunces', Georgia, serif; font-size: 260px; font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 12, 'WONK' 1; text-anchor: middle; fill: none; stroke: #33251E; stroke-width: 1;">
+                    <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs">MEIA</text>
+                    <text x="500" y="620" textLength="660" lengthAdjust="spacingAndGlyphs">NOITE</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <button id="intro-pular" type="button" style="position: absolute; right: clamp(16px, 4vw, 40px); bottom: clamp(16px, 4vw, 40px); padding: 10px 16px; background: none; border: 1px solid #33251E; border-radius: 2px; color: #E9E0D3; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; cursor: pointer;">Entrar</button>
+    </div>
+  </sc-if>
+
+  <main>
+    <!-- FAIXA: no máximo 35% da viewport -->
+    <section data-screen-label="Faixa" style="position: relative; height: 35dvh; max-height: 35dvh; min-height: 168px; display: grid; align-items: end; overflow: hidden; border-bottom: 1px solid #33251E;">
+      <img src="chapa/chapa-selagem.webp" alt="Um lanche selando na chapa de ferro, iluminado pela gordura quente" width="2400" height="1600" fetchpriority="high" decoding="async" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.82;" />
+      <div style="position: absolute; inset: 0; background: linear-gradient(to top, #120D0B 2%, rgba(18,13,11,0.7) 46%, rgba(18,13,11,0.2) 100%);"></div>
+      <div style="position: relative; padding: clamp(16px, 3vw, 34px) clamp(20px, 5vw, 64px); width: 100%; max-width: 1240px; margin: 0 auto; display: grid; gap: 6px; justify-items: start;">
+        <h1 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2.25rem, 7vw, 5rem); font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 12, 'WONK' 1; line-height: 0.88; letter-spacing: -0.022em; color: #E9E0D3;">Lancheria Meia-Noite</h1>
+        <p style="margin: 0; font-variation-settings: 'wdth' 92, 'wght' 500; font-size: clamp(1rem, 2.4vw, 1.25rem); color: #E9E0D3;">Das 18h às 4h · esquina da Volta Redonda com a Duarte, Maringá</p>
+      </div>
+    </section>
+
+    <!-- DESTAQUES: trilho, o item no centro está prensado -->
+    <section data-screen-label="Destaques" style="position: relative; padding: clamp(30px, 4vw, 56px) 0 clamp(30px, 4.5vw, 60px); background: #120D0B; border-bottom: 1px solid #33251E;">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 64px) 16px; display: grid; gap: 6px;">
+      <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2rem, 4.6vw, 3.25rem); font-variation-settings: 'opsz' 144, 'wght' 800, 'SOFT' 12, 'WONK' 1; line-height: 0.94; letter-spacing: -0.018em; color: #E9E0D3;">Destaques</h2>
+      <p style="margin: 0; color: #E9E0D3; opacity: 0.66;">Os três que mais saem depois da meia-noite. O que está no centro está prensado.</p>
+    </div>
+      <div data-trilho role="group" aria-label="Destaques" style="display: flex; gap: clamp(12px, 2vw, 20px); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding: 6px calc(50% - min(37vw, 180px)); scrollbar-width: none;">
+      <div data-item-trilho data-slug="prensado-completo" style="flex: 0 0 auto; width: min(74vw, 360px); scroll-snap-align: center; display: grid; gap: 8px; align-content: start; padding: 16px; background: #1C1512; border: 1px solid #33251E;">
+        <div data-palco style="position: relative; height: 172px;">
+          <img data-icone src="fixos/prensado-completo.webp" alt="Prensado Completo" loading="lazy" decoding="async" sizes="360px" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 150ms linear;" />
+          <div data-camadas aria-hidden="true" style="position: absolute; inset: 0; opacity: 0; transition: opacity 150ms linear;"></div>
+        </div>
+        <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.375rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado Completo</span>
+        <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carne, bacon, calabresa, milho, queijo ralado, batata palha</span>
+        <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoCompleto }}</span>
+        <button type="button" data-add="prensado-completo" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-slug="x-tudo" style="flex: 0 0 auto; width: min(74vw, 360px); scroll-snap-align: center; display: grid; gap: 8px; align-content: start; padding: 16px; background: #1C1512; border: 1px solid #33251E;">
+        <div data-palco style="position: relative; height: 172px;">
+          <img data-icone src="fixos/x-tudo.webp" alt="X-Tudo" loading="lazy" decoding="async" sizes="360px" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 150ms linear;" />
+          <div data-camadas aria-hidden="true" style="position: absolute; inset: 0; opacity: 0; transition: opacity 150ms linear;"></div>
+        </div>
+        <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.375rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">X-Tudo</span>
+        <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tudo que tem na chapa, em onze camadas</span>
+        <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoXTudo }}</span>
+        <button type="button" data-add="x-tudo" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-slug="prensado-meia-noite" style="flex: 0 0 auto; width: min(74vw, 360px); scroll-snap-align: center; display: grid; gap: 8px; align-content: start; padding: 16px; background: #1C1512; border: 1px solid #33251E;">
+        <div data-palco style="position: relative; height: 172px;">
+          <img data-icone src="fixos/prensado-meia-noite.webp" alt="Prensado Meia-Noite" loading="lazy" decoding="async" sizes="360px" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 150ms linear;" />
+          <div data-camadas aria-hidden="true" style="position: absolute; inset: 0; opacity: 0; transition: opacity 150ms linear;"></div>
+        </div>
+        <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.375rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado Meia-Noite</span>
+        <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carne, bacon, ovo, queijo ralado, batata palha</span>
+        <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoMeiaNoite }}</span>
+        <button type="button" data-add="prensado-meia-noite" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; margin-top: 4px;">Adicionar</button>
+      </div>
+      </div>
+    </section>
+
+    <!-- CARDÁPIO -->
+    <section id="sec-cardapio" data-screen-label="Cardápio" style="position: relative; background: #1C1512;">
+      <img src="macro/macro-pao.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.07; pointer-events: none;" />
+
+      <div id="cardapio-filtro" role="group" aria-label="Filtro do cardápio" style="position: sticky; top: 0; z-index: 12; display: flex; gap: 8px; padding: 10px clamp(16px, 4vw, 64px); background: #1C1512; border-bottom: 1px solid #33251E; overflow-x: auto;">
+        <button type="button" data-filtro="prensados" style="{{ estiloFiltroPrensados }}">Prensados</button>
+        <button type="button" data-filtro="redondos" style="{{ estiloFiltroRedondos }}">Redondos</button>
+        <button type="button" data-filtro="monte" style="{{ estiloFiltroMonte }}">Monte o seu</button>
+      </div>
+
+      <div id="filtro-ingrediente" role="group" aria-label="Filtrar por ingrediente" style="display: flex; gap: 8px; padding: 12px clamp(16px, 4vw, 64px) 0; overflow-x: auto; scrollbar-width: none;">
+        <button type="button" data-ing="carne" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="carne" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Carne</span>
+        </button>
+        <button type="button" data-ing="bacon" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="bacon" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Bacon</span>
+        </button>
+        <button type="button" data-ing="ovo" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="ovo" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Ovo</span>
+        </button>
+        <button type="button" data-ing="calabresa" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="calabresa" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Calabresa</span>
+        </button>
+        <button type="button" data-ing="frango-desfiado" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="frango-desfiado" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Frango</span>
+        </button>
+        <button type="button" data-ing="milho" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="milho" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Milho</span>
+        </button>
+        <button type="button" data-ing="queijo-ralado" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="queijo-ralado" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Queijo ralado</span>
+        </button>
+        <button type="button" data-ing="batata-palha" style="flex: 0 0 auto; display: flex; gap: 8px; align-items: center; min-height: 44px; padding: 6px 12px 6px 8px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer;">
+          <span data-ing-thumb="batata-palha" aria-hidden="true" style="width: 38px; height: 26px; background: center/contain no-repeat;"></span>
+          <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3;">Batata palha</span>
+        </button>
+      </div>
+
+      <div style="position: relative; max-width: 1240px; margin: 0 auto; padding: clamp(14px, 2.4vw, 26px) clamp(16px, 4vw, 64px) clamp(40px, 7vw, 88px);">
+        <div id="grade-prensados" style="{{ estiloGradePrensados }}">
+          <div style="display: grid; gap: 8px; align-content: start; padding: 12px; background: #1C1512; border: 1px solid #33251E;">
+            <div data-item="prensado-completo" style="display: grid; gap: 8px; justify-items: start;">
+              <img data-foto="prensado-completo" src="fixos/prensado-completo.webp" alt="Prensado Completo cortado ao meio" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 110px; object-fit: contain;" />
+              <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado Completo</span>
+              <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carne, bacon, calabresa, milho, queijo ralado, batata palha</span>
+              <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoCompleto }}</span>
+            </div>
+            <button type="button" data-add="prensado-completo" style="margin-top: 2px; min-height: 46px; padding: 13px 16px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: pointer;">Adicionar</button>
+          </div>
+
+          <div style="display: grid; gap: 8px; align-content: start; padding: 12px; background: #1C1512; border: 1px solid #33251E;">
+            <div data-item="prensado-meia-noite" style="display: grid; gap: 8px; justify-items: start;">
+              <img data-foto="prensado-meia-noite" src="fixos/prensado-meia-noite.webp" alt="Prensado Meia-Noite cortado ao meio" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 110px; object-fit: contain;" />
+              <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado Meia-Noite</span>
+              <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carne, bacon, ovo, queijo ralado, batata palha</span>
+              <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoMeiaNoite }}</span>
+            </div>
+            <button type="button" data-add="prensado-meia-noite" style="margin-top: 2px; min-height: 46px; padding: 13px 16px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: pointer;">Adicionar</button>
+          </div>
+
+          <div style="display: grid; gap: 8px; align-content: start; padding: 12px; background: #1C1512; border: 1px solid #33251E;">
+            <div data-item="prensado-frango" style="display: grid; gap: 8px; justify-items: start;">
+              <img data-foto="prensado-frango" src="fixos/prensado-frango.webp" alt="Prensado de Frango cortado ao meio" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 110px; object-fit: contain;" />
+              <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado de Frango</span>
+              <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Frango desfiado, milho, queijo ralado</span>
+              <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoFrango }}</span>
+            </div>
+            <button type="button" data-add="prensado-frango" style="margin-top: 2px; min-height: 46px; padding: 13px 16px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: pointer;">Adicionar</button>
+          </div>
+
+          <div style="display: grid; gap: 8px; align-content: start; padding: 12px; background: #1C1512; border: 1px solid #33251E;">
+            <div data-item="prensado-calabresa" style="display: grid; gap: 8px; justify-items: start;">
+              <img data-foto="prensado-calabresa" src="fixos/prensado-calabresa.webp" alt="Prensado de Calabresa cortado ao meio" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 110px; object-fit: contain;" />
+              <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado de Calabresa</span>
+              <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Calabresa, cebola, queijo ralado</span>
+              <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoCalabresa }}</span>
+            </div>
+            <button type="button" data-add="prensado-calabresa" style="margin-top: 2px; min-height: 46px; padding: 13px 16px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: pointer;">Adicionar</button>
+          </div>
+        </div>
+
+        <div id="grade-redondos" style="{{ estiloGradeRedondos }}">
+          <div style="display: grid; gap: 8px; align-content: start; padding: 12px; background: #1C1512; border: 1px solid #33251E;">
+            <div data-item="x-salada" style="display: grid; gap: 8px; justify-items: start;">
+              <img data-foto="x-salada" src="fixos/x-salada.webp" alt="X-Salada montado" width="2000" height="2000" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 110px; object-fit: contain;" />
+              <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">X-Salada</span>
+              <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Alface, tomate, carne, queijo</span>
+              <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoXSalada }}</span>
+            </div>
+            <button type="button" data-add="x-salada" style="margin-top: 2px; min-height: 46px; padding: 13px 16px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: pointer;">Adicionar</button>
+          </div>
+
+          <div style="display: grid; gap: 8px; align-content: start; padding: 12px; background: #1C1512; border: 1px solid #33251E;">
+            <div data-item="x-tudo" style="display: grid; gap: 8px; justify-items: start;">
+              <img data-foto="x-tudo" src="fixos/x-tudo.webp" alt="X-Tudo montado" width="2000" height="2000" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 110px; object-fit: contain;" />
+              <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">X-Tudo</span>
+              <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tudo que tem na chapa, em onze camadas</span>
+              <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoXTudo }}</span>
+            </div>
+            <button type="button" data-add="x-tudo" style="margin-top: 2px; min-height: 46px; padding: 13px 16px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: pointer;">Adicionar</button>
+          </div>
+        </div>
+
+        <p id="grade-nada" style="display: none; margin: 0; padding: 26px 0; color: #E9E0D3; opacity: 0.6;">Nada na chapa com essa combinação. Tire um ingrediente do filtro.</p>
+        <div id="grade-monte" style="{{ estiloGradeMonte }}">
+          <button id="abrir-livre-prensado" type="button" style="display: grid; gap: 8px; align-content: start; justify-items: start; padding: 16px; background: #1C1512; border: 1px solid #33251E; cursor: pointer; text-align: left; font: inherit; color: inherit;">
+            <img src="camadas/pao-prensado-topo.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 62px; object-fit: contain;" />
+            <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado do zero</span>
+            <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66;">Painel vazio, pão do prensado travado nas pontas.</span>
+            <span style="margin-top: 2px; font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #A8C6D4;">abrir o raio-x</span>
+          </button>
+          <button id="abrir-livre-redondo" type="button" style="display: grid; gap: 8px; align-content: start; justify-items: start; padding: 16px; background: #1C1512; border: 1px solid #33251E; cursor: pointer; text-align: left; font: inherit; color: inherit;">
+            <img src="camadas/pao-topo.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" sizes="110px" style="width: 110px; height: 62px; object-fit: contain;" />
+            <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Redondo do zero</span>
+            <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.66;">Painel vazio, pão redondo. Até dezesseis camadas.</span>
+            <span style="margin-top: 2px; font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #A8C6D4;">abrir o raio-x</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUGESTÕES -->
+    <section data-screen-label="Sugestões" style="position: relative; padding: clamp(30px, 4vw, 56px) 0 clamp(30px, 4.5vw, 60px); background: #120D0B; border-top: 1px solid #33251E;">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 64px) 16px; display: grid; gap: 6px;">
+      <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2rem, 4.6vw, 3.25rem); font-variation-settings: 'opsz' 144, 'wght' 800, 'SOFT' 12, 'WONK' 1; line-height: 0.94; letter-spacing: -0.018em; color: #E9E0D3;">Sugestões</h2>
+      <p style="margin: 0; color: #E9E0D3; opacity: 0.66;">O que a casa manda quando você não sabe o que quer.</p>
+    </div>
+      <div data-trilho role="group" aria-label="Sugestões" style="display: flex; gap: clamp(12px, 2vw, 20px); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding: 6px calc(50% - min(37vw, 180px)); scrollbar-width: none;">
+      <div data-item-trilho data-slug="prensado-calabresa" style="flex: 0 0 auto; width: min(74vw, 360px); scroll-snap-align: center; display: grid; gap: 8px; align-content: start; padding: 16px; background: #1C1512; border: 1px solid #33251E;">
+        <div data-palco style="position: relative; height: 172px;">
+          <img data-icone src="fixos/prensado-calabresa.webp" alt="Prensado de Calabresa" loading="lazy" decoding="async" sizes="360px" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 150ms linear;" />
+          <div data-camadas aria-hidden="true" style="position: absolute; inset: 0; opacity: 0; transition: opacity 150ms linear;"></div>
+        </div>
+        <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.375rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado de Calabresa</span>
+        <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Calabresa, cebola, queijo ralado</span>
+        <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoCalabresa }}</span>
+        <button type="button" data-add="prensado-calabresa" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-slug="x-salada" style="flex: 0 0 auto; width: min(74vw, 360px); scroll-snap-align: center; display: grid; gap: 8px; align-content: start; padding: 16px; background: #1C1512; border: 1px solid #33251E;">
+        <div data-palco style="position: relative; height: 172px;">
+          <img data-icone src="fixos/x-salada.webp" alt="X-Salada" loading="lazy" decoding="async" sizes="360px" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 150ms linear;" />
+          <div data-camadas aria-hidden="true" style="position: absolute; inset: 0; opacity: 0; transition: opacity 150ms linear;"></div>
+        </div>
+        <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.375rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">X-Salada</span>
+        <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Alface, tomate, carne, queijo</span>
+        <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoXSalada }}</span>
+        <button type="button" data-add="x-salada" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-slug="prensado-frango" style="flex: 0 0 auto; width: min(74vw, 360px); scroll-snap-align: center; display: grid; gap: 8px; align-content: start; padding: 16px; background: #1C1512; border: 1px solid #33251E;">
+        <div data-palco style="position: relative; height: 172px;">
+          <img data-icone src="fixos/prensado-frango.webp" alt="Prensado de Frango" loading="lazy" decoding="async" sizes="360px" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 150ms linear;" />
+          <div data-camadas aria-hidden="true" style="position: absolute; inset: 0; opacity: 0; transition: opacity 150ms linear;"></div>
+        </div>
+        <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.375rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #E9E0D3;">Prensado de Frango</span>
+        <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Frango desfiado, milho, queijo ralado</span>
+        <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoFrango }}</span>
+        <button type="button" data-add="prensado-frango" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; margin-top: 4px;">Adicionar</button>
+      </div>
+      </div>
+    </section>
+
+    <!-- BEBIDAS -->
+    <section data-screen-label="Bebidas" style="position: relative; padding: clamp(30px, 4vw, 56px) 0 clamp(30px, 4.5vw, 60px); background: #120D0B; border-top: 1px solid #33251E;">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 64px) 16px; display: grid; gap: 6px;">
+      <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2rem, 4.6vw, 3.25rem); font-variation-settings: 'opsz' 144, 'wght' 800, 'SOFT' 12, 'WONK' 1; line-height: 0.94; letter-spacing: -0.018em; color: #E9E0D3;">Bebidas</h2>
+      <p style="margin: 0; color: #E9E0D3; opacity: 0.66;">Geladeira ao lado do balcão.</p>
+    </div>
+      <div data-trilho role="group" aria-label="Bebidas" style="display: flex; gap: clamp(12px, 2vw, 20px); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding: 6px calc(50% - min(37vw, 165px)); scrollbar-width: none;">
+      <div data-item-trilho data-tipo="extra" data-slug="refri" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-corte.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Refrigerante lata</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoRefri }}</span>
+        <button type="button" data-add="refri" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-tipo="extra" data-slug="guarana" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-corte.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Guaraná</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoGuarana }}</span>
+        <button type="button" data-add="guarana" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-tipo="extra" data-slug="suco-laranja" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-corte.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Suco de laranja</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoSuco }}</span>
+        <button type="button" data-add="suco-laranja" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-tipo="extra" data-slug="agua" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-corte.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Água</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoAgua }}</span>
+        <button type="button" data-add="agua" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-tipo="extra" data-slug="milkshake" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-corte.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Milkshake</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoMilkshake }}</span>
+        <button type="button" data-add="milkshake" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      </div>
+    </section>
+
+    <!-- ACOMPANHAMENTOS -->
+    <section data-screen-label="Acompanhamentos" style="position: relative; padding: clamp(30px, 4vw, 56px) 0 clamp(30px, 4.5vw, 60px); background: #120D0B; border-top: 1px solid #33251E;">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 64px) 16px; display: grid; gap: 6px;">
+      <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2rem, 4.6vw, 3.25rem); font-variation-settings: 'opsz' 144, 'wght' 800, 'SOFT' 12, 'WONK' 1; line-height: 0.94; letter-spacing: -0.018em; color: #E9E0D3;">Acompanhamentos</h2>
+      <p style="margin: 0; color: #E9E0D3; opacity: 0.66;">Sai da fritadeira direto para a bandeja.</p>
+    </div>
+      <div data-trilho role="group" aria-label="Acompanhamentos" style="display: flex; gap: clamp(12px, 2vw, 20px); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding: 6px calc(50% - min(37vw, 165px)); scrollbar-width: none;">
+      <div data-item-trilho data-tipo="extra" data-slug="batata-frita" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-chapa.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Batata frita</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoBatataFrita }}</span>
+        <button type="button" data-add="batata-frita" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-tipo="extra" data-slug="batata-cheddar" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-chapa.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Batata com cheddar e bacon</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoBatataCheddar }}</span>
+        <button type="button" data-add="batata-cheddar" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      <div data-item-trilho data-tipo="extra" data-slug="aneis-cebola" style="flex: 0 0 auto; width: min(74vw, 330px); scroll-snap-align: center; position: relative; min-height: 248px; display: grid; gap: 12px; align-content: end; padding: 20px; background: #1C1512; border: 1px solid #33251E; overflow: hidden; transform-origin: 50% 50%;">
+        <img src="macro/macro-chapa.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.10; pointer-events: none;" />
+        <span style="position: relative; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 4.4vw, 2.5rem); font-variation-settings: 'opsz' 144, 'wght' 820, 'SOFT' 12, 'WONK' 1; line-height: 0.96; letter-spacing: -0.015em; color: #E9E0D3;">Anéis de cebola</span>
+        <span style="position: relative; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ precoAneis }}</span>
+        <button type="button" data-add="aneis-cebola" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; position: relative; margin-top: 4px;">Adicionar</button>
+      </div>
+      </div>
+    </section>
+
+    <!-- A CHAPA -->
+    <section data-screen-label="A chapa" style="position: relative; min-height: 78vh; display: grid; align-items: center; padding: clamp(56px, 9vw, 132px) clamp(20px, 5vw, 64px); border-top: 1px solid #33251E;">
+      <img src="chapa/chapa-vazia.webp" alt="A chapa de ferro vazia, raspada e brilhando de gordura" width="2400" height="1600" loading="lazy" decoding="async" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" />
+      <div style="position: absolute; inset: 0; background: linear-gradient(105deg, rgba(18,13,11,0.95) 0%, rgba(18,13,11,0.86) 42%, rgba(18,13,11,0.42) 100%);"></div>
+      <div style="position: relative; max-width: 1240px; margin: 0 auto; width: 100%;">
+        <div style="max-width: 48ch; display: grid; gap: 20px;">
+          <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2.75rem, 6vw, 5rem); font-variation-settings: 'opsz' 144, 'wght' 800, 'SOFT' 12, 'WONK' 1; line-height: 0.92; letter-spacing: -0.018em; color: #E9E0D3;">A chapa</h2>
+          <p style="margin: 0; color: #E9E0D3; opacity: 0.84;">O prensado nasceu em Maringá, dentro de um carrinho de lanches: o dono instalou uma prensa na chapa e passou a fechar o pão em cima do recheio. Os concorrentes copiaram. Virou o prato típico da cidade e saiu do estado — hoje tem prensado em Curitiba, em Guaratuba, em São José dos Pinhais, e em São Paulo há uma casa chamada O Prensado de Maringá.</p>
+          <p style="margin: 0; color: #E9E0D3; opacity: 0.84;">Ferro fundido de 12 mm, 230 °C no centro e 190 °C nas bordas. A carne vai crua e sela em 90 segundos de cada lado, sem apertar com a espátula — apertar tira a gordura que faz a crosta.</p>
+          <p style="margin: 0; color: #E9E0D3; opacity: 0.84;">Depois o pão vai para a prensa: 40 segundos com o peso em cima, sem abrir para conferir. A prensa sela o pão e derrete o recheio de uma vez, e o que sai é mais fino e mais firme do que entrou.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTÁ ABERTO? -->
+    <section data-screen-label="Está aberto" style="position: relative; padding: clamp(56px, 9vw, 132px) clamp(20px, 5vw, 64px); background: #1C1512; border-top: 1px solid #33251E;">
+      <img src="macro/macro-corte.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.12; pointer-events: none;" />
+      <div style="position: relative; max-width: 1240px; margin: 0 auto; display: grid; gap: 22px;">
+        <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2.75rem, 6vw, 5rem); font-variation-settings: 'opsz' 144, 'wght' 800, 'SOFT' 12, 'WONK' 1; line-height: 0.92; letter-spacing: -0.018em; color: #E9E0D3;">Está aberto?</h2>
+        <p aria-live="polite" style="margin: 0; max-width: 30ch; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.75rem, 3.4vw, 2.75rem); font-variation-settings: 'opsz' 96, 'wght' 700, 'SOFT' 12, 'WONK' 1; line-height: 1.05; color: #A8C6D4;">{{ horarioTexto }}</p>
+        <p style="margin: 0; color: #E9E0D3; opacity: 0.7;">{{ horarioSub }}</p>
+      </div>
+    </section>
+
+    <!-- RODAPÉ -->
+    <footer style="padding: clamp(44px, 6vw, 88px) clamp(20px, 5vw, 64px); background: #120D0B; border-top: 1px solid #33251E;">
+      <div style="max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 40px; align-items: end; justify-content: space-between;">
+        <div style="display: grid; gap: 6px;">
+          <p style="margin: 0; color: #E9E0D3;">Rua Volta Redonda, 412 — esquina com a Duarte</p>
+          <p style="margin: 0; color: #E9E0D3; opacity: 0.72;">Maringá · <a href="tel:+554432320400" style="color: #A8C6D4;">(44) 3232-0400</a></p>
+          <p style="margin: 0; color: #E9E0D3; opacity: 0.52; font-size: 0.9375rem;">Todos os dias, das 18h às 4h.</p>
+        </div>
+        <svg viewBox="0 0 340 150" role="img" aria-label="Letreiro pequeno da Lancheria Meia-Noite" style="width: 236px; height: auto;">
+          <defs>
+            <radialGradient id="lt-rod-luz" cx="50%" cy="48%" r="70%">
+              <stop offset="0%" stop-color="#A8C6D4" stop-opacity="0.96"></stop>
+              <stop offset="100%" stop-color="#A8C6D4" stop-opacity="0.8"></stop>
+            </radialGradient>
+            <mask id="lt-rod-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="150">
+              <g style="font-family: 'Fraunces', Georgia, serif; font-size: 52px; font-variation-settings: 'opsz' 72, 'wght' 900, 'SOFT' 12, 'WONK' 1; text-anchor: middle;">
+                <text x="170" y="70" textLength="212" lengthAdjust="spacingAndGlyphs" fill="#ffffff">MEIA</text>
+                <text x="170" y="122" textLength="212" lengthAdjust="spacingAndGlyphs" fill="#ffffff">NOITE</text>
+              </g>
+            </mask>
+          </defs>
+          <g transform="rotate(-0.4 170 75)">
+            <rect x="8" y="8" width="324" height="134" rx="3" fill="#1C1512" stroke="#33251E" stroke-width="1.5"></rect>
+            <rect x="18" y="18" width="304" height="114" rx="2" fill="#120D0B" stroke="#33251E" stroke-width="1"></rect>
+            <g id="lt-rod-tremor" style="animation: lt-tremor 4s linear infinite; animation-delay: -2.1s;">
+              <rect x="18" y="18" width="304" height="114" fill="url(#lt-rod-luz)" style="opacity: 0.16;"></rect>
+              <rect x="0" y="0" width="340" height="150" fill="url(#lt-rod-luz)" mask="url(#lt-rod-mask)"></rect>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </footer>
+  </main>
+
+  <!-- BARRA DO PEDIDO: onde o salto aterra -->
+  <div id="barra-pedido" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgba(28,21,18,0.97); border-top: 1px solid #33251E;">
+    <sc-if value="{{ ultimoVivo }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 9px clamp(16px, 4vw, 64px); border-bottom: 1px solid #33251E;">
+        <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #E9E0D3; opacity: 0.74;">{{ ultimoNome }} entrou no pedido</span>
+        <button type="button" data-modificar="{{ ultimoId }}" style="min-height: 44px; padding: 11px 16px; background: none; border: 1px solid #33251E; border-radius: 2px; color: #A8C6D4; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; cursor: pointer;">Modificar lanche</button>
+      </div>
+    </sc-if>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; justify-content: space-between; padding: 11px clamp(16px, 4vw, 64px);">
+      <div style="display: flex; gap: 14px; align-items: baseline;">
+        <span aria-live="polite" style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.9375rem; color: #E9E0D3; opacity: 0.72;">{{ contagemPedido }}</span>
+        <span id="barra-total" style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.5rem; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; color: #A9762F;"></span>
+      </div>
+      <button id="barra-abrir" type="button" style="{{ estiloAbrirPedido }}">Abrir pedido</button>
+    </div>
+  </div>
+
+  <!-- CARRINHO: folha que sobe -->
+  <sc-if value="{{ carrinhoAberto }}" hint-placeholder-val="{{ false }}">
+    <div id="carrinho-fundo" style="position: fixed; inset: 0; z-index: 25; background: rgba(18,13,11,0.76);"></div>
+    <div role="dialog" aria-modal="true" aria-label="Seu pedido" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; max-height: 85dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: #120D0B; border-top: 1px solid #33251E;">
+      <div style="display: flex; gap: 16px; align-items: baseline; justify-content: space-between; padding: 16px clamp(16px, 4vw, 48px); border-bottom: 1px solid #33251E;">
+        <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.5rem, 3vw, 2.25rem); font-variation-settings: 'opsz' 72, 'wght' 780, 'SOFT' 12, 'WONK' 1; line-height: 1; color: #E9E0D3;">{{ tituloCarrinho }}</h2>
+        <button id="carrinho-fechar" type="button" style="min-height: 44px; padding: 11px 16px; background: none; border: 1px solid #33251E; border-radius: 2px; color: #A8C6D4; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; cursor: pointer; color: #E9E0D3;">Voltar ao cardápio</button>
+      </div>
+
+      <div style="overflow-y: auto;">
+        <sc-if value="{{ mostrandoLista }}" hint-placeholder-val="{{ true }}">
+          <div role="list">
+            <sc-for list="{{ linhas }}" as="it" hint-placeholder-count="0">
+              <div role="listitem" style="display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 13px clamp(16px, 4vw, 48px); border-bottom: 1px solid #33251E;">
+                <sc-if value="{{ it.temFoto }}" hint-placeholder-val="{{ true }}">
+                  <img src="{{ it.foto }}" alt="" loading="lazy" decoding="async" sizes="64px" style="flex: 0 0 auto; width: 64px; height: 64px; object-fit: contain;" />
+                </sc-if>
+                <sc-if value="{{ it.semFoto }}" hint-placeholder-val="{{ false }}">
+                  <span aria-hidden="true" style="flex: 0 0 auto; width: 64px; height: 64px; display: grid; place-items: center; background: #1C1512; border: 1px solid #33251E; font-family: 'Fraunces', Georgia, serif; font-size: 1.75rem; font-variation-settings: 'opsz' 48, 'wght' 820, 'SOFT' 12, 'WONK' 1; color: #E9E0D3;">{{ it.inicial }}</span>
+                </sc-if>
+                <div style="flex: 1 1 200px; min-width: 0; display: grid; gap: 2px;">
+                  <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.125rem; font-variation-settings: 'opsz' 48, 'wght' 740, 'SOFT' 12, 'WONK' 1; line-height: 1.1; color: #E9E0D3;">{{ it.nome }}</span>
+                  <span style="max-width: 100%; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ it.resumo }}</span>
+                </div>
+                <div style="flex: 0 0 auto; display: flex; align-items: center; border: 1px solid #33251E; border-radius: 2px;">
+                  <button type="button" data-qtd-menos="{{ it.id }}" aria-label="{{ it.ariaMenos }}" style="min-width: 44px; min-height: 44px; background: none; border: 0; color: #E9E0D3; font-family: 'Archivo', sans-serif; font-size: 1.125rem; cursor: pointer;">−</button>
+                  <span style="min-width: 2ch; text-align: center; font-variation-settings: 'wght' 500; font-variant-numeric: tabular-nums; color: #E9E0D3;">{{ it.qtd }}</span>
+                  <button type="button" data-qtd-mais="{{ it.id }}" aria-label="{{ it.ariaMais }}" style="min-width: 44px; min-height: 44px; background: none; border: 0; color: #E9E0D3; font-family: 'Archivo', sans-serif; font-size: 1.125rem; cursor: pointer;">+</button>
+                </div>
+                <span style="flex: 0 0 auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1rem; font-variant-numeric: tabular-nums; color: #A9762F;">{{ it.preco }}</span>
+                <div style="flex: 0 0 auto; display: flex; gap: 6px; align-items: center;">
+                  <sc-if value="{{ it.ehLanche }}" hint-placeholder-val="{{ true }}">
+                    <button type="button" data-modificar="{{ it.id }}" aria-label="{{ it.ariaModificar }}" style="min-height: 44px; padding: 11px 16px; background: none; border: 1px solid #33251E; border-radius: 2px; color: #A8C6D4; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; cursor: pointer;">Modificar</button>
+                  </sc-if>
+                  <button type="button" data-remover="{{ it.id }}" aria-label="{{ it.ariaRemover }}" style="min-height: 44px; padding: 11px 12px; background: none; border: 0; color: #E9E0D3; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; opacity: 0.56; cursor: pointer;">remover</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ temGancho }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 15px clamp(16px, 4vw, 48px); background: #1C1512; border-bottom: 1px solid #33251E;">
+              <span style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-variation-settings: 'opsz' 48, 'wght' 760, 'SOFT' 12, 'WONK' 1; color: #E9E0D3;">{{ ganchoTexto }}</span>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="gancho-agir" type="button" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer;">{{ ganchoAcao }}</button>
+                <button id="gancho-dispensar" type="button" style="min-height: 44px; padding: 11px 12px; background: none; border: 0; color: #E9E0D3; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; opacity: 0.56; cursor: pointer;">dispensar</button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ pedidoVazio }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; padding: 30px clamp(16px, 4vw, 48px); color: #E9E0D3; opacity: 0.6;">Pedido vazio. Escolha na grade ou nos trilhos.</p>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ mostrandoResumo }}" hint-placeholder-val="{{ false }}">
+          <div style="display: grid; gap: 14px; padding: 18px clamp(16px, 4vw, 48px);">
+            <p style="margin: 0; max-width: 52ch; color: #E9E0D3; opacity: 0.7;">O pedido sai por WhatsApp. Manda esse texto e a gente responde com o tempo de chapa.</p>
+            <div style="white-space: pre-wrap; padding: 16px; background: #1C1512; border: 1px solid #33251E; font-size: 0.9375rem; line-height: 1.6; font-variant-numeric: tabular-nums; color: #E9E0D3;">{{ resumoTexto }}</div>
+            <p aria-live="polite" style="margin: 0; min-height: 1.4em; font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; color: #A8C6D4;">{{ recadoCarrinho }}</p>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="border-top: 1px solid #33251E;">
+        <sc-if value="{{ mostrandoLista }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; padding: 14px clamp(16px, 4vw, 48px);">
+            <div style="display: flex; gap: 12px; align-items: baseline;">
+              <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.9375rem; color: #E9E0D3; opacity: 0.66;">subtotal</span>
+              <span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.5rem; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; color: #A9762F;">{{ subtotalTexto }}</span>
+            </div>
+            <button id="carrinho-resumo" type="button" style="{{ estiloFecharPedido }}">Fechar pedido</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ mostrandoResumo }}" hint-placeholder-val="{{ false }}">
+          <div style="display: grid; gap: 12px; padding: 14px clamp(16px, 4vw, 48px);">
+            <div style="display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline;">
+              <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.55;">aceitamos</span>
+              <span style="font-variation-settings: 'wght' 500; color: #E9E0D3;">Dinheiro</span>
+              <span style="font-variation-settings: 'wght' 500; color: #E9E0D3;">Pix</span>
+              <span style="font-variation-settings: 'wght' 500; color: #E9E0D3;">Débito</span>
+              <span style="font-variation-settings: 'wght' 500; color: #E9E0D3;">Crédito</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <a id="carrinho-enviar" href="{{ linkWhats }}" target="_blank" rel="noopener" style="min-height: 46px; padding: 12px 18px; background: #A9762F; color: #120D0B; border: 0; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wght' 600; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; color: #120D0B;">Enviar no WhatsApp</a>
+              <button id="carrinho-copiar" type="button" style="min-height: 44px; padding: 11px 16px; background: none; border: 1px solid #33251E; border-radius: 2px; color: #A8C6D4; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; cursor: pointer;">Copiar o resumo</button>
+              <button id="carrinho-voltar" type="button" style="min-height: 44px; padding: 11px 12px; background: none; border: 0; color: #E9E0D3; font-family: 'Archivo', sans-serif; font-size: 0.875rem; font-variation-settings: 'wdth' 92, 'wght' 500; opacity: 0.6; cursor: pointer;">voltar à lista</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- TAKEOVER: raio-x -->
+  <sc-if value="{{ takeover }}" hint-placeholder-val="{{ false }}">
+    <div id="rx-takeover" role="dialog" aria-modal="true" aria-label="Raio-x do lanche" style="position: fixed; inset: 0; z-index: 30; background: #120D0B; display: grid; grid-template-rows: auto minmax(0, 1fr) auto;">
+      <header style="display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: baseline; justify-content: space-between; padding: clamp(14px, 2vw, 22px) clamp(16px, 3vw, 32px); border-bottom: 1px solid #33251E;">
+        <h2 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.5rem, 3vw, 2.25rem); font-variation-settings: 'opsz' 72, 'wght' 780, 'SOFT' 12, 'WONK' 1; line-height: 1; color: #E9E0D3;">{{ nomeAtual }}</h2>
+        <button id="rx-fechar" type="button" style="padding: 10px 18px; background: none; border: 1px solid #33251E; border-radius: 2px; color: #E9E0D3; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wdth' 92, 'wght' 500; cursor: pointer;">Voltar ao cardápio</button>
+      </header>
+
+      <div id="rx-painel" style="position: relative; overflow-x: hidden; overflow-y: auto; display: flex; flex-wrap: wrap; align-items: stretch;">
+        <img src="macro/macro-chapa.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2000" height="1333" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.1; pointer-events: none;" />
+
+        <div id="rx-desenho" style="position: relative; flex: 1 1 420px; min-width: 280px; min-height: 260px; max-height: 100%; touch-action: none;">
+          <img id="rx-chapa-fundo" src="chapa/chapa-vazia.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="2400" height="1600" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 200ms linear; pointer-events: none;" />
+          <sc-if value="{{ vazio }}" hint-placeholder-val="{{ false }}">
+            <p style="position: absolute; inset: 0; margin: 0; display: grid; place-items: center; text-align: center; color: #E9E0D3; opacity: 0.5;">Comece pelo pão: toque num ingrediente.</p>
+          </sc-if>
+
+          <div id="rx-pilha" style="position: absolute; inset: 0;">
+            <sc-for list="{{ camadas }}" as="c" hint-placeholder-count="0">
+              <div id="rx-camada-{{ c.id }}" data-inst="{{ c.uid }}" style="{{ c.estiloWrap }}">
+                <div aria-hidden="true" style="{{ c.estiloSombra }}"></div>
+                <div role="img" aria-label="{{ c.alt }}" draggable="false" style="{{ c.estiloImg }}"></div>
+                <div aria-hidden="true" style="{{ c.estiloMarca }}"></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-for list="{{ chamadas }}" as="ch" hint-placeholder-count="0">
+            <div style="{{ ch.estiloLinha }}"></div>
+            <div style="{{ ch.estiloPonto }}"></div>
+            <button id="rx-chamada-{{ ch.id }}" type="button" data-chamada="{{ ch.indice }}" aria-label="{{ ch.aria }}" style="{{ ch.estiloRotulo }}">
+              <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ ch.nome }}</span>
+            </button>
+          </sc-for>
+          <div id="rx-varredura" style="position: absolute; left: 0; right: 0; bottom: 0; height: 46%; display: none; pointer-events: none; background: linear-gradient(to top, rgba(169,118,47,0) 0%, rgba(169,118,47,0.5) 46%, rgba(169,118,47,0) 100%); mix-blend-mode: screen;"></div>
+          <div id="rx-ar" style="position: absolute; left: 8%; right: 8%; top: 4%; height: 14%; display: none; pointer-events: none; transform-origin: bottom center; background: linear-gradient(to top, rgba(169,118,47,0.22), rgba(169,118,47,0));"></div>
+        </div>
+
+        <div id="rx-medidor" style="position: relative; z-index: 2; flex: 0 1 288px; min-width: 244px; min-height: 0; max-height: 100%; border-left: 1px solid #33251E; padding: clamp(16px, 2.2vw, 28px); display: grid; gap: 20px; align-content: start; background: rgba(18,13,11,0.92); overflow-y: auto;">
+          <div style="display: grid; gap: 6px;">
+            <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.6;">preço</span>
+            <span id="rx-preco-valor" style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: #A9762F; line-height: 1;">{{ precoTexto }}</span>
+          </div>
+          <div style="display: grid; gap: 6px; border-top: 1px solid #33251E; padding-top: 18px;">
+            <span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3; opacity: 0.6;">montagem</span>
+            <span id="rx-camadas-valor" style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; font-size: 1.5rem; font-variant-numeric: tabular-nums; color: #A8C6D4; line-height: 1;">{{ camadasTexto }}</span>
+            <div id="rx-medida" role="img" aria-label="{{ barraAria }}" style="margin-top: 8px; height: 8px; background: #120D0B; border: 1px solid #33251E; border-radius: 1px; overflow: hidden;">
+              <div style="{{ estiloBarra }}"></div>
+            </div>
+            <span style="{{ estiloAviso }}">{{ avisoTexto }}</span>
+          </div>
+          <button id="rx-selar" type="button" style="{{ estiloSelar }}">{{ textoSelar }}</button>
+          <p aria-live="polite" style="margin: 0; min-height: 2.6em; font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.875rem; line-height: 1.45; color: #E9E0D3; opacity: 0.72;">{{ recado }}</p>
+          <p style="margin: 0; font-size: 0.8125rem; line-height: 1.5; color: #E9E0D3; opacity: 0.5;">Toque para adicionar. Arraste para reordenar, ou para fora para tirar. No teclado: setas movem, Delete tira.</p>
+        </div>
+      </div>
+
+      <div id="rx-trilho" role="group" aria-label="Ingredientes disponíveis" style="display: flex; border-top: 1px solid #33251E; padding: 14px clamp(12px, 2vw, 20px); gap: 10px; overflow-x: auto; background: rgba(28,21,18,0.85); touch-action: pan-x;">
+        <button type="button" data-slug="molho" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="molho" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Molho</span><span data-conta="molho" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 2,00</span>
+        </button>
+        <button type="button" data-slug="alface" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="alface" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Alface</span><span data-conta="alface" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 1,50</span>
+        </button>
+        <button type="button" data-slug="tomate" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="tomate" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Tomate</span><span data-conta="tomate" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 2,00</span>
+        </button>
+        <button type="button" data-slug="cebola" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="cebola" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Cebola</span><span data-conta="cebola" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 3,50</span>
+        </button>
+        <button type="button" data-slug="carne" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="carne" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Carne</span><span data-conta="carne" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 9,00</span>
+        </button>
+        <button type="button" data-slug="calabresa" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="calabresa" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Calabresa</span><span data-conta="calabresa" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 5,00</span>
+        </button>
+        <button type="button" data-slug="salsicha" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="salsicha" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Salsicha</span><span data-conta="salsicha" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 4,50</span>
+        </button>
+        <button type="button" data-slug="frango-desfiado" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="frango-desfiado" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Frango</span><span data-conta="frango-desfiado" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 8,00</span>
+        </button>
+        <button type="button" data-slug="milho" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="milho" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Milho</span><span data-conta="milho" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 2,50</span>
+        </button>
+        <button type="button" data-slug="queijo" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="queijo" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Queijo</span><span data-conta="queijo" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 4,00</span>
+        </button>
+        <button type="button" data-slug="queijo-ralado" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="queijo-ralado" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Queijo ralado</span><span data-conta="queijo-ralado" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 4,00</span>
+        </button>
+        <button type="button" data-slug="presunto" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="presunto" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Presunto</span><span data-conta="presunto" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 4,50</span>
+        </button>
+        <button type="button" data-slug="bacon" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="bacon" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Bacon</span><span data-conta="bacon" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 7,00</span>
+        </button>
+        <button type="button" data-slug="ovo" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="ovo" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Ovo</span><span data-conta="ovo" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 4,00</span>
+        </button>
+        <button type="button" data-slug="batata-palha" style="flex: 0 0 auto; display: grid; gap: 2px; justify-items: start; width: 128px; padding: 9px; background: #1C1512; border: 1px solid #33251E; border-radius: 2px; cursor: pointer; text-align: left; touch-action: none;">
+          <span data-thumb="batata-palha" style="width: 100%; height: 36px; background: center/contain no-repeat;"></span>
+          <span style="display: flex; width: 100%; gap: 8px; align-items: baseline; justify-content: space-between;"><span style="font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; color: #E9E0D3;">Batata palha</span><span data-conta="batata-palha" style="font-variation-settings: 'wght' 500; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #A8C6D4;"></span></span>
+          <span style="font-size: 0.75rem; font-variant-numeric: tabular-nums; color: #E9E0D3; opacity: 0.55;">R$ 3,00</span>
+        </button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280},&quot;tremorAtivo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Letreiro&quot;},&quot;velocidadeSequencia&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.5,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Letreiro&quot;},&quot;limiarCamadas&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:10,&quot;min&quot;:6,&quot;max&quot;:16,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Raio-X&quot;}}">
+class Component extends DCLogic {
+  PRECO_BASE_CENT = 1200;
+  GAP = 46;
+  /* espaçamento como fração do explodido, por rota de fechamento */
+  PRENSA_ESPACAMENTO = 0.30;
+  SELADO_ESPACAMENTO = 0.40;
+  MEDIDA_MAX_U = 2200;
+  PRENSA_MS = 340;
+  PRENSA_CURVA = 'cubic-bezier(.14,.92,.24,1)';
+  ESPALHA_X = 1.14;
+  ESPALHA_Y = 0.80;
+  ASSENTA_Y = 0.90;
+  MAX_POR_SLUG = 3;
+  MAX_CAMADAS = 16;
+
+  CAMADAS = [
+    { slug: 'pao-base', arquivo: 'camadas/pao-base.webp', nome: 'Pão de baixo', alt: 'Metade de baixo do pão redondo, vista de lado', alturaPx: 285, afundamento: 0, precoCent: 0, ordem: 1, obrigatorio: true, pao: 'redondo' },
+    { slug: 'pao-prensado-base', arquivo: 'camadas/pao-prensado-base.webp', nome: 'Pão de baixo', alt: 'Metade de baixo do pão do prensado, marcada na chapa', alturaPx: 307, afundamento: 0, precoCent: 0, ordem: 1, obrigatorio: true, pao: 'prensado' },
+    { slug: 'molho', arquivo: 'camadas/molho.webp', nome: 'Molho', alt: 'Faixa de molho da casa passada no pão', alturaPx: 108, afundamento: 0.92, precoCent: 200, ordem: 2, obrigatorio: false },
+    { slug: 'alface', arquivo: 'camadas/alface.webp', nome: 'Alface', alt: 'Folhas de alface crespa', alturaPx: 467, afundamento: 0.55, precoCent: 150, ordem: 3, obrigatorio: false },
+    { slug: 'tomate', arquivo: 'camadas/tomate.webp', nome: 'Tomate', alt: 'Rodelas de tomate vistas de lado', alturaPx: 139, afundamento: 0.40, precoCent: 200, ordem: 4, obrigatorio: false },
+    { slug: 'cebola', arquivo: 'camadas/cebola.webp', nome: 'Cebola', alt: 'Cebola caramelizada em tiras', alturaPx: 399, afundamento: 0.55, precoCent: 350, ordem: 5, obrigatorio: false },
+    { slug: 'carne', arquivo: 'camadas/carne.webp', nome: 'Carne', alt: 'Hambúrguer selado na chapa', alturaPx: 381, afundamento: 0.42, precoCent: 900, ordem: 6, obrigatorio: false, firme: true },
+    { slug: 'calabresa', arquivo: 'camadas/calabresa.webp', nome: 'Calabresa', alt: 'Calabresa em rodelas marcadas na chapa', alturaPx: 224, afundamento: 0.50, precoCent: 500, ordem: 6.2, obrigatorio: false },
+    { slug: 'salsicha', arquivo: 'camadas/salsicha.webp', nome: 'Salsicha', alt: 'Duas salsichas abertas ao meio', alturaPx: 330, afundamento: 0.50, precoCent: 450, ordem: 6.3, obrigatorio: false },
+    { slug: 'frango-desfiado', arquivo: 'camadas/frango-desfiado.webp', nome: 'Frango', alt: 'Frango desfiado na maionese temperada', alturaPx: 296, afundamento: 0.45, precoCent: 800, ordem: 6.4, obrigatorio: false },
+    { slug: 'milho', arquivo: 'camadas/milho.webp', nome: 'Milho', alt: 'Camada de milho verde', alturaPx: 202, afundamento: 0.50, precoCent: 250, ordem: 6.8, obrigatorio: false },
+    { slug: 'queijo', arquivo: 'camadas/queijo.webp', nome: 'Queijo', alt: 'Fatia de queijo derretendo', alturaPx: 420, afundamento: 0.62, precoCent: 400, ordem: 7, obrigatorio: false },
+    { slug: 'presunto', arquivo: 'camadas/presunto.webp', nome: 'Presunto', alt: 'Fatia de presunto dobrada', alturaPx: 416, afundamento: 0.58, precoCent: 450, ordem: 8, obrigatorio: false },
+    { slug: 'bacon', arquivo: 'camadas/bacon.webp', nome: 'Bacon', alt: 'Duas fatias de bacon frito', alturaPx: 305, afundamento: 0.48, precoCent: 700, ordem: 9, obrigatorio: false },
+    { slug: 'ovo', arquivo: 'camadas/ovo.webp', nome: 'Ovo', alt: 'Ovo frito com gema inteira', alturaPx: 301, afundamento: 0.42, precoCent: 400, ordem: 10, obrigatorio: false },
+    { slug: 'queijo-ralado', arquivo: 'camadas/queijo-ralado.webp', nome: 'Queijo ralado', alt: 'Camada de queijo ralado grosso', alturaPx: 261, afundamento: 0.55, precoCent: 400, ordem: 10.5, obrigatorio: false },
+    { slug: 'batata-palha', arquivo: 'camadas/batata-palha.webp', nome: 'Batata palha', alt: 'Punhado de batata palha', alturaPx: 323, afundamento: 0.52, precoCent: 300, ordem: 11, obrigatorio: false },
+    { slug: 'pao-topo', arquivo: 'camadas/pao-topo.webp', nome: 'Pão de cima', alt: 'Metade de cima do pão redondo com gergelim', alturaPx: 456, afundamento: 0.30, precoCent: 0, ordem: 12, obrigatorio: true, pao: 'redondo' },
+    { slug: 'pao-prensado-topo', arquivo: 'camadas/pao-prensado-topo.webp', nome: 'Pão de cima', alt: 'Metade de cima do pão do prensado, marcada na chapa', alturaPx: 315, afundamento: 0.30, precoCent: 0, ordem: 12, obrigatorio: true, pao: 'prensado' }
+  ];
+
+  PAES = {
+    prensado: ['pao-prensado-base', 'pao-prensado-topo'],
+    redondo: ['pao-base', 'pao-topo']
+  };
+
+  FIXOS = [
+    { slug: 'prensado-completo', nome: 'Prensado Completo', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'tomate', 'carne', 'bacon', 'calabresa', 'milho', 'queijo-ralado', 'batata-palha', 'pao-prensado-topo'] },
+    { slug: 'prensado-frango', nome: 'Prensado de Frango', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'tomate', 'frango-desfiado', 'milho', 'queijo-ralado', 'pao-prensado-topo'] },
+    { slug: 'prensado-calabresa', nome: 'Prensado de Calabresa', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'calabresa', 'cebola', 'queijo-ralado', 'pao-prensado-topo'] },
+    { slug: 'prensado-meia-noite', nome: 'Prensado Meia-Noite', forma: 'prensado', camadas: ['pao-prensado-base', 'tomate', 'carne', 'bacon', 'ovo', 'queijo-ralado', 'batata-palha', 'pao-prensado-topo'] },
+    { slug: 'x-salada', nome: 'X-Salada', forma: 'redondo', camadas: ['pao-base', 'alface', 'tomate', 'carne', 'queijo', 'pao-topo'] },
+    { slug: 'x-tudo', nome: 'X-Tudo', forma: 'redondo', camadas: ['pao-base', 'molho', 'alface', 'tomate', 'carne', 'presunto', 'queijo', 'bacon', 'ovo', 'batata-palha', 'pao-topo'] }
+  ];
+
+  EXTRAS = [
+    { slug: 'refri', nome: 'Refrigerante lata', grupo: 'bebida', precoCent: 700, icone: '' },
+    { slug: 'guarana', nome: 'Guaraná', grupo: 'bebida', precoCent: 1200, icone: '' },
+    { slug: 'suco-laranja', nome: 'Suco de laranja', grupo: 'bebida', precoCent: 1000, icone: '' },
+    { slug: 'agua', nome: 'Água', grupo: 'bebida', precoCent: 400, icone: '' },
+    { slug: 'milkshake', nome: 'Milkshake', grupo: 'bebida', precoCent: 1600, icone: '' },
+    { slug: 'batata-frita', nome: 'Batata frita', grupo: 'acompanhamento', precoCent: 1800, icone: '' },
+    { slug: 'batata-cheddar', nome: 'Batata com cheddar e bacon', grupo: 'acompanhamento', precoCent: 2600, icone: '' },
+    { slug: 'aneis-cebola', nome: 'Anéis de cebola', grupo: 'acompanhamento', precoCent: 2000, icone: '' }
+  ];
+
+  /* trilho: t = 0 no centro (prensado calibrado), 1 na borda do foco (aberto) */
+  TRILHO_PRENSA = 0.30;
+
+  state = {
+    intro: (() => {
+      try { return sessionStorage.getItem('lm:letreiro-aceso') === '1' ? 'fim' : 'ativa'; } catch (e) { return 'ativa'; }
+    })(),
+    filtro: 'prensados',
+    takeover: false,
+    nomeAtual: '',
+    forma: 'prensado',
+    pilha: [],
+    comprimido: false,
+    marca: false,
+    selado: false,
+    selando: false,
+    pedido: [],
+    carrinho: false,
+    resumo: false,
+    recadoCarrinho: '',
+    ingredientes: [],
+    ganchoDispensado: {},
+    ultimo: null,
+    editandoId: null,
+    areaW: 0,
+    areaH: 0,
+    recado: '',
+    horario: { t: '', s: '' },
+    sombras: {},
+    ausentes: {}
+  };
+
+  _uid = 1;
+
+  get mapa() {
+    if (!this._mapa) {
+      this._mapa = {};
+      this.CAMADAS.forEach((c) => { this._mapa[c.slug] = c; });
+    }
+    return this._mapa;
+  }
+
+  get mapaFixos() {
+    if (!this._mapaFixos) {
+      this._mapaFixos = {};
+      this.FIXOS.forEach((f) => { this._mapaFixos[f.slug] = f; });
+    }
+    return this._mapaFixos;
+  }
+
+  get mapaExtras() {
+    if (!this._mapaExtras) {
+      this._mapaExtras = {};
+      this.EXTRAS.forEach((e) => { this._mapaExtras[e.slug] = e; });
+    }
+    return this._mapaExtras;
+  }
+
+  get limiar() {
+    const v = Number(this.props.limiarCamadas);
+    return v > 0 ? Math.round(v) : 10;
+  }
+
+  // ---------- ciclo de vida ----------
+
+  componentDidMount() {
+    this.montarIntro();
+    this.montarHorario();
+    this.verificarAusentes();
+    this.carregarBaselines();
+    document.addEventListener('click', this.aoClicar);
+    document.addEventListener('keydown', this.aoTeclar);
+    this.reconectarPainel();
+    this.escreverTotal();
+    this.prepararCamadas();
+    this._reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.ligarTrilhos();
+    this.ligarIngredientes();
+    window.addEventListener('resize', this.aoRedimensionar);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.aoRedimensionar());
+  }
+
+  /* as fotos das camadas precisam estar decodificadas antes do primeiro salto */
+  prepararCamadas() {
+    const alvo = document.getElementById('sec-cardapio');
+    if (!alvo || !window.IntersectionObserver) return;
+    this._ioCamadas = new IntersectionObserver((ents) => {
+      if (!ents.some((e) => e.isIntersecting)) return;
+      this._ioCamadas.disconnect();
+      this.CAMADAS.forEach((c) => { const im = new Image(); im.src = c.arquivo; });
+    }, { rootMargin: '100%' });
+    this._ioCamadas.observe(alvo);
+  }
+
+  componentWillUnmount() {
+    if (this._ro) this._ro.disconnect();
+    if (this._ioCamadas) this._ioCamadas.disconnect();
+    if (this._tUltimo) clearTimeout(this._tUltimo);
+    if (this._relogio) clearInterval(this._relogio);
+    if (this._t) this._t.forEach(clearTimeout);
+    document.removeEventListener('click', this.aoClicar);
+    document.removeEventListener('keydown', this.aoTeclar);
+    window.removeEventListener('resize', this.aoRedimensionar);
+    if (this._tRedim) clearTimeout(this._tRedim);
+    document.body.style.overflow = '';
+  }
+
+  componentDidUpdate() {
+    document.body.style.overflow = (this.state.takeover || this.state.carrinho || this.state.intro !== 'fim') ? 'hidden' : '';
+    this.reconectarPainel();
+    this.sincronizarTrilho();
+    this.ligarTrilhos();
+    this.ligarIngredientes();
+    this.sincronizarIngredientes();
+    this.aplicarFiltros();
+    this.registrarGancho();
+    if (!this._contando) this.escreverTotal();
+  }
+
+  agendar(fn, ms) {
+    this._t = this._t || [];
+    this._t.push(setTimeout(fn, ms));
+  }
+
+  // ---------- intro ----------
+
+  montarIntro() {
+    document.body.style.overflow = this.state.intro === 'fim' ? '' : 'hidden';
+    if (this.state.intro === 'fim') return;
+    const svg = document.getElementById('lt-svg');
+    if (!svg) { this.setState({ intro: 'fim' }); return; }
+
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const velocidade = Number(this.props.velocidadeSequencia) || 1;
+    if (this.props.tremorAtivo === false) {
+      ['lt-tremor', 'lt-tubo-a', 'lt-tubo-b', 'lt-texto', 'lt-rod-tremor'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.animation = 'none';
+      });
+    }
+    const marcar = () => { try { sessionStorage.setItem('lm:letreiro-aceso', '1'); } catch (e) {} };
+    const sair = () => {
+      if (this.state.intro === 'fim') return;
+      marcar();
+      this.setState({ intro: 'saindo' });
+      this.agendar(() => this.setState({ intro: 'fim' }), reduzido ? 0 : 500);
+    };
+    this._sairIntro = sair;
+
+    if (reduzido) {
+      svg.style.setProperty('--lt-acende', '1');
+      svg.style.setProperty('--lt-letras', '1');
+      this.agendar(sair, 1400);
+      return;
+    }
+    const acender = () => {
+      svg.style.animation = `lt-ignicao ${Math.round(1100 / velocidade)}ms linear forwards`;
+      svg.addEventListener('animationend', () => {
+        svg.style.setProperty('--lt-acende', '1');
+        svg.style.setProperty('--lt-letras', '1');
+        this.agendar(sair, 620);
+      }, { once: true });
+    };
+    let comecou = false;
+    const comecar = () => { if (!comecou) { comecou = true; acender(); } };
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(comecar);
+      this.agendar(comecar, 2200);
+    } else { comecar(); }
+  }
+
+  // ---------- relógio da casa ----------
+
+  calcularHorario() {
+    const f = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false });
+    const p = f.format(new Date()).split(':');
+    const min = Number(p[0]) * 60 + Number(p[1]);
+    const abre = 18 * 60, fecha = 4 * 60;
+    if (min >= abre || min <= fecha) {
+      const restam = (min >= abre ? 24 * 60 + fecha : fecha) - min;
+      if (restam <= 30) return { t: 'Aberto. Últimos pedidos.', s: 'A chapa desliga às 4h. Depois disso, só amanhã às 18h.' };
+      const h = Math.floor(restam / 60), m = restam % 60;
+      return { t: `Aberto. Fecha em ${h}h${String(m).padStart(2, '0')}.`, s: 'Balcão e mesas na calçada. Sem reserva.' };
+    }
+    return { t: 'Fechada. Abre hoje às 18h.', s: 'A chapa começa a esquentar às 17h30.' };
+  }
+
+  montarHorario() {
+    const bater = () => this.setState({ horario: this.calcularHorario() });
+    bater();
+    this._relogio = setInterval(bater, 60000);
+  }
+
+  // ---------- assets ----------
+
+  verificarAusentes() {
+    this.CAMADAS.filter((c) => c.alturaPx === 0).forEach((c) => {
+      const im = new Image();
+      im.onload = () => this.setState((s) => {
+        const a = Object.assign({}, s.ausentes); a[c.slug] = false; return { ausentes: a };
+      });
+      im.onerror = () => this.setState((s) => {
+        const a = Object.assign({}, s.ausentes); a[c.slug] = true; return { ausentes: a };
+      });
+      im.src = c.arquivo;
+    });
+  }
+
+  carregarBaselines() {
+    fetch('data/baselines.json').then((r) => r.json()).then((j) => {
+      this._baselines = j;
+      this.forceUpdate();
+    }).catch(() => {});
+  }
+
+  // ---------- navegação ----------
+
+  aoClicar = (e) => {
+    if (e.target.closest('#intro')) {
+      if (this._sairIntro) this._sairIntro();
+      return;
+    }
+    const filtro = e.target.closest('[data-filtro]');
+    if (filtro) { this.setState({ filtro: filtro.dataset.filtro }); return; }
+    const ing = e.target.closest('[data-ing]');
+    if (ing) { this.alternarIngrediente(ing.dataset.ing); return; }
+    const add = e.target.closest('[data-add]');
+    if (add) { this.adicionarPorSlug(add.dataset.add, add.parentElement); return; }
+    const mod = e.target.closest('[data-modificar]');
+    if (mod) { this.abrirPedido(mod.dataset.modificar); return; }
+    const mais = e.target.closest('[data-qtd-mais]');
+    if (mais) { this.mudarQtd(mais.dataset.qtdMais, 1); return; }
+    const menos = e.target.closest('[data-qtd-menos]');
+    if (menos) { this.mudarQtd(menos.dataset.qtdMenos, -1); return; }
+    const fora = e.target.closest('[data-remover]') || e.target.closest('[data-tirar]');
+    if (fora) { this.tirarDoPedido(fora.dataset.remover || fora.dataset.tirar); return; }
+    if (e.target.closest('#barra-abrir')) { this.abrirCarrinho(); return; }
+    if (e.target.closest('#carrinho-fechar') || e.target.closest('#carrinho-fundo')) { this.fecharCarrinho(); return; }
+    if (e.target.closest('#carrinho-resumo')) { if (this.state.pedido.length) this.setState({ resumo: true, recadoCarrinho: '' }); return; }
+    if (e.target.closest('#carrinho-voltar')) { this.setState({ resumo: false, recadoCarrinho: '' }); return; }
+    if (e.target.closest('#carrinho-copiar')) { this.copiarResumo(); return; }
+    if (e.target.closest('#gancho-agir')) { this.agirGancho(); return; }
+    if (e.target.closest('#gancho-dispensar')) { this.dispensarGancho(); return; }
+    if (e.target.closest('#abrir-livre-prensado')) { this.abrirLivre('prensado'); return; }
+    if (e.target.closest('#abrir-livre-redondo')) { this.abrirLivre('redondo'); return; }
+    if (e.target.closest('#rx-fechar')) { this.fechar(); return; }
+    if (e.target.closest('#rx-selar')) { this.fechamento(); return; }
+    const item = e.target.closest('#rx-trilho [data-slug]');
+    if (item && !item.disabled && !this._arrastouTrilho) this.adicionar(item.dataset.slug);
+  };
+
+  aoTeclar = (e) => {
+    if (e.key === 'Escape') {
+      if (this.state.intro !== 'fim') { if (this._sairIntro) this._sairIntro(); return; }
+      if (this.state.takeover) { this.fechar(); return; }
+      if (this.state.carrinho) { this.fecharCarrinho(); return; }
+    }
+    if (this.state.takeover) this.teclaCamada(e);
+  };
+
+  instanciar(slugs) {
+    return slugs
+      .filter((s) => this.mapa[s])
+      .map((s) => ({ slug: s, uid: this._uid++ }));
+  }
+
+  limpo(extra) {
+    return Object.assign({
+      takeover: true, carrinho: false, resumo: false, comprimido: false, marca: false, selado: false, selando: false,
+      editandoId: null, recado: '', sombras: {}
+    }, extra);
+  }
+
+  abrirPedido(id) {
+    const p = this.state.pedido.filter((x) => x.id === id)[0];
+    if (!p) return;
+    this.setState(this.limpo({
+      nomeAtual: p.nome, forma: p.forma, pilha: this.instanciar(p.camadas), editandoId: p.id
+    }));
+  }
+
+  adicionarPorSlug(slug, bloco) {
+    if (this.mapaFixos[slug]) return this.adicionarFixo(slug, bloco);
+    if (this.mapaExtras[slug]) return this.adicionarExtra(slug);
+  }
+
+  adicionarFixo(slug, bloco) {
+    const f = this.mapaFixos[slug];
+    if (!f) return;
+    this.lancar({
+      chave: slug, tipo: 'lanche', grupo: 'lanche', nome: f.nome, forma: f.forma,
+      resumo: this.resumoDeCamadas(f.camadas), camadas: f.camadas.slice(),
+      cent: this.precoFixo(f), foto: 'fixos/' + slug + '.webp'
+    }, this.origemDoCard(bloco, f));
+  }
+
+  /* bebida e acompanhamento não têm camada: entram sem salto */
+  adicionarExtra(slug) {
+    const e = this.mapaExtras[slug];
+    if (!e) return;
+    this.somar({
+      chave: 'extra:' + slug, tipo: 'extra', grupo: e.grupo, nome: e.nome, forma: '',
+      resumo: e.grupo === 'bebida' ? 'Bebida' : 'Acompanhamento', camadas: [],
+      cent: e.precoCent, foto: e.icone || ''
+    });
+  }
+
+  resumoDeCamadas(camadas) {
+    const nomes = camadas.filter((s) => this.mapa[s] && !this.mapa[s].pao).map((s) => this.mapa[s].nome);
+    return nomes.length ? nomes.join(', ') : 'Só o pão';
+  }
+
+  mudarQtd(id, d) {
+    const p = this.state.pedido.filter((x) => x.id === id)[0];
+    if (!p) return;
+    if (p.qtd + d <= 0) { this.tirarDoPedido(id); return; }
+    const de = this.totalVisto();
+    this.setState((s) => ({
+      pedido: s.pedido.map((x) => (x.id === id ? Object.assign({}, x, { qtd: x.qtd + d }) : x))
+    }), () => this.contarTotal(de, this.totalCent()));
+  }
+
+  tirarDoPedido(id) {
+    const de = this.totalVisto();
+    this.setState((s) => ({
+      pedido: s.pedido.filter((p) => p.id !== id),
+      ultimo: s.ultimo === id ? null : s.ultimo
+    }), () => this.contarTotal(de, this.totalCent()));
+  }
+
+  totalCent() {
+    return this.state.pedido.reduce((s, p) => s + p.cent * p.qtd, 0);
+  }
+
+  totalVisto() {
+    return this._totalExibido == null ? this.totalCent() : this._totalExibido;
+  }
+
+  abrirCarrinho() {
+    if (!this.state.pedido.length) return;
+    this.setState({ carrinho: true, resumo: false, recadoCarrinho: '', ultimo: null });
+  }
+
+  fecharCarrinho() {
+    this.setState({ carrinho: false, resumo: false, recadoCarrinho: '' });
+  }
+
+  resumoDoPedido() {
+    if (!this.state.pedido.length) return '';
+    const linhas = this.state.pedido.map((p) => p.qtd + '× ' + p.nome + ' — ' + this.brl(p.cent * p.qtd));
+    return ['Pedido — Lancheria Meia-Noite', ''].concat(linhas, [
+      '', 'Total: ' + this.brl(this.totalCent()), 'Retirada no balcão, Rua Volta Redonda 412.'
+    ]).join('\n');
+  }
+
+  linkDoPedido() {
+    return 'https://wa.me/554432320400?text=' + encodeURIComponent(this.resumoDoPedido());
+  }
+
+  copiarResumo() {
+    const texto = this.resumoDoPedido();
+    const pronto = () => this.setState({ recadoCarrinho: 'Resumo copiado.' });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(pronto, () => this.setState({ recadoCarrinho: 'Não deu para copiar. Selecione o texto acima.' }));
+    } else {
+      this.setState({ recadoCarrinho: 'Selecione o texto acima para copiar.' });
+    }
+  }
+
+  /* ganchos: um por vez, no máximo dois no pedido inteiro */
+  ganchoAtual() {
+    const vistos = this._ganchosVistos = this._ganchosVistos || [];
+    const disp = this.state.ganchoDispensado;
+    const ped = this.state.pedido;
+    const lanches = ped.filter((p) => p.tipo === 'lanche');
+    if (!lanches.length) return null;
+    const tem = (g) => ped.filter((p) => p.grupo === g).length > 0;
+    const cand = [];
+    if (!tem('bebida')) {
+      const b = this.mapaExtras['refri'];
+      cand.push({ id: 'bebida', texto: 'Sem bebida?', acao: b.nome + ' — ' + this.brl(b.precoCent), extra: b.slug });
+    }
+    if (lanches.length >= 2 && !tem('acompanhamento')) {
+      const b = this.mapaExtras['batata-frita'];
+      cand.push({ id: 'batata', texto: 'Dois lanches, nenhuma batata.', acao: b.nome + ' — ' + this.brl(b.precoCent), extra: b.slug });
+    }
+    const sem = lanches.filter((p) => p.forma === 'prensado' && p.camadas.indexOf('bacon') < 0)[0];
+    if (sem) cand.push({ id: 'bacon:' + sem.id, texto: sem.nome + ' sem bacon.', acao: 'Pôr bacon nesse', pedidoId: sem.id });
+    const livres = cand.filter((c) => !disp[c.id]);
+    const repetido = livres.filter((c) => vistos.indexOf(c.id) >= 0)[0];
+    if (repetido) return repetido;
+    if (vistos.length >= 2) return null;
+    return livres[0] || null;
+  }
+
+  registrarGancho() {
+    if (!this.state.carrinho) return;
+    const g = this.ganchoAtual();
+    if (!g) return;
+    this._ganchosVistos = this._ganchosVistos || [];
+    if (this._ganchosVistos.indexOf(g.id) < 0) this._ganchosVistos.push(g.id);
+  }
+
+  agirGancho() {
+    const g = this.ganchoAtual();
+    if (!g) return;
+    if (g.extra) { this.adicionarExtra(g.extra); return; }
+    if (g.pedidoId) this.abrirPedidoComBacon(g.pedidoId);
+  }
+
+  dispensarGancho() {
+    const g = this.ganchoAtual();
+    if (!g) return;
+    this.setState((s) => {
+      const d = Object.assign({}, s.ganchoDispensado);
+      d[g.id] = true;
+      return { ganchoDispensado: d };
+    });
+  }
+
+  /* o gancho do bacon abre o raio-x com o bacon já posicionado, à espera da prensa */
+  abrirPedidoComBacon(id) {
+    const p = this.state.pedido.filter((x) => x.id === id)[0];
+    if (!p) return;
+    const meio = p.camadas.slice(1, -1).concat(['bacon']);
+    meio.sort((a, b) => this.mapa[a].ordem - this.mapa[b].ordem);
+    const arr = [p.camadas[0]].concat(meio, [p.camadas[p.camadas.length - 1]]);
+    this.setState(this.limpo({
+      nomeAtual: p.nome, forma: p.forma, pilha: this.instanciar(arr), editandoId: p.id,
+      recado: 'Bacon posto na pilha. Prense para confirmar.'
+    }));
+  }
+
+  brl(c) {
+    return `R$ ${(c / 100).toFixed(2).replace('.', ',')}`;
+  }
+
+  escreverTotal() {
+    const el = document.getElementById('barra-total');
+    const v = this.totalCent();
+    this._totalExibido = v;
+    if (el) el.textContent = this.brl(v);
+  }
+
+  /* o total sobe contando; escrito direto no nó para não re-renderizar a página inteira */
+  contarTotal(de, para) {
+    if (de === para) { this.escreverTotal(); return; }
+    this._contando = true;
+    const ficha = (this._ficha = (this._ficha || 0) + 1);
+    const t0 = performance.now();
+    const passo = (t) => {
+      if (ficha !== this._ficha) return;
+      const p = Math.min(1, (t - t0) / 320);
+      const v = Math.round(de + (para - de) * (1 - Math.pow(1 - p, 3)));
+      this._totalExibido = v;
+      const el = document.getElementById('barra-total');
+      if (el) el.textContent = this.brl(v);
+      if (p < 1) requestAnimationFrame(passo);
+      else { this._contando = false; this.escreverTotal(); }
+    };
+    requestAnimationFrame(passo);
+  }
+
+  solavanco() {
+    const barra = document.getElementById('barra-pedido');
+    if (!barra || !barra.animate) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    barra.animate([
+      { transform: 'translateY(0px)' },
+      { transform: 'translateY(7px)' },
+      { transform: 'translateY(-2px)' },
+      { transform: 'translateY(0px)' }
+    ], { duration: 190, easing: 'ease-out' });
+  }
+
+  marcarUltimo(id) {
+    if (this._tUltimo) clearTimeout(this._tUltimo);
+    this._tUltimo = setTimeout(() => {
+      this.setState((s) => (s.ultimo === id ? { ultimo: null } : {}));
+    }, 5200);
+  }
+
+  /* origem do salto: se o card já está montado por camada, sai da própria pilha */
+  origemDoCard(bloco, f) {
+    const it = bloco && bloco._it;
+    if (it && it.pecas && it.pecas.length) {
+      const p0 = it.pecas[0];
+      const r = p0.el.getBoundingClientRect();
+      return { centroX: r.left + r.width / 2, baseY: r.top + (600 + p0.altura / 2) * it.kk, kk: it.kk };
+    }
+    const img = bloco ? bloco.querySelector('[data-foto], [data-icone]') : null;
+    return this.origemDaFoto(img, f);
+  }
+
+  /* origem do salto: miniatura do cardápio */
+  origemDaFoto(el, f) {
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const slugs = f.camadas.filter((s) => this.mapa[s] && this.mapa[s].alturaPx > 0);
+    const u = this.unidadesPilha(slugs, this.fatorFechado(f.forma));
+    if (!u || !r.height) return null;
+    return { centroX: r.left + r.width / 2, baseY: r.bottom - r.height * 0.05, kk: (r.height * 0.92) / u };
+  }
+
+  /* origem do salto: pilha desenhada no raio-x */
+  origemDaPilha() {
+    const inst = this.state.pilha[0];
+    const el = inst ? document.querySelector(`[data-inst="${inst.uid}"]`) : null;
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    if (!r.width) return null;
+    const kk = r.width / 2000;
+    const c = this.mapa[inst.slug];
+    return { centroX: r.left + r.width / 2, baseY: r.top + (600 + c.alturaPx / 2) * kk, kk: kk };
+  }
+
+  /* rotação e deriva sorteadas uma vez por lanche e memorizadas */
+  sorteio(chave, n) {
+    this._sorteios = this._sorteios || {};
+    const k = chave + ':' + n;
+    if (this._sorteios[k]) return this._sorteios[k];
+    let h = 2166136261;
+    for (let i = 0; i < k.length; i++) { h ^= k.charCodeAt(i); h = Math.imul(h, 16777619); }
+    const rnd = () => {
+      h = Math.imul(h ^ (h >>> 15), 2246822507); h ^= h >>> 13;
+      return ((h >>> 0) % 10000) / 10000;
+    };
+    const itens = [];
+    for (let i = 0; i < n; i++) {
+      itens.push({ rot: rnd() * 28 - 14, deriva: (i % 2 ? 1 : -1) * (8 + rnd() * 32) });
+    }
+    const dado = { lado: rnd() > 0.5 ? 1 : -1, itens: itens };
+    this._sorteios[k] = dado;
+    return dado;
+  }
+
+  /* agacha, pula, e as camadas caem de baixo para cima, cada uma no seu tempo */
+  salto(item, origem, aoChegar) {
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const slugs = item.camadas.filter((s) => this.mapa[s] && this.mapa[s].alturaPx > 0);
+    const cont = document.createElement('div');
+    if (reduzido || !origem || !slugs.length || !cont.animate) { aoChegar(); return; }
+
+    const kk = origem.kk;
+    const largura = 2000 * kk;
+    const fator = this.fatorFechado(item.forma);
+    cont.setAttribute('aria-hidden', 'true');
+    cont.style.cssText = 'position: fixed; left: ' + (origem.centroX - largura / 2) + 'px; top: ' + origem.baseY +
+      'px; width: ' + largura + 'px; height: 0; z-index: 45; pointer-events: none; transform-origin: 50% 0;';
+
+    const par = this.sorteio(item.chave, slugs.length);
+    const pecas = [];
+    let topo = this.mapa[slugs[0]].alturaPx;
+    slugs.forEach((s, i) => {
+      const c = this.mapa[s];
+      if (i > 0) topo += this.visivelPx(slugs, i) * fator;
+      const el = document.createElement('div');
+      el.style.cssText = 'position: absolute; left: 0; width: 100%; height: ' + (1200 * kk) +
+        'px; bottom: ' + ((topo - c.alturaPx / 2 - 600) * kk) + 'px; z-index: ' + i +
+        '; background: center/contain no-repeat url("' + c.arquivo + '"); will-change: transform;';
+      cont.appendChild(el);
+      pecas.push(el);
+    });
+    document.body.appendChild(cont);
+
+    const subida = window.innerHeight * 0.12;
+    cont.animate([
+      { transform: 'translateY(0px) scale(1, 1) rotate(0deg)', easing: 'cubic-bezier(.25,.75,.4,1)' },
+      { transform: 'translateY(8px) scale(1.04, 0.86) rotate(0deg)', offset: 0.45, easing: 'cubic-bezier(.16,.84,.44,1)' },
+      { transform: 'translateY(' + (-subida) + 'px) scale(0.97, 1.08) rotate(' + (par.lado * 4) + 'deg)' }
+    ], { duration: 200, fill: 'forwards' });
+
+    const queda = window.innerHeight - origem.baseY + subida + 1200 * kk + 80;
+    pecas.forEach((el, i) => {
+      const p = par.itens[i];
+      el.animate([
+        { transform: 'translate(0px, 0px) rotate(0deg)' },
+        { transform: 'translate(' + p.deriva.toFixed(1) + 'px, ' + queda.toFixed(0) + 'px) rotate(' + p.rot.toFixed(1) + 'deg)' }
+      ], { duration: 380, delay: 200 + i * 45, easing: 'cubic-bezier(.36,0,.86,.36)', fill: 'forwards' });
+    });
+
+    this.agendar(aoChegar, 560);
+    this.agendar(() => cont.remove(), 200 + pecas.length * 45 + 480);
+  }
+
+  lancar(item, origem, substituirId) {
+    this.salto(item, origem, () => this.somar(item, substituirId));
+  }
+
+  /* item novo entra na lista; item repetido soma quantidade; edição substitui no lugar */
+  somar(item, substituirId) {
+    const de = this.totalVisto();
+    let id = substituirId || null;
+    this.setState((s) => {
+      const arr = s.pedido.slice();
+      let alvo = -1;
+      arr.forEach((x, i) => { if (substituirId && x.id === substituirId) alvo = i; });
+      if (alvo >= 0) {
+        arr[alvo] = Object.assign({}, arr[alvo], item, { id: arr[alvo].id, qtd: arr[alvo].qtd });
+      } else {
+        let igual = -1;
+        arr.forEach((x, i) => { if (x.chave === item.chave) igual = i; });
+        if (igual >= 0) {
+          id = arr[igual].id;
+          arr[igual] = Object.assign({}, arr[igual], { qtd: arr[igual].qtd + 1 });
+        } else {
+          id = 'p' + (this._pid = (this._pid || 0) + 1);
+          arr.push(Object.assign({}, item, { id: id, qtd: 1 }));
+        }
+      }
+      return { pedido: arr, ultimo: id };
+    }, () => {
+      this.contarTotal(de, this.totalCent());
+      this.solavanco();
+      this.marcarUltimo(id);
+    });
+  }
+
+  abrirLivre(forma) {
+    this.setState(this.limpo({
+      nomeAtual: forma === 'prensado' ? 'Prensado da casa' : 'Redondo da casa',
+      forma, pilha: []
+    }));
+  }
+
+  fechar() {
+    const fundo = document.getElementById('rx-chapa-fundo');
+    if (fundo) fundo.style.opacity = '0';
+    this.setState({ takeover: false, editandoId: null, selado: false, selando: false, comprimido: false, marca: false, recado: '' });
+  }
+
+  // ---------- painel ----------
+
+  reconectarPainel() {
+    const desenho = document.getElementById('rx-desenho');
+    if (!desenho) {
+      if (this._ro) { this._ro.disconnect(); this._ro = null; }
+      this._ligado = null;
+      if (this.state.areaW !== 0) this.setState({ areaW: 0, areaH: 0 });
+      return;
+    }
+    if (this._ligado === desenho) return;
+    this._ligado = desenho;
+
+    const r = desenho.getBoundingClientRect();
+    this.setState({ areaW: r.width, areaH: r.height, sombras: {} });
+
+    if (this._ro) this._ro.disconnect();
+    this._ro = new ResizeObserver(() => {
+      const b = desenho.getBoundingClientRect();
+      if (Math.abs(b.width - this.state.areaW) > 1 || Math.abs(b.height - this.state.areaH) > 1) {
+        this.setState({ areaW: b.width, areaH: b.height, sombras: {} });
+      }
+    });
+    this._ro.observe(desenho);
+
+    const trilho = document.getElementById('rx-trilho');
+    if (trilho) {
+      trilho.querySelectorAll('[data-thumb]').forEach((el) => {
+        const c = this.mapa[el.dataset.thumb];
+        if (c && !this.state.ausentes[c.slug]) el.style.backgroundImage = `url("${c.arquivo}")`;
+      });
+      trilho.addEventListener('pointerdown', (e) => this.arrastarDoTrilho(e));
+    }
+    desenho.addEventListener('pointerdown', (e) => this.arrastarCamada(e));
+    this.sincronizarTrilho();
+  }
+
+  contarSlug(slug) {
+    return this.state.pilha.filter((i) => i.slug === slug).length;
+  }
+
+  sincronizarTrilho() {
+    const trilho = document.getElementById('rx-trilho');
+    if (!trilho) return;
+    const bloqueado = this.state.selando || this.state.selado;
+    const cheio = this.state.pilha.length >= this.MAX_CAMADAS;
+    trilho.querySelectorAll('[data-slug]').forEach((b) => {
+      const slug = b.dataset.slug;
+      const n = this.contarSlug(slug);
+      const ausente = !!this.state.ausentes[slug];
+      const off = bloqueado || ausente || n >= this.MAX_POR_SLUG || cheio;
+      b.disabled = off;
+      b.style.opacity = off ? '0.34' : '1';
+      b.style.cursor = off ? 'default' : 'pointer';
+      const badge = b.querySelector('[data-conta]');
+      if (badge) badge.textContent = ausente ? 'em falta' : (n ? `${n}×` : '');
+    });
+  }
+
+  // ---------- regras de posição ----------
+
+  ehPao(slug) {
+    return !!(this.mapa[slug] && this.mapa[slug].pao);
+  }
+
+  valida(arr) {
+    if (!arr.length) return true;
+    if (arr.length > this.MAX_CAMADAS) return false;
+    const paes = this.PAES[this.state.forma];
+    if (arr[0].slug !== paes[0] || arr[arr.length - 1].slug !== paes[1]) return false;
+    if (arr.filter((i) => this.ehPao(i.slug)).length !== 2) return false;
+    const contagem = {};
+    for (let i = 0; i < arr.length; i++) {
+      contagem[arr[i].slug] = (contagem[arr[i].slug] || 0) + 1;
+      if (contagem[arr[i].slug] > this.MAX_POR_SLUG) return false;
+    }
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].slug !== 'molho') continue;
+      if (i !== 1 && i !== arr.length - 2) return false;
+    }
+    return true;
+  }
+
+  adicionar(slug) {
+    if (this.state.selando || this.state.selado) return;
+    const c = this.mapa[slug];
+    if (!c || this.state.ausentes[slug] || c.pao) return;
+    if (this.state.pilha.length >= this.MAX_CAMADAS) {
+      this.setState({ recado: 'Dezesseis camadas é o teto. Tire uma antes.' }); return;
+    }
+    if (this.contarSlug(slug) >= this.MAX_POR_SLUG) {
+      this.setState({ recado: `Três ${c.nome.toLowerCase()} já é exagero. O quarto não entra.` }); return;
+    }
+    let arr = this.state.pilha.slice();
+    if (!arr.length) arr = this.instanciar(this.PAES[this.state.forma]);
+    const meio = arr.slice(1, -1);
+    meio.push({ slug, uid: this._uid++ });
+    meio.sort((a, b) => this.mapa[a.slug].ordem - this.mapa[b.slug].ordem);
+    arr = [arr[0]].concat(meio, [arr[arr.length - 1]]);
+    if (!this.valida(arr)) { this.setState({ recado: 'O molho só entra ao lado de um pão.' }); return; }
+    this.setState({ pilha: arr, recado: '', comprimido: false });
+  }
+
+  remover(i) {
+    const arr = this.state.pilha.slice();
+    const inst = arr[i];
+    if (!inst) return;
+    if (this.mapa[inst.slug].obrigatorio) {
+      this.setState({ recado: 'Os pães ficam. Sem eles não é lanche.' }); return;
+    }
+    arr.splice(i, 1);
+    for (let j = 0; j < arr.length; j++) {
+      if (arr[j].slug === 'molho' && j > 1 && j < arr.length - 2) {
+        const m = arr.splice(j, 1)[0]; arr.splice(1, 0, m); break;
+      }
+    }
+    const so = arr.length === 2;
+    this.setState({ pilha: so ? [] : arr, recado: '', comprimido: false });
+  }
+
+  mover(i, delta) {
+    const arr = this.state.pilha.slice();
+    const j = i + delta;
+    if (j < 1 || j > arr.length - 2 || i < 1 || i > arr.length - 2) return -1;
+    const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    if (!this.valida(arr)) { this.setState({ recado: 'O molho só entra ao lado de um pão.' }); return -1; }
+    this.setState({ pilha: arr, recado: '', comprimido: false });
+    return j;
+  }
+
+  // ---------- gestos ----------
+
+  arrastarDoTrilho(e) {
+    const b = e.target.closest('[data-slug]');
+    if (!b || b.disabled) return;
+    const c = this.mapa[b.dataset.slug];
+    const painel = document.getElementById('rx-painel');
+    this._arrastouTrilho = false;
+    const x0 = e.clientX, y0 = e.clientY;
+    let fantasma = null;
+    const mover = (ev) => {
+      const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (!fantasma && Math.hypot(dx, dy) > 10) {
+        this._arrastouTrilho = true;
+        fantasma = document.createElement('div');
+        fantasma.style.cssText = 'position:fixed;z-index:40;width:180px;height:108px;pointer-events:none;opacity:.85;background:center/contain no-repeat;';
+        fantasma.style.backgroundImage = `url("${c.arquivo}")`;
+        document.body.appendChild(fantasma);
+      }
+      if (fantasma) {
+        fantasma.style.left = (ev.clientX - 90) + 'px';
+        fantasma.style.top = (ev.clientY - 54) + 'px';
+      }
+    };
+    const soltar = (ev) => {
+      window.removeEventListener('pointermove', mover);
+      window.removeEventListener('pointerup', soltar);
+      if (!fantasma) return;
+      fantasma.remove();
+      const r = painel ? painel.getBoundingClientRect() : null;
+      const dentro = r && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+      if (dentro) this.adicionar(c.slug);
+      this.agendar(() => { this._arrastouTrilho = false; }, 60);
+    };
+    window.addEventListener('pointermove', mover);
+    window.addEventListener('pointerup', soltar);
+  }
+
+  arrastarCamada(e) {
+    if (this.state.selando || this.state.selado) return;
+    const alvo = e.target.closest('[data-inst]') || e.target.closest('[data-chamada]');
+    if (!alvo) return;
+    let i = alvo.dataset.chamada !== undefined
+      ? Number(alvo.dataset.chamada)
+      : this.state.pilha.findIndex((x) => String(x.uid) === alvo.dataset.inst);
+    if (i < 0) return;
+    const painel = document.getElementById('rx-painel');
+    const x0 = e.clientX, y0 = e.clientY;
+    let base = y0, idx = i, removendo = false, mexeu = false;
+    const passo = Math.max(28, this.state.areaH / Math.max(6, this.state.pilha.length * 1.6));
+
+    const elDe = () => {
+      const inst = this.state.pilha[idx];
+      return inst ? document.querySelector(`[data-inst="${inst.uid}"]`) : null;
+    };
+    const mover = (ev) => {
+      const dy = ev.clientY - base;
+      const dx = ev.clientX - x0;
+      if (Math.hypot(dx, ev.clientY - y0) > 8) mexeu = true;
+      const r = painel.getBoundingClientRect();
+      const fora = ev.clientX < r.left - 40 || ev.clientX > r.right + 40 || Math.abs(dx) > 150;
+      if (fora !== removendo) {
+        removendo = fora;
+        const el = elDe();
+        if (el) el.style.opacity = removendo ? '0.45' : '1';
+        this.setState({ recado: removendo ? 'Solte para tirar.' : '' });
+      }
+      if (Math.abs(dy) >= passo && !removendo) {
+        const j = this.mover(idx, dy > 0 ? -1 : 1);
+        if (j >= 0) idx = j;
+        base = ev.clientY;
+      }
+    };
+    const soltar = (ev) => {
+      window.removeEventListener('pointermove', mover);
+      window.removeEventListener('pointerup', soltar);
+      const inst = this.state.pilha[idx];
+      const el = elDe();
+      if (removendo && inst && !this.mapa[inst.slug].obrigatorio) {
+        if (el) {
+          const dir = ev.clientX < x0 ? -1 : 1;
+          el.style.transition = 'transform 220ms cubic-bezier(.4,0,1,1), opacity 220ms linear';
+          el.style.transform = `translateX(${dir * 340}px)`;
+          el.style.opacity = '0';
+        }
+        this.agendar(() => this.remover(idx), el ? 200 : 0);
+      } else {
+        if (el) el.style.opacity = '1';
+        if (removendo) this.setState({ recado: 'Os pães ficam. Sem eles não é lanche.' });
+        else if (!mexeu) this.setState({ recado: '' });
+      }
+    };
+    window.addEventListener('pointermove', mover);
+    window.addEventListener('pointerup', soltar);
+  }
+
+  teclaCamada(e) {
+    const b = e.target.closest && e.target.closest('[data-chamada]');
+    if (!b) return;
+    const i = Number(b.dataset.chamada);
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const j = this.mover(i, e.key === 'ArrowUp' ? 1 : -1);
+      if (j >= 0) this.agendar(() => {
+        const alvo = document.querySelector(`[data-chamada="${j}"]`);
+        if (alvo) alvo.focus();
+      }, 20);
+    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      this.remover(i);
+    }
+  }
+
+  // ---------- prensa, gravidade e despacho ----------
+
+  fechamento() {
+    if (!this.state.pilha.length || this.state.selando || this.state.selado) return;
+    return this.state.forma === 'prensado' ? this.prensar() : this.selar();
+  }
+
+  prensar() {
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fundo = document.getElementById('rx-chapa-fundo');
+    if (fundo) fundo.style.opacity = '0.9';
+
+    if (reduzido) {
+      this.setState({ comprimido: true, marca: true, selando: false, selado: true, sombras: {} });
+      this.agendar(() => this.despachar(), 140);
+      return;
+    }
+    this.setState({ selando: true, recado: '' });
+    this.agendar(() => this.setState({ comprimido: true, sombras: {} }), 60);
+    this.agendar(() => this.setState({ marca: true }), 60 + this.PRENSA_MS);
+    this.agendar(() => {
+      this.setState({ selando: false, selado: true });
+      this.despachar();
+    }, 60 + this.PRENSA_MS + 260);
+  }
+
+  selar() {
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fundo = document.getElementById('rx-chapa-fundo');
+    if (fundo) fundo.style.opacity = '0.9';
+    this.setState({ selando: true, recado: '' });
+
+    if (reduzido) {
+      this.setState({ comprimido: true, sombras: {}, selando: false, selado: true });
+      this.agendar(() => this.despachar(), 140);
+      return;
+    }
+    this.agendar(() => this.setState({ comprimido: true, sombras: {} }), 200);
+    this.agendar(() => {
+      const v = document.getElementById('rx-varredura');
+      const ar = document.getElementById('rx-ar');
+      if (v) { v.style.display = 'block'; v.style.animation = 'rx-varredura 1200ms ease-out forwards'; }
+      if (ar) { ar.style.display = 'block'; ar.style.animation = 'rx-ar 1200ms ease-in-out forwards'; }
+    }, 500);
+    this.agendar(() => {
+      const v = document.getElementById('rx-varredura');
+      const ar = document.getElementById('rx-ar');
+      if (v) v.style.display = 'none';
+      if (ar) ar.style.display = 'none';
+      this.setState({ selando: false, selado: true });
+      this.despachar();
+    }, 1740);
+  }
+
+  /* o lanche fechado sai do raio-x e cai na barra do pedido */
+  despachar() {
+    const camadas = this.state.pilha.map((i) => i.slug);
+    if (!camadas.length) return;
+    const cent = this.state.pilha.reduce((s, x) => s + this.mapa[x.slug].precoCent, this.PRECO_BASE_CENT);
+    const substituir = this.state.editandoId;
+    const item = {
+      chave: 'montado:' + this.state.forma + ':' + camadas.join('.'),
+      tipo: 'lanche', grupo: 'lanche', nome: this.state.nomeAtual, forma: this.state.forma,
+      resumo: this.resumoDeCamadas(camadas), camadas: camadas, cent: cent,
+      foto: this.mapaFixos[this.slugDoFixo(camadas, this.state.forma)] ? 'fixos/' + this.slugDoFixo(camadas, this.state.forma) + '.webp' : ''
+    };
+    const origem = this.origemDaPilha();
+    const fundo = document.getElementById('rx-chapa-fundo');
+    if (fundo) fundo.style.opacity = '0';
+    this.setState({ takeover: false, editandoId: null, selado: false, selando: false, comprimido: false, marca: false, recado: '' });
+    this.lancar(item, origem, substituir);
+  }
+
+  slugDoFixo(camadas, forma) {
+    const chave = camadas.join('.');
+    const f = this.FIXOS.filter((x) => x.forma === forma && x.camadas.join('.') === chave)[0];
+    return f ? f.slug : '';
+  }
+
+  // ---------- trilhos: o item no centro está prensado ----------
+
+  aoRedimensionar = () => {
+    if (this._tRedim) clearTimeout(this._tRedim);
+    this._tRedim = setTimeout(() => {
+      const rails = document.querySelectorAll('[data-trilho]');
+      for (let i = 0; i < rails.length; i++) {
+        const rail = rails[i];
+        (rail._itens || []).forEach((it) => { if (it.pecas) this.desmontarPecas(it); });
+        this.medirTrilho(rail);
+      }
+    }, 160);
+  };
+
+  ligarTrilhos() {
+    const rails = document.querySelectorAll('[data-trilho]');
+    for (let i = 0; i < rails.length; i++) {
+      const rail = rails[i];
+      if (rail._ligado) continue;
+      rail._ligado = true;
+      rail.addEventListener('scroll', () => this.pedirQuadro(rail), { passive: true });
+      this.medirTrilho(rail);
+    }
+  }
+
+  medirTrilho(rail) {
+    const nos = [].slice.call(rail.querySelectorAll('[data-item-trilho]'));
+    rail._itens = nos.map((el) => {
+      const it = {
+        el: el, slug: el.dataset.slug, extra: el.dataset.tipo === 'extra',
+        meio: el.offsetLeft + el.offsetWidth / 2,
+        palco: el.querySelector('[data-palco]'),
+        host: el.querySelector('[data-camadas]'),
+        icone: el.querySelector('[data-icone]')
+      };
+      el._it = it;
+      return it;
+    });
+    rail._foco = nos.length ? nos[0].offsetWidth : 1;
+    rail._centro = -1;
+    this.pintarTrilho(rail);
+  }
+
+  pedirQuadro(rail) {
+    if (rail._quadro) return;
+    rail._quadro = requestAnimationFrame(() => { rail._quadro = 0; this.pintarTrilho(rail); });
+  }
+
+  pintarTrilho(rail) {
+    const itens = rail._itens || [];
+    if (!itens.length) return;
+    const meio = rail.scrollLeft + rail.clientWidth / 2;
+    let escolhido = 0, menor = Infinity;
+    itens.forEach((it, i) => {
+      const d = Math.abs(it.meio - meio);
+      if (d < menor) { menor = d; escolhido = i; }
+    });
+    if (escolhido !== rail._centro) { rail._centro = escolhido; this.montarVizinhos(rail, escolhido); }
+    itens.forEach((it, i) => {
+      let t = Math.min(1, Math.abs(it.meio - meio) / (rail._foco || 1));
+      if (this._reduzido) t = i === escolhido ? 0 : 1;
+      if (it.extra) {
+        it.el.style.transform = 'scale(' + (1.04 - 0.04 * t).toFixed(3) + ')';
+        it.el.style.opacity = (1 - 0.30 * t).toFixed(3);
+      } else if (it.pecas) {
+        this.prensarPecas(it, t);
+      }
+    });
+  }
+
+  /* só o central e os dois vizinhos ficam montados por camada */
+  montarVizinhos(rail, c) {
+    (rail._itens || []).forEach((it, i) => {
+      if (it.extra) return;
+      const perto = Math.abs(i - c) <= 1;
+      if (perto && !it.pecas) this.montarPecas(it);
+      else if (!perto && it.pecas) this.desmontarPecas(it);
+    });
+  }
+
+  montarPecas(it) {
+    const f = this.mapaFixos[it.slug];
+    if (!f || !it.host || !it.palco) return;
+    const slugs = f.camadas.filter((s) => this.mapa[s] && this.mapa[s].alturaPx > 0 && !this.state.ausentes[s]);
+    if (!slugs.length) return;
+    const w = it.palco.clientWidth, h = it.palco.clientHeight;
+    const aberto = this.unidadesPilha(slugs, 1);
+    if (!w || !h || !aberto) return;
+    const kk = Math.min((h * 0.96) / aberto, (w * 0.92) / 2000);
+    const pecas = [];
+    let topo = this.mapa[slugs[0]].alturaPx;
+    slugs.forEach((s, i) => {
+      const c = this.mapa[s];
+      if (i > 0) topo += this.visivelPx(slugs, i);
+      const el = document.createElement('div');
+      el.style.cssText = 'position: absolute; left: 50%; width: ' + (2000 * kk) + 'px; height: ' + (1200 * kk) +
+        'px; margin-left: ' + (-1000 * kk) + 'px; bottom: ' + ((topo - c.alturaPx / 2 - 600) * kk) +
+        'px; z-index: ' + i + '; background: center/contain no-repeat url("' + c.arquivo + '"); will-change: transform;';
+      it.host.appendChild(el);
+      pecas.push({ el: el, aberto: topo, altura: c.alturaPx, pao: !!c.pao, visivel: i === 0 ? 0 : this.visivelPx(slugs, i) });
+    });
+    it.pecas = pecas;
+    it.kk = kk;
+    it.aberto = topo;
+    it.host.style.opacity = '1';
+    if (it.icone) it.icone.style.opacity = '0';
+  }
+
+  desmontarPecas(it) {
+    if (it.host) { it.host.style.opacity = '0'; it.host.textContent = ''; }
+    if (it.icone) it.icone.style.opacity = '1';
+    it.pecas = null;
+  }
+
+  /* espaçamento e deformação dirigidos pelo gesto, não pelo relógio */
+  prensarPecas(it, t) {
+    const fator = this.TRILHO_PRENSA + (1 - this.TRILHO_PRENSA) * t;
+    const sx = (this.ESPALHA_X - (this.ESPALHA_X - 1) * t).toFixed(3);
+    const sy = (this.ESPALHA_Y + (1 - this.ESPALHA_Y) * t).toFixed(3);
+    let pos = it.pecas[0].altura;
+    for (let i = 0; i < it.pecas.length; i++) {
+      const p = it.pecas[i];
+      if (i > 0) pos += p.visivel * fator;
+      const dy = ((p.aberto - pos) * it.kk).toFixed(2);
+      p.el.style.transform = p.pao ? 'translateY(' + dy + 'px)' : 'translateY(' + dy + 'px) scale(' + sx + ', ' + sy + ')';
+    }
+    /* o que encolhe sobe metade: a pilha fica centrada no quadro nos dois estados */
+    it.host.style.transform = 'translateY(' + (((pos - it.aberto) * it.kk) / 2).toFixed(2) + 'px)';
+  }
+
+  // ---------- filtro por ingrediente ----------
+
+  ligarIngredientes() {
+    const rail = document.getElementById('filtro-ingrediente');
+    if (!rail || rail._ligado) return;
+    rail._ligado = true;
+    rail.querySelectorAll('[data-ing-thumb]').forEach((el) => {
+      const c = this.mapa[el.dataset.ingThumb];
+      if (c) el.style.backgroundImage = 'url("' + c.arquivo + '")';
+    });
+  }
+
+  alternarIngrediente(slug) {
+    this.setState((s) => {
+      const arr = s.ingredientes.slice();
+      const i = arr.indexOf(slug);
+      if (i >= 0) arr.splice(i, 1); else arr.push(slug);
+      return { ingredientes: arr };
+    });
+  }
+
+  sincronizarIngredientes() {
+    const rail = document.getElementById('filtro-ingrediente');
+    if (!rail) return;
+    rail.querySelectorAll('[data-ing]').forEach((b) => {
+      const on = this.state.ingredientes.indexOf(b.dataset.ing) >= 0;
+      b.style.borderColor = on ? '#A8C6D4' : '#33251E';
+      b.style.boxShadow = on ? 'inset 0 0 0 1px #A8C6D4' : 'none';
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  aplicarFiltros() {
+    const sel = this.state.ingredientes;
+    let mostrados = 0, contados = 0;
+    ['grade-prensados', 'grade-redondos'].forEach((id) => {
+      const g = document.getElementById(id);
+      if (!g) return;
+      const ativa = g.style.display !== 'none';
+      g.querySelectorAll('[data-add]').forEach((b) => {
+        const f = this.mapaFixos[b.dataset.add];
+        const cartao = b.parentElement;
+        if (!f || !cartao) return;
+        let ok = true;
+        sel.forEach((s) => { if (f.camadas.indexOf(s) < 0) ok = false; });
+        cartao.style.display = ok ? 'grid' : 'none';
+        if (ativa) { contados++; if (ok) mostrados++; }
+      });
+    });
+    const nada = document.getElementById('grade-nada');
+    if (nada) nada.style.display = (contados > 0 && mostrados === 0) ? 'block' : 'none';
+  }
+
+  // ---------- geometria ----------
+
+  visiveis() {
+    return this.state.pilha.filter((i) => !this.state.ausentes[i.slug] && this.mapa[i.slug].alturaPx > 0);
+  }
+
+  /* Afundamento limitado pela camada de baixo: nenhuma camada é engolida. */
+  afundamentoPx(slugs, i) {
+    if (i === 0) return 0;
+    const c = this.mapa[slugs[i]];
+    const abaixo = this.mapa[slugs[i - 1]];
+    const af = i === slugs.length - 1 ? Math.min(c.afundamento, 0.65) : c.afundamento;
+    return Math.min(c.alturaPx * af, abaixo.alturaPx * 0.55);
+  }
+
+  visivelPx(slugs, i) {
+    return this.mapa[slugs[i]].alturaPx - this.afundamentoPx(slugs, i);
+  }
+
+  fatorFechado(forma) {
+    return forma === 'prensado' ? this.PRENSA_ESPACAMENTO : this.SELADO_ESPACAMENTO;
+  }
+
+  /* medida da pilha em unidades de pixel do arquivo — sem unidade exposta */
+  unidadesPilha(slugs, fator) {
+    const com = slugs.filter((s) => this.mapa[s] && this.mapa[s].alturaPx > 0);
+    if (!com.length) return 0;
+    let u = this.mapa[com[0]].alturaPx;
+    for (let i = 1; i < com.length; i++) u += this.visivelPx(com, i) * fator;
+    return u;
+  }
+
+  geometria(lista) {
+    const { areaW, areaH, comprimido, forma } = this.state;
+    const slugs = lista.map((i) => i.slug);
+    const colW = Math.min(200, Math.max(80, areaW * 0.28));
+    const x0 = colW + 18;
+    const larguraPilha = Math.max(130, areaW - x0 - 10);
+    const prensa = comprimido && forma === 'prensado';
+    const assenta = comprimido && forma !== 'prensado';
+
+    let unidades = 0;
+    lista.forEach((inst, i) => { unidades += this.mapa[inst.slug].alturaPx + (i > 0 ? this.GAP : 0); });
+    const k = Math.min(larguraPilha / 2000, unidades ? (areaH * 0.88) / unidades : 1);
+
+    const tops = [];
+    let cursor = 0;
+    lista.forEach((inst, i) => {
+      const c = this.mapa[inst.slug];
+      if (i === 0) cursor = -c.alturaPx;
+      else if (comprimido) cursor -= this.visivelPx(slugs, i) * this.fatorFechado(forma);
+      else cursor -= c.alturaPx + this.GAP;
+      tops.push(cursor);
+    });
+    const minTop = tops.length ? tops[tops.length - 1] : 0;
+    const offsetY = (areaH - (-minTop) * k) / 2;
+    return { colW, x0, larguraPilha, k, tops, minTop, offsetY, prensa, assenta };
+  }
+
+  precoFixo(f) {
+    return f.camadas
+      .filter((s) => this.mapa[s])
+      .reduce((soma, s) => soma + this.mapa[s].precoCent, this.PRECO_BASE_CENT);
+  }
+
+  // ---------- sombra de contato ----------
+
+  sombraDe(slug, k) {
+    const b = this._baselines && this._baselines[slug];
+    if (!b) return null;
+    const cache = this.state.sombras;
+    if (cache[slug]) return cache[slug];
+    const caixa = b.caixa;
+    const w = Math.max(8, Math.round((caixa[2] - caixa[0]) * k));
+    const alturaCaixa = (caixa[3] - caixa[1]) * k;
+    let minBase = 1;
+    b.base.forEach((v) => { if (v < minBase) minBase = v; });
+    const amplitude = Math.max(6, (1 - minBase) * alturaCaixa);
+    const h = Math.round(amplitude + 34);
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+    const baseY = h - 16;
+    ctx.filter = 'blur(10px)';
+    ctx.fillStyle = '#120D0B';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    b.base.forEach((v, j) => {
+      ctx.lineTo((j / (b.base.length - 1)) * w, baseY - (1 - v) * alturaCaixa);
+    });
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+    const dado = { url: cv.toDataURL(), w, h, baseY, x0Caixa: caixa[0] * k };
+    cache[slug] = dado;
+    return dado;
+  }
+
+  // ---------- valores do template ----------
+
+  renderVals() {
+    const { areaW, areaH, comprimido, selado, selando, intro, forma, marca, filtro } = this.state;
+    const lista = this.visiveis();
+    const g = this.geometria(lista);
+    const pronto = areaW > 0 && areaH > 0;
+    const ehPrensado = forma === 'prensado';
+    const transicao = g.prensa
+      ? `top ${this.PRENSA_MS}ms ${this.PRENSA_CURVA}, transform ${this.PRENSA_MS}ms ${this.PRENSA_CURVA}`
+      : (selando || comprimido
+        ? 'top 320ms cubic-bezier(.32,.02,.24,1), transform 320ms cubic-bezier(.32,.02,.24,1)'
+        : 'top 420ms cubic-bezier(.22,1.24,.36,1), transform 300ms linear');
+
+    const camadas = [];
+    const chamadas = [];
+    const vistos = {};
+    let pilhaTopo = 0, pilhaBase = 0;
+    if (pronto) {
+      lista.forEach((inst, i) => {
+        const c = this.mapa[inst.slug];
+        vistos[inst.slug] = (vistos[inst.slug] || 0) + 1;
+        const id = `${inst.slug}-${vistos[inst.slug]}`;
+        const wTop = g.tops[i] - g.minTop;
+        const topoPx = g.offsetY + (wTop - (600 - c.alturaPx / 2)) * g.k;
+        const osc = comprimido || selando || selado
+          ? ''
+          : ` animation: rx-osc ${6.4 + i * 0.7}s ease-in-out ${-i * 1.3}s infinite;`;
+        const sombra = comprimido ? this.sombraDe(inst.slug, g.k) : null;
+        const fundoBaseY = g.offsetY + (wTop + c.alturaPx) * g.k;
+        /* prensa: o recheio espalha para os lados. gravidade: só assenta. */
+        let deforma = '';
+        if (g.prensa && !c.pao) deforma = ` transform: scaleX(${this.ESPALHA_X}) scaleY(${this.ESPALHA_Y});`;
+        else if (g.assenta && !c.pao && !c.firme) deforma = ` transform: scaleY(${this.ASSENTA_Y});`;
+        if (i === 0) pilhaBase = g.offsetY + (wTop + c.alturaPx) * g.k;
+        if (i === lista.length - 1) pilhaTopo = g.offsetY + wTop * g.k;
+
+        camadas.push({
+          id, uid: inst.uid,
+          estiloWrap: `position: absolute; left: ${g.x0}px; width: ${g.larguraPilha}px; top: ${topoPx}px; height: ${1200 * g.k}px; z-index: ${10 + i}; cursor: grab; touch-action: none; transform-origin: 50% 50%; transition: ${transicao}, opacity 200ms linear;${osc}${deforma}`,
+          estiloImg: `position: absolute; inset: 0; background: center/contain no-repeat url("${c.arquivo}"); user-select: none; -webkit-user-drag: none;`,
+          alt: c.alt,
+          estiloMarca: ehPrensado && c.pao
+            ? `position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: ${marca ? 0.27 : 0.12}; transition: opacity 200ms linear; background: repeating-linear-gradient(97deg, rgba(169,118,47,0) 0 24px, rgba(169,118,47,0.92) 24px 36px, rgba(169,118,47,0) 36px 58px); -webkit-mask-image: url("${c.arquivo}"); mask-image: url("${c.arquivo}"); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center;`
+            : 'display: none;',
+          estiloSombra: sombra
+            ? `position: absolute; left: ${sombra.x0Caixa}px; top: ${fundoBaseY - topoPx - sombra.baseY + 14}px; width: ${sombra.w}px; height: ${sombra.h}px; opacity: 0.37; pointer-events: none; background: center/100% 100% no-repeat url("${sombra.url}");`
+            : 'display: none;'
+        });
+
+        if (!comprimido && !selando) {
+          const y = g.offsetY + wTop * g.k;
+          const pontoX = g.x0 + (this._baselines && this._baselines[inst.slug] ? this._baselines[inst.slug].caixa[0] * g.k : 0);
+          chamadas.push({
+            id, indice: i, nome: c.nome,
+            aria: `${c.nome}. Setas para cima e para baixo movem, Delete tira.`,
+            estiloLinha: `position: absolute; left: ${g.colW + 6}px; width: ${Math.max(0, pontoX - g.colW - 6)}px; top: ${y}px; height: 1px; background: #A8C6D4; opacity: 0.6; pointer-events: none; z-index: 26; transition: top 300ms linear, width 300ms linear;`,
+            estiloPonto: `position: absolute; left: ${pontoX - 1.5}px; top: ${y - 1.5}px; width: 3px; height: 3px; background: #A8C6D4; border-radius: 50%; pointer-events: none; z-index: 27; transition: top 300ms linear, left 300ms linear;`,
+            estiloRotulo: `position: absolute; left: 0; width: ${g.colW}px; top: ${y - 11}px; display: flex; align-items: baseline; gap: 8px; padding: 0; background: none; border: 0; cursor: grab; text-align: left; z-index: 28; touch-action: none; transition: top 300ms linear;`
+          });
+        }
+      });
+    }
+
+    const slugs = lista.map((i) => i.slug);
+    const n = this.state.pilha.length;
+    const aviso = n > this.limiar;
+    const cent = n ? this.state.pilha.reduce((s, x) => s + this.mapa[x.slug].precoCent, this.PRECO_BASE_CENT) : 0;
+    const unidades = this.unidadesPilha(slugs, comprimido ? this.fatorFechado(forma) : 1);
+    const pct = Math.max(n ? 2 : 0, Math.min(100, (unidades / this.MEDIDA_MAX_U) * 100));
+    const podeFechar = n > 0 && !selado && !selando;
+    const brl = (c) => `R$ ${(c / 100).toFixed(2).replace('.', ',')}`;
+    const contagem = n === 0 ? 'painel vazio' : (n === 1 ? '1 camada' : `${n} camadas`);
+    const durBarra = g.prensa ? `${this.PRENSA_MS}ms ${this.PRENSA_CURVA}` : '420ms cubic-bezier(.2,.7,.3,1)';
+
+    const aba = (ativo) => `flex: 0 0 auto; padding: 10px 18px; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 0.9375rem; font-variation-settings: 'wdth' 92, 'wght' ${ativo ? 600 : 500}; cursor: pointer; background: ${ativo ? '#E9E0D3' : 'none'}; color: ${ativo ? '#120D0B' : '#E9E0D3'}; border: 1px solid ${ativo ? '#E9E0D3' : '#33251E'};`;
+    const grade = (visivel, cols) => `display: ${visivel ? 'grid' : 'none'}; grid-template-columns: repeat(auto-fill, minmax(${cols}, 1fr)); gap: clamp(8px, 1.4vw, 14px);`;
+
+    const linhas = this.state.pedido.map((p) => ({
+      id: p.id, nome: p.nome, resumo: p.resumo || '', qtd: String(p.qtd),
+      preco: brl(p.cent * p.qtd), temFoto: !!p.foto, semFoto: !p.foto, foto: p.foto || '',
+      inicial: p.nome.slice(0, 1), ehLanche: p.tipo === 'lanche',
+      ariaMenos: `Menos um ${p.nome}`, ariaMais: `Mais um ${p.nome}`,
+      ariaModificar: `Modificar ${p.nome}`, ariaRemover: `Remover ${p.nome} do pedido`
+    }));
+    const contados = this.state.pedido.reduce((s, p) => s + p.qtd, 0);
+    const totalPedido = this.totalCent();
+    const gancho = this.ganchoAtual();
+    const ultimoItem = this.state.pedido.filter((p) => p.id === this.state.ultimo)[0] || null;
+    const cheio = this.state.pedido.length > 0;
+    const botao = (on) => `min-height: 46px; padding: 13px 20px; background: ${on ? '#A9762F' : '#1C1512'}; color: ${on ? '#120D0B' : '#E9E0D3'}; border: 1px solid ${on ? '#A9762F' : '#33251E'}; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: ${on ? 'pointer' : 'default'}; opacity: ${on ? '1' : '0.45'};`;
+
+    return {
+      introViva: intro !== 'fim',
+      estiloIntro: `position: fixed; inset: 0; z-index: 50; background: #120D0B; display: grid; place-items: center; padding: clamp(20px, 5vw, 64px); opacity: ${intro === 'saindo' ? '0' : '1'}; transition: opacity 480ms cubic-bezier(.2,.7,.3,1); cursor: pointer;`,
+      estiloFiltroPrensados: aba(filtro === 'prensados'),
+      estiloFiltroRedondos: aba(filtro === 'redondos'),
+      estiloFiltroMonte: aba(filtro === 'monte'),
+      estiloGradePrensados: grade(filtro === 'prensados', 'max(148px, 23%)'),
+      estiloGradeRedondos: grade(filtro === 'redondos', 'max(148px, 23%)'),
+      estiloGradeMonte: grade(filtro === 'monte', 'max(148px, 23%)'),
+      takeover: this.state.takeover,
+      nomeAtual: this.state.nomeAtual,
+      camadas,
+      chamadas,
+      vazio: n === 0,
+      precoTexto: brl(cent),
+      camadasTexto: contagem,
+      barraAria: `Altura da pilha: ${Math.round(pct)} por cento do medidor${comprimido ? ', depois de fechar' : ''}`,
+      estiloBarra: `width: ${pct.toFixed(1)}%; height: 100%; background: ${aviso ? '#A9762F' : '#A8C6D4'}; transition: width ${durBarra}, background-color 200ms linear;`,
+      avisoTexto: aviso ? 'Risco de desmontar. Segue por sua conta.' : `até ${this.limiar} camadas a pilha para em pé`,
+      estiloAviso: `font-variation-settings: 'wdth' 92, 'wght' 500; font-size: 0.8125rem; line-height: 1.4; color: ${aviso ? '#A9762F' : '#E9E0D3'}; opacity: ${aviso ? '1' : '0.5'};`,
+      estiloSelar: `margin-top: 2px; padding: 14px 20px; background: ${podeFechar ? '#A9762F' : '#1C1512'}; color: ${podeFechar ? '#120D0B' : '#E9E0D3'}; border: 1px solid ${podeFechar ? '#A9762F' : '#33251E'}; border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 1rem; font-variation-settings: 'wght' 600; cursor: ${podeFechar ? 'pointer' : 'default'}; opacity: ${podeFechar ? '1' : '0.45'};`,
+      textoSelar: selado
+        ? 'No papel'
+        : (selando
+          ? (ehPrensado ? 'Prensando…' : 'Selando…')
+          : (ehPrensado ? 'Prensar na chapa' : 'Selar na chapa')),
+      recado: this.state.recado,
+      linhas: linhas,
+      pedidoVazio: linhas.length === 0,
+      contagemPedido: contados === 0 ? 'pedido vazio' : (contados === 1 ? '1 item' : `${contados} itens`),
+      carrinhoAberto: this.state.carrinho,
+      mostrandoLista: this.state.carrinho && !this.state.resumo,
+      mostrandoResumo: this.state.carrinho && this.state.resumo,
+      tituloCarrinho: this.state.resumo ? 'Resumo do pedido' : 'Seu pedido',
+      subtotalTexto: brl(totalPedido),
+      temGancho: !!gancho && !this.state.resumo,
+      ganchoTexto: gancho ? gancho.texto : '',
+      ganchoAcao: gancho ? gancho.acao : '',
+      resumoTexto: this.resumoDoPedido(),
+      linkWhats: this.linkDoPedido(),
+      recadoCarrinho: this.state.recadoCarrinho,
+      ultimoVivo: !!ultimoItem && !this.state.carrinho,
+      ultimoNome: ultimoItem ? ultimoItem.nome : '',
+      ultimoId: ultimoItem ? ultimoItem.id : '',
+      estiloAbrirPedido: botao(cheio),
+      estiloFecharPedido: botao(cheio),
+      precoRefri: brl(this.mapaExtras['refri'].precoCent),
+      precoGuarana: brl(this.mapaExtras['guarana'].precoCent),
+      precoSuco: brl(this.mapaExtras['suco-laranja'].precoCent),
+      precoAgua: brl(this.mapaExtras['agua'].precoCent),
+      precoMilkshake: brl(this.mapaExtras['milkshake'].precoCent),
+      precoBatataFrita: brl(this.mapaExtras['batata-frita'].precoCent),
+      precoBatataCheddar: brl(this.mapaExtras['batata-cheddar'].precoCent),
+      precoAneis: brl(this.mapaExtras['aneis-cebola'].precoCent),
+      horarioTexto: this.state.horario.t,
+      horarioSub: this.state.horario.s,
+      precoCompleto: brl(this.precoFixo(this.mapaFixos['prensado-completo'])),
+      precoFrango: brl(this.precoFixo(this.mapaFixos['prensado-frango'])),
+      precoCalabresa: brl(this.precoFixo(this.mapaFixos['prensado-calabresa'])),
+      precoMeiaNoite: brl(this.precoFixo(this.mapaFixos['prensado-meia-noite'])),
+      precoXSalada: brl(this.precoFixo(this.mapaFixos['x-salada'])),
+      precoXTudo: brl(this.precoFixo(this.mapaFixos['x-tudo']))
+    };
+  }
+}
+</script>
+</body>
+</html>

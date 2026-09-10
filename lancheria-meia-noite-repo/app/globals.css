@@ -1,0 +1,25 @@
+:root {
+  /* Os seis. Nenhum token novo, nem para hover/foco.
+     Frio (--letreiro) = sistema. Quente (--latao) = comida. Nunca no mesmo elemento. */
+  --borra: #120D0B;
+  --fumo: #1C1512;
+  --traco: #33251E;
+  --osso: #E9E0D3;
+  --latao: #A9762F;
+  --letreiro: #A8C6D4;
+}
+
+@property --lt-acende { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --lt-letras { syntax: '<number>'; inherits: true; initial-value: 0; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--borra); }
+body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-serif; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
