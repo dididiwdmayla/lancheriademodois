@@ -39,6 +39,12 @@ export function caixaX0(slug: string): number {
   return BASELINES[slug]?.caixa[0] ?? 0
 }
 
+/** Largura da caixa do objeto no arquivo. Mesma fonte que a sombra de contato usa. */
+export function larguraCaixa(slug: string): number {
+  const b = BASELINES[slug]
+  return b ? b.caixa[2] - b.caixa[0] : 0
+}
+
 // Memo de uma função pura: mesma camada, mesma escala, mesmo data URL. A chave inclui a
 // escala porque redimensionar a janela troca `k` e a sombra antiga não serve mais.
 const cache = new Map<string, Sombra>()

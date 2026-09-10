@@ -6,7 +6,7 @@
 
 import type { CSSProperties } from 'react'
 import { type Camada as DadosCamada, urlCamada } from '@/data/camadas'
-import { ASSENTA_Y, ESPALHA_X, ESPALHA_Y, expostoPx, type Forma, type Geometria } from './prensa'
+import { ASSENTA_Y, ESPALHA_Y, expostoPx, type Forma, type Geometria } from './prensa'
 import { caixaX0, DESLOCAMENTO_PX, OPACIDADE, sombraDe } from './sombra'
 
 export type EstadoPilha = {
@@ -60,7 +60,7 @@ export function Camada({ camada, uid, n, indice, slugs, g, estado, transicao }: 
   // A pilha explodida respira. Cada camada fora de fase das outras, senão vira acordeão.
   if (!parado) estilo.animation = `rx-osc ${6.4 + indice * 0.7}s ease-in-out ${-indice * 1.3}s infinite`
   // Prensa: o recheio espalha para os lados. Gravidade: o que é mole só assenta.
-  if (g.prensa && !camada.pao) estilo.transform = `scaleX(${ESPALHA_X}) scaleY(${ESPALHA_Y})`
+  if (g.prensa && !camada.pao) estilo.transform = `scaleX(${g.espalhaX}) scaleY(${ESPALHA_Y})`
   else if (g.assenta && !camada.pao && !camada.firme) estilo.transform = `scaleY(${ASSENTA_Y})`
 
   const sombra = comprimido ? sombraDe(camada.slug, g.k) : null

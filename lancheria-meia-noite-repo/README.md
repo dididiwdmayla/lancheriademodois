@@ -8,15 +8,28 @@ perguntar.
 
 ## Estado
 
-Andaime, dados e assets prontos. **Componentes ainda não portados.**
+Porte em andamento. O comportamento de referência continua em
+`export/lancheria-meia-noite.dc.html` — o componente único produzido no Claude Design, que
+não roda sozinho no navegador (referencia `./support.js`, o runtime do Claude Design, que
+não veio no pacote) e serve como leitura de código, não como demo.
 
-O comportamento vive em `export/lancheria-meia-noite.dc.html` — um componente único
-produzido no Claude Design, onde o letreiro, o raio-x, a prensa, o salto, o carrinho e os
-trilhos já funcionam. A próxima tarefa é portá-lo para React preservando o comportamento
-exatamente. Ver `design/PROMPT-09-porte.md`.
+**Portado:**
+- `components/letreiro/` — o letreiro e a intro
+- `components/raio-x/` — a pilha explodida, a física de afundamento (`prensa.ts`), a
+  sombra de contato (`sombra.ts`), a prensa e a gravidade, o salto (`salto.ts`), o medidor
+  e o trilho de ingredientes ("monte o seu")
+- `components/pedido/` — o balcão e a barra do pedido
 
-O export referencia `./support.js`, que é o runtime do Claude Design e não veio no pacote.
-Ele não roda sozinho no navegador — serve como leitura de código, não como demo.
+**Incompleto:**
+- Barra do pedido: o botão "Abrir pedido" existe (`data-abrir-carrinho`) mas não abre nada
+  — o carrinho é a fase seguinte
+- Única porta de entrada é `?lanche=<slug>`, direto no raio-x montado; não há cardápio
+
+**Não existe ainda:** cardápio em grade, filtro por ingrediente, trilho horizontal com
+deslize-que-prensa (Destaques/Sugestões/Bebidas/Acompanhamentos), carrinho aberto,
+bebidas, acompanhamentos, hero, seção da chapa, "está aberto?", rodapé.
+
+Ver `design/PROMPT-09-porte.md` para o plano de porte.
 
 ## Rodar
 
@@ -32,8 +45,8 @@ npm run qa          # asserções em texto + uma folha de contato
 ```
 AGENTS.md      contrato — a lei do projeto
 CLAUDE.md      uma linha: @AGENTS.md
-app/           layout com next/font, tokens em globals.css
-components/    vazio até o porte
+app/           layout com next/font, tokens em globals.css, a página que abre o raio-x
+components/    letreiro/, raio-x/, pedido/ — ver Estado
 data/          camadas.ts, fixos.ts, casa.ts, baselines.json
 design/        briefings e prompts, na ordem em que foram dados
 export/        o HTML do Claude Design
@@ -43,6 +56,7 @@ scripts/       qa-visual.mjs
 
 ## O que falta
 
-- Porte dos componentes (`design/PROMPT-09-porte.md`)
+Componentes que faltam portar: ver "Estado" acima.
+
 - Fotos de bebida e acompanhamento — hoje as duas seções são peça tipográfica
 - Série de giro 360° — adiada, o hero funciona sem ela

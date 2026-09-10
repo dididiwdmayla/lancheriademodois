@@ -4,6 +4,7 @@
 // Tudo aqui é puro: entra composição e caixa, sai geometria. Nenhum DOM, nenhum estado.
 
 import { CAMADAS, MAPA_CAMADAS } from '@/data/camadas'
+import { larguraCaixa } from './sombra'
 
 export type Forma = 'prensado' | 'redondo'
 
@@ -21,11 +22,17 @@ export const PRENSA_CURVA = 'cubic-bezier(.14,.92,.24,1)'
 /**
  * O recheio espalha para os lados. Sem isso sobra fresta entre os pães nas pontas.
  *
- * 1.16 e não 1.14: em 1.14 o bacon alcançava 1732 contra os 1749 do pão e o
- * `prensado-meia-noite` ficava com fresta nas pontas — era o único dos quatro que não
- * fechava. O mínimo para o bacon cobrir é 1.151; 1.16 dá 1763, com folga.
+ * Um número fixo nunca cobre toda composição possível — um lanche cujo recheio mais largo
+ * fosse mais estreito que o testado sempre pediria mais. Por isso o fator é derivado, não
+ * escrito à mão: a razão entre a largura do pão e a do recheio mais largo da composição.
+ *
+ * Piso 1.16: preserva o espalhamento como gesto mesmo quando o recheio já cobria sozinho.
+ * Teto 1.30: não estica um recheio estreito a ponto de distorcer a fotografia. Composição
+ * estreita bate no teto e sobra vão nas pontas — aceitável, porque pilha estreita é pilha
+ * baixa e os dois pães ficam quase encostados. Não precisa de tratamento.
  */
-export const ESPALHA_X = 1.16
+export const ESPALHA_X_MIN = 1.16
+export const ESPALHA_X_MAX = 1.30
 export const ESPALHA_Y = 0.8
 /** Redondo: as camadas moles assentam, sem espalhar. */
 export const ASSENTA_Y = 0.9
@@ -87,6 +94,22 @@ export function fatorFechado(forma: Forma): number {
   return forma === 'prensado' ? PRENSA_ESPACAMENTO : SELADO_ESPACAMENTO
 }
 
+/**
+ * O fator de espalhamento daquela composição: largura do pão sobre a do recheio mais
+ * largo, no piso `ESPALHA_X_MIN` e no teto `ESPALHA_X_MAX`. Ver o comentário de
+ * `ESPALHA_X_MIN`. Sem pão ou sem recheio na lista, devolve o piso — não há razão pra
+ * calcular.
+ */
+export function espalhaXDe(slugs: string[]): number {
+  const paoSlug = slugs.find((s) => ehPao(s))
+  const larguraPao = paoSlug ? larguraCaixa(paoSlug) : 0
+  const maiorRecheio = slugs
+    .filter((s) => !ehPao(s))
+    .reduce((max, s) => Math.max(max, larguraCaixa(s)), 0)
+  if (!larguraPao || !maiorRecheio) return ESPALHA_X_MIN
+  return Math.min(ESPALHA_X_MAX, Math.max(ESPALHA_X_MIN, larguraPao / maiorRecheio))
+}
+
 /** Altura da pilha em unidades de pixel do arquivo — medida sem unidade exposta. */
 export function unidadesPilha(slugs: string[], fator: number): number {
   const com = slugs.filter((s) => MAPA_CAMADAS[s] && MAPA_CAMADAS[s].alturaPx > 0)
@@ -109,6 +132,8 @@ export type Geometria = {
   offsetY: number
   prensa: boolean
   assenta: boolean
+  /** Espalhamento do recheio nesta composição. Só importa quando `prensa` é true. */
+  espalhaX: number
 }
 
 /**
@@ -148,6 +173,9 @@ export function geometria(opcoes: {
   })
   const minTop = tops.length ? tops[tops.length - 1] : 0
   const offsetY = (areaH - -minTop * k) / 2
+  // Calculado no momento de prensar: fora dele o valor não é usado, e computar sempre
+  // gastaria a mesma volta pelas larguras à toa em cada render explodido.
+  const espalhaX = prensa ? espalhaXDe(slugs) : ESPALHA_X_MIN
 
-  return { colW, x0, larguraPilha, k, tops, minTop, offsetY, prensa, assenta }
+  return { colW, x0, larguraPilha, k, tops, minTop, offsetY, prensa, assenta, espalhaX }
 }

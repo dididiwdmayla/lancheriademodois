@@ -81,10 +81,20 @@ exatamente 45,0%, ou seja, o limite é a restrição ativa em todos. Alterar qua
 **Prensa (só prensado), 340ms, aceleração forte e parada seca — sem mola:**
 ```
 espacamento = espacamento_explodido × 0.30
-recheio (não-pão): scaleX(1.16) scaleY(0.80)
+recheio (não-pão): scaleX(ESPALHA_X) scaleY(0.80)
+
+ESPALHA_X = clamp(larguraPao / maiorRecheio, 1.16, 1.30)
+larguraPao   = largura da camada de pão do lanche
+maiorRecheio = maior largura entre as camadas não-pão da composição
 ```
 O `scaleX` não é enfeite: sem ele sobra fresta entre os dois pães nas pontas e o lanche não
-lê como prensado.
+lê como prensado. `ESPALHA_X` é **derivado da composição, nunca escrito à mão** — um
+número fixo nunca cobre toda composição possível. Piso 1.16: preserva o espalhamento como
+gesto mesmo quando o recheio já cobria sozinho. Teto 1.30: não estica um recheio estreito a
+ponto de distorcer a fotografia. Composição estreita bate no teto e sobra vão nas pontas —
+aceitável, porque pilha estreita é pilha baixa e os dois pães ficam quase encostados. Não
+precisa de tratamento; se aparecer visível num lanche real, avise antes de corrigir.
+Qualquer lugar que precise de `ESPALHA_X` importa de `prensa.ts`, nunca reescreve a conta.
 
 **Gravidade (só redondo):**
 ```
@@ -95,9 +105,13 @@ camadas moles: scaleY(0.90), sem scaleX
 **Deslize que prensa** — `t` = 0 no centro do trilho, 1 na borda do foco:
 ```
 espacamento = espacamento_explodido × (0.30 + 0.70 × t)
-recheio: scaleX(1.14 − 0.14 × t)  scaleY(0.80 + 0.20 × t)
+recheio: scaleX(ESPALHA_X − (ESPALHA_X − 1) × t)
+         scaleY(0.80 + 0.20 × t)
 ```
-Acompanha o dedo continuamente. Não é estado que troca no fim do gesto.
+Em `t = 0` cai exatamente no estado prensado daquele lanche; em `t = 1`, no explodido — é
+por isso que a fórmula reusa `ESPALHA_X` em vez de citar um número. `ESPALHA_X` é o mesmo
+fator derivado da composição descrito acima, nunca uma segunda constante. Acompanha o dedo
+continuamente. Não é estado que troca no fim do gesto.
 
 **Salto, 640ms:** antecipação 0–90ms `scaleY(.86) scaleX(1.04)`; impulso 90–200ms sobe 12%
 da viewport com `scaleY(1.08)` e 4° de rotação; queda e desmonte 200–560ms com 45ms de
