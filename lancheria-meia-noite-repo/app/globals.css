@@ -23,3 +23,40 @@ body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-seri
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Letreiro — números extraídos do export, não altere sem checar contra
+   /export/lancheria-meia-noite.dc.html. O clock único: uma animação escrevendo em
+   --lt-acende e --lt-letras. O tremor: quatro grupos rodando fora de fase. */
+@keyframes lt-ignicao {
+  0%    { --lt-acende: 0;    --lt-letras: 0; }
+  4.9%  { --lt-acende: 0;    --lt-letras: 0; }
+  5%    { --lt-acende: 0.40; --lt-letras: 0; }
+  10.9% { --lt-acende: 0.40; --lt-letras: 0; }
+  11%   { --lt-acende: 0;    --lt-letras: 0; }
+  42%   { --lt-acende: 0;    --lt-letras: 0; }
+  47%   { --lt-acende: 0.90; --lt-letras: 0.30; }
+  53%   { --lt-acende: 0.44; --lt-letras: 0.16; }
+  64%   { --lt-acende: 0.97; --lt-letras: 0.86; }
+  73%   { --lt-acende: 0.78; --lt-letras: 0.70; }
+  100%  { --lt-acende: 1;    --lt-letras: 1; }
+}
+@keyframes lt-tremor {
+  0%, 100% { opacity: 1; }
+  17% { opacity: 0.983; }
+  23% { opacity: 0.999; }
+  41% { opacity: 0.987; }
+  55% { opacity: 1; }
+  68% { opacity: 0.980; }
+  79% { opacity: 0.996; }
+}
+
+/* Flag escrita antes do primeiro paint (script inline em Letreiro.tsx), não em
+   useEffect: cobre o intervalo entre o HTML bruto do servidor e a hidratação. */
+html[data-lt-aceso='1'] {
+  --lt-acende: 1;
+  --lt-letras: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { --lt-acende: 1 !important; --lt-letras: 1 !important; }
+}

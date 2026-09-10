@@ -39,6 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="pt-BR"
       className={`${fraunces.variable} ${archivo.variable} ${plexMono.variable}`}
+      // data-lt-aceso é escrito por um script inline (components/letreiro/Letreiro.tsx)
+      // antes da hidratação, pra evitar o letreiro nascer apagado na 2ª visita da sessão.
+      suppressHydrationWarning
     >
       <body>{children}</body>
     </html>

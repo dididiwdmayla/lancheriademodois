@@ -13,7 +13,7 @@
 // uso:  node scripts/qa-visual.mjs [url]
 
 import { chromium } from 'playwright'
-import { writeFileSync, mkdirSync } from 'node:fs'
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs'
 
 const URL = process.argv[2] ?? 'http://localhost:3000'
 const LARGURA_RECORTE = 360
@@ -21,7 +21,14 @@ const QUALIDADE = 55
 
 mkdirSync('qa', { recursive: true })
 
-const navegador = await chromium.launch()
+// Em alguns ambientes de execução (contêiner efêmero do Claude Code), o download do
+// Chromium do Playwright é bloqueado e um binário já vem pré-instalado num caminho fixo.
+// Fora desses ambientes essa variável/caminho não existem e o Playwright resolve sozinho.
+const CHROMIUM_FIXO = '/opt/pw-browsers/chromium'
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+  ?? (existsSync(CHROMIUM_FIXO) ? CHROMIUM_FIXO : undefined)
+
+const navegador = await chromium.launch(executablePath ? { executablePath } : undefined)
 const ctx = await navegador.newContext({
   viewport: { width: 390, height: 844 },
   deviceScaleFactor: 1, // nunca 2 — dobra o peso da imagem sem ajudar o julgamento
