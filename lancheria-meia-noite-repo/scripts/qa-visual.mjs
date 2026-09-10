@@ -21,6 +21,9 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs'
 /** Caixa de cada silhueta, a mesma que a sombra de contato usa. Nenhuma imagem é lida. */
 const CAIXAS = JSON.parse(readFileSync('data/baselines.json', 'utf8'))
 const larguraDe = (slug) => CAIXAS[slug].caixa[2] - CAIXAS[slug].caixa[0]
+/** Teto do fator de espalhamento. Duplicado de `prensa.ts` pelo mesmo motivo de
+ * `larguraDe`: este script é puro Node, sem passar pelo build do TypeScript. */
+const ESPALHA_X_TETO = 1.3
 
 const URL = process.argv[2] ?? 'http://localhost:3000'
 const LARGURA_RECORTE = 360
@@ -67,6 +70,10 @@ await ctx.addInitScript(() => {
 
 const pg = await ctx.newPage()
 
+// Exceção não tratada de página é um FALHA, não um crash silencioso do script.
+const excecoes = []
+pg.on('pageerror', (erro) => excecoes.push(String(erro)))
+
 const linhas = []
 const recortes = []
 const diz = (ok, txt) => linhas.push(`${ok ? 'ok  ' : 'FALHA'} ${txt}`)
@@ -93,6 +100,46 @@ async function encarar() {
   await pg.waitForTimeout(80)
 }
 
+/**
+ * Sela a composição atual e lê, do próprio DOM — não de uma cópia da constante, que é
+ * justamente o que pegaria divergência com `prensa.ts` — o fator aplicado ao recheio mais
+ * largo. Só mede; não julga se o alcance está certo, porque o "certo" depende da
+ * composição: nas seis fixas o recheio tem de alcançar o pão, mas um recheio estreito de
+ * propósito pode bater no teto sem alcançar — vão esperado, não falha. Quem decide a
+ * asserção é o chamador.
+ */
+async function medirFresta() {
+  const camadas = await pg.evaluate(() =>
+    [...document.querySelectorAll('#rx-pilha [id^="rx-camada-"]')].map((e) => ({
+      id: e.id.replace('rx-camada-', ''),
+    })))
+  const naPilha = camadas.map((c) => ({ inst: c.id, slug: c.id.replace(/-\d+$/, '') }))
+  const pao = larguraDe(naPilha[0].slug)
+  const maisLargo = naPilha
+    .filter((c) => !c.slug.startsWith('pao-'))
+    .reduce((a, c) => (larguraDe(c.slug) > larguraDe(a.slug) ? c : a))
+
+  // Lê o `style` declarado, não o computado: o computado devolve o valor no meio da
+  // transição de 340ms, e um relógio fixo aqui corre contra a máquina de estados — na
+  // navegação mais pesada do loop ele chegava a ler 1.000, com a prensa ainda parada.
+  // O alvo declarado não tem quadro intermediário; esperar por ele dispensa o relógio.
+  await pg.waitForSelector('#rx-selar:not([disabled])', { timeout: 5000 })
+  await pg.click('#rx-selar')
+  const fator = await pg
+    .waitForFunction(
+      (inst) => {
+        const el = document.getElementById(`rx-camada-${inst}`)
+        const m = el && /scaleX\(([\d.]+)\)/.exec(el.style.transform || '')
+        return m ? Number(m[1]) : false
+      },
+      maisLargo.inst,
+      { timeout: 3000, polling: 16 },
+    )
+    .then((h) => h.jsonValue())
+  const alcance = Math.round(larguraDe(maisLargo.slug) * fator)
+  return { maisLargo: maisLargo.slug, pao, fator, alcance }
+}
+
 // ---------- 1. asserções numéricas ----------
 
 await abrir(LANCHE_CHEIO)
@@ -108,6 +155,10 @@ diz(acende === '1', `letreiro estabilizado (#lt-svg --lt-acende=${acende || 'n/d
 
 pula('itens do cardápio na primeira tela', 'cardápio em grade')
 pula('filtro por ingrediente como eixo separado', 'cardápio em grade')
+
+// Fator, recheio mais largo e alcance de cada prensado — o relatório final soma o
+// sintético a esta mesma lista.
+const frestas = []
 
 // Teto de afundamento: nenhuma camada some atrás da de cima. É o teste do tomate, e ele
 // roda em todas as composições do cardápio — não só na que tem mais recheio.
@@ -134,45 +185,56 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
   })
   diz(bate.nos === bate.lido, `${slug}: medidor diz ${bate.lido}, painel desenha ${bate.nos} camadas`)
 
-  // Fresta da prensa: com o recheio espalhado em scaleX, o mais largo dele tem de alcançar
-  // a largura do pão — senão as duas metades se encostam sem nada entre elas nas pontas.
-  // A composição sai dos próprios ids da pilha desenhada, não de uma segunda lista.
   if (!PRENSADOS.includes(slug)) continue
-  const naPilha = camadas.map((c) => ({ inst: c.id, slug: c.id.replace(/-\d+$/, '') }))
-  const pao = larguraDe(naPilha[0].slug)
-  const maisLargo = naPilha
-    .filter((c) => !c.slug.startsWith('pao-'))
-    .reduce((a, c) => (larguraDe(c.slug) > larguraDe(a.slug) ? c : a))
-
-  // Sela e lê o scaleX do próprio DOM. Repetir a constante aqui daria uma segunda cópia
-  // de 1.16 no QA, livre para divergir de prensa.ts sem ninguém notar — e é justamente
-  // esta asserção que existe para pegar divergência.
-  //
-  // Lê o `style` declarado, não o computado: o computado devolve o valor no meio da
-  // transição de 340ms, e um relógio fixo aqui corre contra a máquina de estados — na
-  // navegação mais pesada do loop ele chegava a ler 1.000, com a prensa ainda parada.
-  // O alvo declarado não tem quadro intermediário; esperar por ele dispensa o relógio.
-  await pg.waitForSelector('#rx-selar:not([disabled])', { timeout: 5000 })
-  await pg.click('#rx-selar')
-  const escalaX = await pg
-    .waitForFunction(
-      (inst) => {
-        const el = document.getElementById(`rx-camada-${inst}`)
-        const m = el && /scaleX\(([\d.]+)\)/.exec(el.style.transform || '')
-        return m ? Number(m[1]) : false
-      },
-      maisLargo.inst,
-      { timeout: 3000, polling: 16 },
-    )
-    .then((h) => h.jsonValue())
-  const alcance = Math.round(larguraDe(maisLargo.slug) * escalaX)
+  // Fresta da prensa: o recheio mais largo, já espalhado em scaleX, tem de alcançar a
+  // largura do pão — senão as duas metades se encostam sem nada entre elas nas pontas.
+  const fresta = await medirFresta()
+  frestas.push({ rotulo: slug, ...fresta })
   diz(
-    alcance >= pao,
-    `${slug}: prensado, recheio mais largo é ${maisLargo.slug}, alcança ${alcance}` +
-      ` de ${pao} do pão (scaleX ${escalaX.toFixed(3)}` +
-      `${alcance >= pao ? '' : `, ${pao - alcance}px a menos`})`,
+    fresta.alcance >= fresta.pao,
+    `${slug}: prensado, recheio mais largo é ${fresta.maisLargo}, alcança ${fresta.alcance}` +
+      ` de ${fresta.pao} do pão (scaleX ${fresta.fator.toFixed(3)}` +
+      `${fresta.alcance >= fresta.pao ? '' : `, ${fresta.pao - fresta.alcance}px a menos`})`,
   )
 }
+
+// Caso sintético: um lanche fora dos seis fixos, só pão + molho + tomate — os dois
+// recheios mais estreitos do cardápio. Nenhum fixo tem essa composição; ela nasce aqui
+// pelos mesmos gestos do cliente: Delete tira pelo teclado, o trilho põe. Existe para
+// confirmar que o fator bate no teto de 1.30 sem lançar exceção, não só nas seis
+// composições fixas.
+await abrir(LANCHE_MAGRO)
+while ((await pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)) > 2) {
+  await pg.focus('[data-chamada="1"]')
+  await pg.keyboard.press('Delete')
+  await pg.waitForTimeout(60)
+}
+await pg.click('#rx-trilho [data-slug="molho"]')
+await pg.waitForTimeout(80)
+await pg.click('#rx-trilho [data-slug="tomate"]')
+await pg.waitForTimeout(80)
+const composto = await pg.evaluate(() =>
+  [...document.querySelectorAll('#rx-pilha [id^="rx-camada-"]')].map((e) =>
+    e.id.replace(/^rx-camada-/, '').replace(/-\d+$/, '')))
+diz(
+  composto.join('+') === 'pao-prensado-base+molho+tomate+pao-prensado-topo',
+  `sintético: composição montada é ${composto.join(' + ') || 'vazia'}`,
+)
+const excecoesAntes = excecoes.length
+const sintetico = await medirFresta()
+frestas.push({ rotulo: 'sintético: pão + molho + tomate', ...sintetico })
+// Aqui o teste NÃO é alcance >= pão: com recheio tão estreito o fator bate no teto e
+// sobra vão de propósito (ver AGENTS.md). O que importa é o teto ter sido respeitado e
+// nada ter quebrado ao selar.
+diz(
+  sintetico.fator >= ESPALHA_X_TETO - 1e-6,
+  `sintético: fator bateu no teto (${sintetico.fator.toFixed(3)} contra ${ESPALHA_X_TETO.toFixed(3)})` +
+    ` — alcança ${sintetico.alcance} de ${sintetico.pao} do pão, vão esperado`,
+)
+diz(
+  excecoes.length === excecoesAntes,
+  `sintético: exceções lançadas ao selar ${excecoes.length - excecoesAntes}`,
+)
 
 // nenhuma medição em --latao
 await abrir(LANCHE_CHEIO)
@@ -274,6 +336,19 @@ diz(
   `sob prefers-reduced-motion o lanche chega ao pedido: ${totalParado || 'nada'} (pedia ${precoParado})`,
 )
 await ctxParado.close()
+
+// ---------- resumo do espalhamento ----------
+//
+// Uma linha por composição prensada: o fator calculado, o recheio que decidiu o fator, e
+// o alcance final contra a largura do pão. As mesmas medidas da asserção de fresta acima,
+// só que juntas — para não ter que caçar cinco linhas espalhadas pelo texto.
+linhas.push('', 'resumo do espalhamento (fator · recheio mais largo · alcance / pão):')
+frestas.forEach((f) => {
+  linhas.push(
+    `  ${f.rotulo}: fator ${f.fator.toFixed(3)} · ${f.maisLargo} (${larguraDe(f.maisLargo)}px)` +
+      ` · alcança ${f.alcance}/${f.pao}`,
+  )
+})
 
 // ---------- folha de contato ----------
 
