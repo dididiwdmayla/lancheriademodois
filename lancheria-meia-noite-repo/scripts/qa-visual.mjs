@@ -16,7 +16,11 @@
 // uso:  node scripts/qa-visual.mjs [url]
 
 import { chromium } from 'playwright'
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs'
+import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs'
+
+/** Caixa de cada silhueta, a mesma que a sombra de contato usa. Nenhuma imagem é lida. */
+const CAIXAS = JSON.parse(readFileSync('data/baselines.json', 'utf8'))
+const larguraDe = (slug) => CAIXAS[slug].caixa[2] - CAIXAS[slug].caixa[0]
 
 const URL = process.argv[2] ?? 'http://localhost:3000'
 const LARGURA_RECORTE = 360
@@ -33,6 +37,8 @@ const REDONDOS = ['x-salada', 'x-tudo']
 const EXPOSICAO_MIN = 0.45
 /** Depois de mandar prensar: 60ms de espera + 340ms de prensa. Antes do despacho, aos 660ms. */
 const ESPERA_PRENSA_MS = 430
+/** O mesmo scaleX da prensa (components/raio-x/prensa.ts). */
+const ESPALHA_X = 1.14
 
 mkdirSync('qa', { recursive: true })
 
@@ -67,6 +73,9 @@ const linhas = []
 const recortes = []
 const diz = (ok, txt) => linhas.push(`${ok ? 'ok  ' : 'FALHA'} ${txt}`)
 const pula = (txt, fase) => linhas.push(`pula  ${txt} — chega na fase: ${fase}`)
+// Medida sem veredito: número que ninguém calibrou ainda. Reportar move o assunto;
+// inventar um limiar aqui seria fabricar calibragem.
+const mede = (txt) => linhas.push(`medida ${txt}`)
 
 async function recorte(nome, seletor) {
   const el = await pg.$(seletor)
@@ -129,6 +138,21 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
     return { nos, lido }
   })
   diz(bate.nos === bate.lido, `${slug}: medidor diz ${bate.lido}, painel desenha ${bate.nos} camadas`)
+
+  // Fresta da prensa: com o recheio espalhado em scaleX, o mais largo dele tem de alcançar
+  // a largura do pão — senão as duas metades se encostam sem nada entre elas nas pontas.
+  // A composição sai dos próprios ids da pilha desenhada, não de uma segunda lista.
+  if (!PRENSADOS.includes(slug)) continue
+  const naPilha = camadas.map((c) => c.id.replace(/-\d+$/, ''))
+  const pao = larguraDe(naPilha[0])
+  const maisLargo = naPilha
+    .filter((s) => !s.startsWith('pao-'))
+    .reduce((a, s) => (larguraDe(s) > larguraDe(a) ? s : a))
+  const alcance = Math.round(larguraDe(maisLargo) * ESPALHA_X)
+  mede(
+    `${slug}: recheio mais largo é ${maisLargo}, alcança ${alcance} de ${pao} do pão` +
+      ` (${alcance >= pao ? 'cobre' : `${pao - alcance}px a menos`})`,
+  )
 }
 
 // nenhuma medição em --latao
@@ -211,6 +235,26 @@ diz(
 )
 
 pula('recorte do carrinho aberto', 'carrinho')
+
+// prefers-reduced-motion vale para tudo que se move, sem exceção. Sob ele a prensa não
+// tem quadros e o salto não existe — mas o lanche precisa chegar ao pedido do mesmo jeito.
+const ctxParado = await navegador.newContext({
+  viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 1,
+  reducedMotion: 'reduce',
+})
+const pgParada = await ctxParado.newPage()
+await pgParada.goto(`${URL}/?lanche=${LANCHE_MAGRO}`, { waitUntil: 'networkidle' })
+await pgParada.waitForSelector('#rx-selar:not([disabled])', { timeout: 5000 })
+const precoParado = await pgParada.evaluate(() => document.getElementById('rx-preco-valor')?.textContent ?? '')
+await pgParada.click('#rx-selar')
+await pgParada.waitForTimeout(600)
+const totalParado = await pgParada.evaluate(() => document.getElementById('barra-total')?.textContent ?? '')
+diz(
+  totalParado === precoParado,
+  `sob prefers-reduced-motion o lanche chega ao pedido: ${totalParado || 'nada'} (pedia ${precoParado})`,
+)
+await ctxParado.close()
 
 // ---------- folha de contato ----------
 
