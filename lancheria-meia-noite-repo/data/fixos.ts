@@ -37,3 +37,6 @@ export const EXTRAS: Extra[] = [
     { slug: 'batata-cheddar', nome: 'Batata com cheddar e bacon', grupo: 'acompanhamento', precoCent: 2600, icone: '' },
     { slug: 'aneis-cebola', nome: 'Anéis de cebola', grupo: 'acompanhamento', precoCent: 2000, icone: '' }
 ]
+
+/** Índice por slug. Derivado, não uma segunda fonte da verdade. */
+export const MAPA_FIXOS: Record<string, Fixo> = Object.fromEntries(FIXOS.map((f) => [f.slug, f]))

@@ -50,6 +50,26 @@ body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-seri
   79% { opacity: 0.996; }
 }
 
+/* Raio-x. A pilha explodida respira; a varredura e o ar são a chapa passando por baixo
+   do redondo. Números do export. */
+@keyframes rx-osc {
+  0%, 100% { transform: translateY(-3px); }
+  50% { transform: translateY(3px); }
+}
+@keyframes rx-varredura {
+  0%   { transform: translateY(10%); opacity: 0; }
+  14%  { opacity: 0.9; }
+  82%  { opacity: 0.62; }
+  100% { transform: translateY(-205%); opacity: 0; }
+}
+@keyframes rx-ar {
+  0%, 100% { opacity: 0; transform: scaleY(1); }
+  45% { opacity: 0.5; transform: scaleY(1.06); }
+}
+
+/* As camadas são fotografia de fundo, não <img>: o navegador não deve oferecer arrastar. */
+#rx-pilha [data-foto-camada] { -webkit-user-drag: none; }
+
 /* Flag escrita antes do primeiro paint (script inline em Letreiro.tsx), não em
    useEffect: cobre o intervalo entre o HTML bruto do servidor e a hidratação.
    A flag mora no <html> porque é lá que o script chega antes da hidratação; as duas

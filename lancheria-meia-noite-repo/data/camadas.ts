@@ -42,3 +42,8 @@ export const CAMADAS: Camada[] = [
 export const MAPA_CAMADAS: Record<string, Camada> = Object.fromEntries(
   CAMADAS.map((c) => [c.slug, c]),
 )
+
+/** Os arquivos moram em /public. O campo `arquivo` é relativo, como no export. */
+export function urlCamada(c: Camada): string {
+  return `/${c.arquivo}`
+}

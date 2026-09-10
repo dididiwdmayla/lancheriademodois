@@ -39,11 +39,12 @@ export function caixaX0(slug: string): number {
   return BASELINES[slug]?.caixa[0] ?? 0
 }
 
-/**
- * Reconstrói a sombra de uma camada na escala `k`. O cache é do chamador e a chave inclui
- * a escala — redimensionar a janela troca `k` e a sombra antiga não serve mais.
- */
-export function sombraDe(slug: string, k: number, cache: Map<string, Sombra>): Sombra | null {
+// Memo de uma função pura: mesma camada, mesma escala, mesmo data URL. A chave inclui a
+// escala porque redimensionar a janela troca `k` e a sombra antiga não serve mais.
+const cache = new Map<string, Sombra>()
+
+/** Reconstrói a sombra de uma camada na escala `k`. */
+export function sombraDe(slug: string, k: number): Sombra | null {
   const b = BASELINES[slug]
   if (!b || typeof document === 'undefined') return null
 
