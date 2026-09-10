@@ -2,6 +2,12 @@
 
 // O raio-x: a pilha explodida, as chamadas, o medidor e o trilho.
 //
+// O layout é mobile-first e mora no CSS (app/globals.css, bloco "Raio-x"): em 390px a pilha
+// ocupa a largura inteira nos dois terços de cima e medidor, trilho e botão empilham no
+// terço de baixo, que é a zona de polegar. Acima de 900px o medidor volta para a coluna da
+// direita. O que este arquivo decide é o que MUDA de comportamento com o corte, não o que
+// muda de lugar: abaixo dele as chamadas ficam ocultas e só a camada tocada mostra a dela.
+//
 // O estado é uma LISTA ORDENADA DE INSTÂNCIAS, não um conjunto de slugs. Duas fatias de
 // queijo são duas instâncias, cada uma com seu uid e seu lugar na ordem — um Set não
 // conseguiria representar isso, nem dizer qual das duas você arrastou.
@@ -12,11 +18,13 @@ import { CAMADAS, MAPA_CAMADAS, urlCamada } from '@/data/camadas'
 import { LIMIAR_AVISO_CAMADAS, MAX_CAMADAS, MAX_REPETICOES } from '@/data/casa'
 import { precoDaComposicao } from '@/lib/precos'
 import { prefersReducedMotion } from '@/lib/motion'
-import { Camada, Chamada } from './Camada'
-import Medidor from './Medidor'
+import { Camada, Chamada, ChamadaChip, TiraDeToque } from './Camada'
+import Composicao from './Composicao'
+import Medidor, { BotaoSelar } from './Medidor'
 import type { Origem } from './salto'
 import Trilho from './Trilho'
 import {
+  CORTE_AMPLO,
   fatorFechado,
   geometria,
   MEDIDA_MAX_U,
@@ -64,6 +72,14 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
   const [varrendo, setVarrendo] = useState(false)
   const [recado, setRecado] = useState('')
   const [area, setArea] = useState({ w: 0, h: 0 })
+  // Mobile-first também no JS: nasce estreito e só alarga se a media query disser. O
+  // servidor não sabe a largura da tela, e chutar desktop no HTML seria o avesso do
+  // contrato — o celular é o alvo, o desktop é a adaptação.
+  const [amplo, setAmplo] = useState(false)
+  // A camada cuja chamada está revelada, por índice. Só vale abaixo do corte: acima dele
+  // as chamadas aparecem todas ao mesmo tempo e não há o que revelar.
+  const [revelada, setRevelada] = useState<number | null>(null)
+  const [composicao, setComposicao] = useState(false)
   // Só camadas sem altura medida são sondadas — hoje não há nenhuma. O caminho existe
   // porque falta de asset vira "em falta" no trilho, nunca placeholder de imagem.
   const [ausentes, setAusentes] = useState<Record<string, boolean>>({})
@@ -106,6 +122,23 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
     const pendentes = timers.current
     return () => pendentes.forEach(window.clearTimeout)
   }, [])
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${CORTE_AMPLO}px)`)
+    const ler = () => setAmplo(mq.matches)
+    ler()
+    mq.addEventListener('change', ler)
+    return () => mq.removeEventListener('change', ler)
+  }, [])
+
+  useEffect(() => {
+    if (!composicao) return
+    const aoTeclarFora = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setComposicao(false)
+    }
+    window.addEventListener('keydown', aoTeclarFora)
+    return () => window.removeEventListener('keydown', aoTeclarFora)
+  }, [composicao])
 
   // ---------- regras de posição ----------
 
@@ -160,8 +193,9 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
       let arr = v.pilha.slice()
       // Painel vazio: os dois pães entram junto com o primeiro recheio.
       if (!arr.length) arr = instanciar(PAES[forma])
+      const uid = uidRef.current++
       const meio = arr.slice(1, -1)
-      meio.push({ slug, uid: uidRef.current++ })
+      meio.push({ slug, uid })
       meio.sort((a, b) => MAPA_CAMADAS[a.slug].ordem - MAPA_CAMADAS[b.slug].ordem)
       arr = [arr[0], ...meio, arr[arr.length - 1]]
       if (!valida(arr)) {
@@ -169,6 +203,9 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         return
       }
       trocarPilha(arr)
+      // A chamada da camada nova se revela sozinha. No celular a ficha do trilho é só a
+      // foto em 56px — é esta chamada que diz, por escrito, o que acabou de entrar.
+      setRevelada(arr.findIndex((x) => x.uid === uid))
     },
     [ausentes, contarSlug, forma, instanciar, trocarPilha, valida],
   )
@@ -192,6 +229,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         }
       }
       trocarPilha(arr.length === 2 ? [] : arr)
+      setRevelada(null)
     },
     [trocarPilha],
   )
@@ -208,6 +246,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         return -1
       }
       trocarPilha(arr)
+      setRevelada((r) => (r === i ? j : r === j ? i : r))
       return j
     },
     [trocarPilha, valida],
@@ -261,12 +300,20 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
     (e: ReactPointerEvent<HTMLElement>) => {
       const v = vivo.current
       if (v.selando || v.selado) return
-      const alvo = (e.target as HTMLElement).closest<HTMLElement>('[data-inst], [data-chamada]')
-      if (!alvo) return
+      const alvo = (e.target as HTMLElement).closest<HTMLElement>(
+        '[data-toque], [data-inst], [data-chamada]',
+      )
+      // Toque no vazio do painel fecha a chamada aberta: sair é gesto, não botão.
+      if (!alvo) {
+        setRevelada(null)
+        return
+      }
       const i =
-        alvo.dataset.chamada !== undefined
-          ? Number(alvo.dataset.chamada)
-          : v.pilha.findIndex((x) => String(x.uid) === alvo.dataset.inst)
+        alvo.dataset.toque !== undefined
+          ? Number(alvo.dataset.toque)
+          : alvo.dataset.chamada !== undefined
+            ? Number(alvo.dataset.chamada)
+            : v.pilha.findIndex((x) => String(x.uid) === alvo.dataset.inst)
       if (i < 0) return
 
       const painel = document.getElementById('rx-painel')
@@ -316,7 +363,12 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         } else {
           if (el) el.style.opacity = '1'
           if (removendo) setRecado('Os pães ficam. Sem eles não é lanche.')
-          else if (!mexeu) setRecado('')
+          else if (!mexeu) {
+            // Toque sem arrasto: revela a chamada daquela camada, e só dela. Tocar de novo
+            // fecha. No desktop as chamadas já estão todas na tela e isto não muda nada.
+            setRecado('')
+            setRevelada((r) => (r === idx ? null : idx))
+          }
         }
       }
       window.addEventListener('pointermove', mover_)
@@ -384,6 +436,8 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
     setSelando(false)
     setSelado(false)
     setRecado('')
+    setRevelada(null)
+    setComposicao(false)
     onFechar(item, origem)
   }, [forma, nome, onFechar])
 
@@ -440,7 +494,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
 
   const lista = pilha.filter((i) => !ausentes[i.slug] && MAPA_CAMADAS[i.slug].alturaPx > 0)
   const slugs = lista.map((i) => i.slug)
-  const g = geometria({ slugs, areaW: area.w, areaH: area.h, comprimido, forma })
+  const g = geometria({ slugs, areaW: area.w, areaH: area.h, comprimido, forma, chamadas: amplo })
   const pronto = area.w > 0 && area.h > 0
 
   const transicao = g.prensa
@@ -463,28 +517,30 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
   })
   const estado = { comprimido, selando, selado, marca, forma }
 
+  // A faixa vertical de cada camada: do topo dela ao topo da de baixo. É o que a tira de
+  // toque cobre — o embrulho da camada é o quadro inteiro e cobriria as vizinhas.
+  const faixaDe = (i: number) => {
+    const topo = g.offsetY + (g.tops[i] - g.minTop) * g.k
+    const base =
+      i > 0
+        ? g.offsetY + (g.tops[i - 1] - g.minTop) * g.k
+        : topo + MAPA_CAMADAS[slugs[i]].alturaPx * g.k
+    return { topo, base }
+  }
+
+  const aberta = revelada !== null && revelada >= 0 && revelada < numerada.length ? revelada : null
+  const chamadasNaTela = pronto && !comprimido && !selando
+
   return (
-    <div
-      id="rx-takeover"
-      aria-label={`Raio-x do ${nome}`}
-      style={{
-        display: 'grid',
-        gridTemplateRows: 'auto minmax(0, 1fr) auto',
-        // Quem dá altura é quem monta o raio-x: no takeover é a viewport inteira, aqui é
-        // a viewport menos a barra do pedido.
-        height: '100%',
-        minHeight: 320,
-        background: 'var(--borra)',
-      }}
-    >
+    <div id="rx-takeover" aria-label={`Raio-x do ${nome}`}>
       <header
+        id="rx-cabeca"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '12px 24px',
           alignItems: 'baseline',
           justifyContent: 'space-between',
-          padding: 'clamp(14px, 2vw, 22px) clamp(16px, 3vw, 32px)',
           borderBottom: '1px solid var(--traco)',
         }}
       >
@@ -502,18 +558,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         </h2>
       </header>
 
-      <div
-        id="rx-painel"
-        data-prensado={g.prensa ? '' : undefined}
-        style={{
-          position: 'relative',
-          overflowX: 'hidden',
-          overflowY: 'auto',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'stretch',
-        }}
-      >
+      <div id="rx-painel" data-prensado={g.prensa ? '' : undefined}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/macro/macro-chapa.webp"
@@ -532,20 +577,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
           }}
         />
 
-        <div
-          ref={desenhoRef}
-          id="rx-desenho"
-          onPointerDown={arrastarCamada}
-          onKeyDown={aoTeclar}
-          style={{
-            position: 'relative',
-            flex: '1 1 420px',
-            minWidth: 280,
-            minHeight: 260,
-            maxHeight: '100%',
-            touchAction: 'none',
-          }}
-        >
+        <div ref={desenhoRef} id="rx-desenho" onPointerDown={arrastarCamada} onKeyDown={aoTeclar}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             id="rx-chapa-fundo"
@@ -600,14 +632,43 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
               ))}
           </div>
 
+          {/* As tiras de toque ficam acima das camadas e abaixo das chamadas: são o alvo
+              de dedo de cada camada, e o vão entre elas cai de volta na camada. */}
+          {pronto && !selando && !selado && (
+            <div
+              id="rx-toques"
+              style={{ position: 'absolute', inset: 0, zIndex: 26, pointerEvents: 'none' }}
+            >
+              {numerada.map(({ inst }, i) => {
+                const { topo, base } = faixaDe(i)
+                return (
+                  <TiraDeToque key={inst.uid} indice={i} topo={topo} base={base} alturaArea={area.h} />
+                )
+              })}
+            </div>
+          )}
+
           {/* As chamadas somem enquanto a pilha fecha: ler nome de camada em movimento
-              não funciona, e depois de prensada a pilha não tem mais o que apontar. */}
-          {pronto &&
-            !comprimido &&
-            !selando &&
+              não funciona, e depois de prensada a pilha não tem mais o que apontar.
+              Abaixo do corte só a camada tocada mostra a dela — em 390px a pilha ocupa a
+              largura inteira e não sobra coluna para dez rótulos. */}
+          {chamadasNaTela &&
+            amplo &&
             numerada.map(({ inst, n: ord }, i) => (
               <Chamada key={inst.uid} camada={MAPA_CAMADAS[inst.slug]} n={ord} indice={i} g={g} />
             ))}
+
+          {chamadasNaTela && !amplo && aberta !== null && (
+            <ChamadaChip
+              key={numerada[aberta].inst.uid}
+              camada={MAPA_CAMADAS[numerada[aberta].inst.slug]}
+              n={numerada[aberta].n}
+              indice={aberta}
+              g={g}
+              alturaArea={area.h}
+              onTirar={remover}
+            />
+          )}
 
           {varrendo && (
             <>
@@ -645,29 +706,21 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
             </>
           )}
         </div>
-
-        <Medidor
-          precoCent={precoDaComposicao(pilha.map((i) => i.slug))}
-          camadas={n}
-          pct={pct}
-          aviso={aviso}
-          podeFechar={n > 0 && !selado && !selando}
-          textoSelar={
-            selado
-              ? 'No papel'
-              : selando
-                ? ehPrensado
-                  ? 'Prensando…'
-                  : 'Selando…'
-                : ehPrensado
-                  ? 'Prensar na chapa'
-                  : 'Selar na chapa'
-          }
-          recado={recado}
-          transicaoBarra={g.prensa ? `${PRENSA_MS}ms ${PRENSA_CURVA}` : '420ms cubic-bezier(.2,.7,.3,1)'}
-          onSelar={fechamento}
-        />
       </div>
+
+      {composicao && (
+        <Composicao pilha={pilha} onTirar={remover} onFechar={() => setComposicao(false)} />
+      )}
+
+      <Medidor
+        precoCent={precoDaComposicao(pilha.map((i) => i.slug))}
+        camadas={n}
+        pct={pct}
+        aviso={aviso}
+        recado={recado}
+        transicaoBarra={g.prensa ? `${PRENSA_MS}ms ${PRENSA_CURVA}` : '420ms cubic-bezier(.2,.7,.3,1)'}
+        onVerComposicao={() => setComposicao((v) => !v)}
+      />
 
       <Trilho
         contarSlug={(s) => pilha.filter((i) => i.slug === s).length}
@@ -676,6 +729,22 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         cheio={n >= MAX_CAMADAS}
         onAdicionar={adicionar}
         onArrastar={arrastarDoTrilho}
+      />
+
+      <BotaoSelar
+        podeFechar={n > 0 && !selado && !selando}
+        texto={
+          selado
+            ? 'No papel'
+            : selando
+              ? ehPrensado
+                ? 'Prensando…'
+                : 'Selando…'
+              : ehPrensado
+                ? 'Prensar na chapa'
+                : 'Selar na chapa'
+        }
+        onSelar={fechamento}
       />
     </div>
   )

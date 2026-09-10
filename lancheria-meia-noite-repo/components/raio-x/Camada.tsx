@@ -1,8 +1,14 @@
-// Uma instância de camada na pilha, e a chamada que sai dela para a coluna da esquerda.
+// Uma instância de camada na pilha, a tira de toque dela e a chamada que sai dela.
 //
-// Os dois são irmãos no DOM, não pai e filho: a chamada precisa ficar acima de todas as
-// camadas (z-index 26–28 contra 10+i), e aninhá-la dentro do embrulho da camada colaria
-// as duas no mesmo empilhamento.
+// Os três são irmãos no DOM, não pai e filho: chamada e tira precisam ficar acima de todas
+// as camadas (z-index 26–28 contra 10+i), e aninhá-las dentro do embrulho da camada colaria
+// tudo no mesmo empilhamento.
+//
+// A chamada tem dois modos, e o corte de 900px decide qual. Em `coluna` (desktop) todas
+// aparecem ao mesmo tempo, cada uma com seu fio até a aresta do ingrediente — ali sobra
+// largura e a leitura simultânea é o ganho. Em `chip` (celular) só a camada tocada mostra
+// a dela, sobre o desenho, com o controle de tirar junto: em 390px sobram ~90px de rótulo
+// e "batata palha" não cabe. A lista inteira em texto mora na composição, fora do desenho.
 
 import type { CSSProperties } from 'react'
 import { type Camada as DadosCamada, urlCamada } from '@/data/camadas'
@@ -16,6 +22,9 @@ export type EstadoPilha = {
   marca: boolean
   forma: Forma
 }
+
+/** Alvo de toque mínimo do contrato. Vale para camada, chamada, ficha de trilho e botão. */
+export const TOQUE_MIN = 44
 
 type Props = {
   camada: DadosCamada
@@ -131,6 +140,74 @@ export function Camada({ camada, uid, n, indice, slugs, g, estado, transicao }: 
 }
 
 /**
+ * A tira de toque de uma camada: um alvo de 44px de altura sobre a faixa que a camada
+ * ocupa no desenho. Existe porque o embrulho da camada é o quadro inteiro de 2000×1200 —
+ * o de cima cobre o de baixo, e o toque sempre cairia na camada errada.
+ *
+ * Faixa menor que 44px cresce até 44 e passa a invadir a vizinha; por isso a mais FINA
+ * fica por cima (z-index maior quanto menor a faixa). Camada fina é a que some primeiro,
+ * e é ela que precisa da preferência. A camada grossa perde alguns pixels nas bordas e
+ * continua com folga de sobra no meio.
+ *
+ * `aria-hidden` e fora da ordem de tabulação de propósito: é afordância de dedo, e o
+ * caminho por teclado e leitor de tela é a chamada (no desktop) e a lista de composição
+ * (no celular) — não uma terceira cópia do mesmo comando.
+ */
+export function TiraDeToque({
+  indice,
+  topo,
+  base,
+  alturaArea,
+}: {
+  indice: number
+  /** Topo da faixa em px de tela: o topo do objeto desta camada. */
+  topo: number
+  /** Base da faixa: o topo da camada de baixo, ou a base do objeto na camada do fundo. */
+  base: number
+  alturaArea: number
+}) {
+  const faixa = Math.max(0, base - topo)
+  const altura = Math.max(TOQUE_MIN, faixa)
+  const y = Math.min(
+    Math.max(0, alturaArea - altura),
+    Math.max(0, topo + (faixa - altura) / 2),
+  )
+
+  return (
+    <button
+      type="button"
+      data-toque={indice}
+      data-faixa={faixa.toFixed(1)}
+      tabIndex={-1}
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: y,
+        height: altura,
+        padding: 0,
+        background: 'none',
+        border: 0,
+        cursor: 'grab',
+        touchAction: 'none',
+        pointerEvents: 'auto',
+        zIndex: Math.round(Math.max(0, TOQUE_MIN - faixa)),
+      }}
+    />
+  )
+}
+
+const nomeDaChamada: CSSProperties = {
+  fontVariationSettings: "'wdth' 92, 'wght' 500",
+  fontSize: '0.8125rem',
+  color: 'var(--osso)',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+}
+
+/**
  * A chamada: rótulo numa coluna fixa à esquerda, e um fio até a aresta esquerda daquele
  * ingrediente. O rótulo alinha; o fio, não — ele mede a largura real da camada, que já
  * vem embutida no arquivo. Só o nome, em Archivo. Nenhum número aqui.
@@ -185,9 +262,10 @@ export function Chamada({
           position: 'absolute',
           left: 0,
           width: g.colW,
-          top: topoObjeto - 11,
+          top: topoObjeto - TOQUE_MIN / 2,
+          minHeight: TOQUE_MIN,
           display: 'flex',
-          alignItems: 'baseline',
+          alignItems: 'center',
           gap: 8,
           padding: 0,
           background: 'none',
@@ -199,19 +277,108 @@ export function Chamada({
           transition: 'top 300ms linear',
         }}
       >
-        <span
+        <span style={nomeDaChamada}>{camada.nome}</span>
+      </button>
+    </>
+  )
+}
+
+/**
+ * A chamada do celular: a mesma informação, sobre o desenho, só para a camada tocada.
+ * O nome à esquerda e o controle de tirar junto — é o único lugar em 390px onde os dois
+ * cabem lado a lado. O ponto marca de qual camada ela saiu; fio não há, porque não há
+ * coluna para onde levar.
+ */
+export function ChamadaChip({
+  camada,
+  n,
+  indice,
+  g,
+  alturaArea,
+  onTirar,
+}: Pick<Props, 'camada' | 'n' | 'indice' | 'g'> & {
+  alturaArea: number
+  onTirar: (indice: number) => void
+}) {
+  const { topoObjeto } = medidas(camada, indice, g)
+  const pontoX = g.x0 + caixaX0(camada.slug) * g.k
+  const y = Math.min(Math.max(0, alturaArea - TOQUE_MIN), Math.max(0, topoObjeto - TOQUE_MIN / 2))
+
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: pontoX - 2,
+          top: topoObjeto - 2,
+          width: 5,
+          height: 5,
+          background: 'var(--letreiro)',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+          zIndex: 27,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: 6,
+          top: y,
+          maxWidth: 'calc(100% - 12px)',
+          display: 'flex',
+          alignItems: 'stretch',
+          background: 'var(--fumo)',
+          border: '1px solid var(--traco)',
+          borderRadius: 2,
+          zIndex: 28,
+        }}
+      >
+        <button
+          id={`rx-chamada-${camada.slug}-${n}`}
+          type="button"
+          data-chamada={indice}
+          aria-label={`${camada.nome}. Setas para cima e para baixo movem, Delete tira.`}
           style={{
-            fontVariationSettings: "'wdth' 92, 'wght' 500",
-            fontSize: '0.8125rem',
-            color: 'var(--osso)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            display: 'flex',
+            alignItems: 'center',
+            minHeight: TOQUE_MIN,
+            minWidth: TOQUE_MIN,
+            padding: '0 12px',
+            background: 'none',
+            border: 0,
+            cursor: 'grab',
+            textAlign: 'left',
+            touchAction: 'none',
           }}
         >
-          {camada.nome}
-        </span>
-      </button>
+          <span style={nomeDaChamada}>{camada.nome}</span>
+        </button>
+        {!camada.obrigatorio && (
+          <button
+            type="button"
+            data-tirar={indice}
+            aria-label={`Tirar ${camada.nome.toLowerCase()}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onTirar(indice)}
+            style={{
+              width: TOQUE_MIN,
+              minHeight: TOQUE_MIN,
+              flex: '0 0 auto',
+              padding: 0,
+              background: 'none',
+              border: 0,
+              borderLeft: '1px solid var(--traco)',
+              color: 'var(--osso)',
+              fontSize: '1.125rem',
+              lineHeight: 1,
+              cursor: 'pointer',
+            }}
+          >
+            ×
+          </button>
+        )}
+      </div>
     </>
   )
 }
