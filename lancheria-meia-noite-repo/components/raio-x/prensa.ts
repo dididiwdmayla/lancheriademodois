@@ -231,8 +231,8 @@ export function geometria(opcoes: {
       const unidadesComFolgaMin = somaAlturas + gapsBase * folga
       const kAltura = unidadesComFolgaMin ? alturaAlvo / unidadesComFolgaMin : escalaNatural
       const piso = escalaNatural * PISO_ESCALA
-      estourou = kAltura < piso
-      k = estourou ? piso : kAltura
+      estourou = kAltura < piso - 1e-3
+      k = Math.max(piso, kAltura)
     }
   }
 

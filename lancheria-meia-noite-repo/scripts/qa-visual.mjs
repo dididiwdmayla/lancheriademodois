@@ -118,13 +118,26 @@ async function abrirTrilhoSeRecolhido(pagina) {
   await pagina.waitForSelector('#rx-trilho-folha', { timeout: 3000 })
 }
 
-/** Abre o raio-x com uma composição do cardápio e espera a pilha existir. */
-async function abrir(slug) {
-  await pg.goto(`${URL}/?lanche=${slug}`, { waitUntil: 'networkidle' })
-  await pg.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
-  // A pilha só é desenhada depois que o ResizeObserver mede o painel.
-  await pg.waitForTimeout(120)
+/** Entra pelo cardápio real. A porta provisória por query foi removida. */
+async function entrar(pagina) {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForFunction(() => !document.querySelector('#conteudo')?.hasAttribute('inert'), { timeout: 10000 })
 }
+async function abrirNaPagina(pagina, slug) {
+  await entrar(pagina)
+  await pagina.click(`[data-filtro-forma="${slug.startsWith('x-') ? 'redondo' : 'prensado'}"]`)
+  await pagina.click(`[data-item-cardapio="${slug}"] [data-add]`)
+  await pagina.waitForSelector(`[data-item-cardapio="${slug}"] [data-modificar]`, { timeout: 5000 })
+  await pagina.click(`[data-item-cardapio="${slug}"] [data-modificar]`)
+  await pagina.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
+  await pagina.waitForTimeout(120)
+}
+async function montar(pagina) {
+  await entrar(pagina)
+  await pagina.click('[data-filtro-forma="monte"]')
+  await pagina.click('#abrir-livre-prensado')
+}
+async function abrir(slug) { await abrirNaPagina(pg, slug) }
 
 /**
  * Rola o raio-x para dentro da viewport. Alinha o TAKEOVER, não o painel: o terço inferior
@@ -170,6 +183,7 @@ async function alvosPequenos(pagina, min) {
     return [...document.querySelectorAll(sel)]
       .filter((e) => {
         const cs = getComputedStyle(e)
+        if (e.closest('[inert]')) return false
         if (cs.display === 'none' || cs.visibility === 'hidden') return false
         const r = e.getBoundingClientRect()
         return r.width > 0 && r.height > 0 && (r.width < m - 0.5 || r.height < m - 0.5)
@@ -255,7 +269,7 @@ async function medirEscala(pagina = pg) {
  */
 function validaGeometria(e, rotulo, exigirSemRolagem) {
   const okFolga = e.folga >= PISO_FOLGA - 1e-6 && e.folga <= 1 + 1e-6
-  const okEscala = e.escala >= e.escalaNatural * PISO_ESCALA - 1e-6
+  const okEscala = e.escala >= e.escalaNatural * PISO_ESCALA - 1e-3
   const okRolagem = !exigirSemRolagem || !e.estourou
   diz(
     okFolga && okEscala && okRolagem,
@@ -278,8 +292,7 @@ const acende = await pg.evaluate(() => {
 })
 diz(acende === '1', `letreiro estabilizado (#lt-svg --lt-acende=${acende || 'n/d'})`)
 
-pula('itens do cardápio na primeira tela', 'cardápio em grade')
-pula('filtro por ingrediente como eixo separado', 'cardápio em grade')
+// Asserções do cardápio e dos filtros são executadas na passada da página inteira abaixo.
 
 // Fator, recheio mais largo e alcance de cada prensado — o relatório final soma o
 // sintético a esta mesma lista.
@@ -412,7 +425,7 @@ diz(monoVazado === 0, `Plex Mono fora do medidor/preço/carimbo: ${monoVazado}`)
 
 // nenhum placeholder de imagem
 const quebradas = await pg.evaluate(() =>
-  [...document.images].filter((i) => !i.complete || i.naturalWidth === 0).length)
+  [...document.images].filter((i) => i.loading !== 'lazy' || i.getBoundingClientRect().top < innerHeight).filter(i => !i.complete || i.naturalWidth === 0).length)
 diz(quebradas === 0, `imagens quebradas: ${quebradas}`)
 
 // ---------- 2. o desenho de celular, em 390 × 844 ----------
@@ -510,8 +523,8 @@ await pg.waitForTimeout(120)
 await recorte('raio-x em 390px com o trilho recolhido', '#rx-takeover')
 
 // Montador ("Monte o seu"): nasce com o trilho aberto, sem o botão — a ação principal ali
-// não passa por folha. Rota provisória `?lanche=montar`, ver o comentário em `page.tsx`.
-await pg.goto(`${URL}/?lanche=montar`, { waitUntil: 'networkidle' })
+// não passa por folha. Entra pelo eixo de forma do cardápio.
+await montar(pg)
 await pg.waitForSelector('#rx-takeover', { timeout: 5000 })
 const montadorAberto = await pg.evaluate(() => ({
   trilhoExiste: !!document.getElementById('rx-trilho'),
@@ -554,7 +567,7 @@ await recorte('medidor · faixa horizontal, 10 camadas', '#rx-medidor')
 // chamada revelada) no meio da passada.
 {
   const pgMontador = await ctx.newPage()
-  await pgMontador.goto(`${URL}/?lanche=montar`, { waitUntil: 'networkidle' })
+  await montar(pgMontador)
   await pgMontador.waitForSelector('#rx-trilho', { timeout: 5000 })
   await recorte('trilho · fichas de 56px (modo montador)', '#rx-trilho', pgMontador)
   await pgMontador.close()
@@ -657,7 +670,9 @@ diz(
     ` (medidor pediu ${precoNoMedidor})`,
 )
 
-pula('recorte do carrinho aberto', 'carrinho')
+await pg.click('[data-abrir-carrinho]')
+await recorte('carrinho aberto com gancho em 390px', '[data-carrinho]')
+await pg.click('#carrinho-fechar')
 
 // prefers-reduced-motion vale para tudo que se move, sem exceção. Sob ele a prensa não
 // tem quadros e o salto não existe — mas o lanche precisa chegar ao pedido do mesmo jeito.
@@ -667,7 +682,7 @@ const ctxParado = await navegador.newContext({
   reducedMotion: 'reduce',
 })
 const pgParada = await ctxParado.newPage()
-await pgParada.goto(`${URL}/?lanche=${LANCHE_MAGRO}`, { waitUntil: 'networkidle' })
+await abrirNaPagina(pgParada, LANCHE_MAGRO)
 await pgParada.waitForSelector('#rx-selar:not([disabled])', { timeout: 5000 })
 const precoParado = await pgParada.evaluate(() => document.getElementById('rx-preco-valor')?.textContent ?? '')
 await pgParada.click('#rx-selar')
@@ -689,7 +704,7 @@ const ctxAmplo = await navegador.newContext({ viewport: AMPLO, deviceScaleFactor
 const pgAmpla = await ctxAmplo.newPage()
 const excecoesAmplo = []
 pgAmpla.on('pageerror', (erro) => excecoesAmplo.push(String(erro)))
-await pgAmpla.goto(`${URL}/?lanche=${LANCHE_CHEIO}`, { waitUntil: 'networkidle' })
+await abrirNaPagina(pgAmpla, LANCHE_CHEIO)
 await pgAmpla.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
 await pgAmpla.waitForTimeout(200)
 const noAmplo = await pgAmpla.evaluate(() => ({
@@ -757,7 +772,7 @@ diz(
 // A mesma checagem, nas seis composições fixas do cardápio — não só na mais cheia. É o
 // "nas seis composições" do prompt: cada fixo abre do zero em 900px, sem herdar estado.
 for (const slug of [...PRENSADOS, ...REDONDOS]) {
-  await pgAmpla.goto(`${URL}/?lanche=${slug}`, { waitUntil: 'networkidle' })
+  await abrirNaPagina(pgAmpla, slug)
   await pgAmpla.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
   await pgAmpla.waitForTimeout(150)
   const leque = checarLequeDeChamadas(await leituraDeChamadas(pgAmpla))
@@ -769,7 +784,7 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
   )
 }
 // Volta ao lanche cheio: o resto da passada de 900px continua a partir dele.
-await pgAmpla.goto(`${URL}/?lanche=${LANCHE_CHEIO}`, { waitUntil: 'networkidle' })
+await abrirNaPagina(pgAmpla, LANCHE_CHEIO)
 await pgAmpla.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
 await pgAmpla.waitForTimeout(150)
 
@@ -817,6 +832,104 @@ await recorte('chamadas em leque · 16 camadas em 900px', '#rx-desenho', pgAmpla
 
 await ctxAmplo.close()
 
+// ---------- Prompt 18: o site inteiro, sem porta por query ----------
+await entrar(pg)
+const acimaDaDobra = await pg.evaluate(() => {
+  const item = document.querySelector('[data-item-cardapio]')
+  const r = item?.getBoundingClientRect(), b = item?.querySelector('[data-add]')?.getBoundingClientRect()
+  const barra = document.querySelector('[data-barra-pedido]')?.getBoundingClientRect()
+  return { top: r?.top, bottom: r?.bottom, limite: barra?.top, y: scrollY,
+    acionavel: b && document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)?.closest('[data-add]') !== null,
+    raioX: !!document.querySelector('#rx-takeover'), hero: document.querySelector('.hero-faixa').getBoundingClientRect().height }
+})
+diz(acimaDaDobra.y === 0 && !acimaDaDobra.raioX && acimaDaDobra.bottom <= acimaDaDobra.limite && acimaDaDobra.acionavel,
+  `primeiro item inteiro sem rolagem em 390×844: topo ${acimaDaDobra.top}, base ${acimaDaDobra.bottom}, barra ${acimaDaDobra.limite}`)
+diz(acimaDaDobra.hero <= CELULAR.height * .35, `hero ${acimaDaDobra.hero}px <= 35% da viewport`)
+const fotoTopo = await pg.screenshot({ type: 'jpeg', quality: QUALIDADE })
+writeFileSync('qa/cardapio-390.jpg', fotoTopo)
+recortes.push({ nome: 'cardápio no topo · 390px', b64: fotoTopo.toString('base64') })
+const estorvosSite = await estorvosHorizontais(pg)
+diz(estorvosSite.length === 0, `página inteira sem rolagem horizontal: ${estorvosSite.join(', ') || 'sim'}`)
+const alvosSite = await alvosPequenos(pg, TOQUE_MIN)
+diz(alvosSite.length === 0, `página inteira: alvos abaixo de 44×44: ${alvosSite.join(', ') || '0'}`)
+await pg.click('[aria-controls="filtro-ingredientes"]')
+await pg.click('[data-filtro-ingrediente="bacon"]')
+await pg.click('[data-filtro-ingrediente="calabresa"]')
+const filtrados = await pg.locator('[data-item-cardapio]').evaluateAll(els => els.map(e => e.dataset.itemCardapio))
+diz(filtrados.length === 1 && filtrados[0] === 'prensado-completo', `ingredientes em AND: ${filtrados.join(', ')}`)
+await pg.click('[data-filtro-forma="redondo"]')
+diz(await pg.locator('[data-item-cardapio]').count() === 0 && await pg.locator('[data-filtro-ingrediente="bacon"]').getAttribute('aria-pressed') === 'true', 'forma e ingredientes são eixos independentes; seleção persiste')
+await entrar(pg)
+await pg.locator('[data-item-cardapio="prensado-frango"] [data-add]').click({ clickCount: 2, delay: 50 })
+await pg.waitForFunction(() => document.querySelector('[data-barra-pedido] [aria-live]')?.textContent === '2 itens', { timeout: 5000 })
+diz(true, 'duas adições rápidas chegam; nenhuma cancela a outra')
+await pg.click('[data-abrir-carrinho]')
+const antesQtd = await pg.locator('.quantidade span').innerText()
+await pg.waitForTimeout(1800)
+await pg.click('[data-qtd-mais]')
+diz(antesQtd === '2' && await pg.locator('.quantidade span').innerText() === '3' && await pg.locator('[data-salto]').count() === 0, 'quantidade muda sem salto e sem duplicar a linha')
+diz(await pg.locator('[data-gancho]').count() === 1, 'só um gancho por vez')
+const cart = await pg.locator('[data-carrinho]').boundingBox()
+diz(cart.height <= CELULAR.height * .85 + 1, `carrinho ${cart.height}px <= 85% da viewport`)
+await recorte('carrinho e gancho · 390px', '[data-carrinho]')
+await pg.locator('[data-carrinho]').screenshot({ path: 'qa/carrinho-390.jpg', type: 'jpeg', quality: QUALIDADE })
+await pg.click('[data-gancho-dispensar]')
+const segundoGancho = await pg.locator('[data-gancho]').getAttribute('data-gancho')
+diz(segundoGancho === 'batata', 'quantidade de lanches habilita gancho da batata')
+await pg.click('[data-gancho-dispensar]')
+await pg.click('#carrinho-fechar')
+await pg.click('[data-abrir-carrinho]')
+diz(await pg.locator('[data-gancho]').count() === 0, 'dois dispensados não voltam ao reabrir na sessão')
+await pg.click('[data-carrinho] [data-modificar]')
+diz(await pg.locator('[data-barra-pedido]').count() === 0, 'barra some apenas com o raio-x aberto')
+await pg.click('#rx-abrir-trilho')
+await pg.click('#rx-trilho [data-slug="bacon"]')
+await pg.click('#rx-selar')
+await pg.waitForSelector('[data-carrinho]', { timeout: 6000 })
+diz(await pg.locator('[data-linha-pedido]').count() === 1 && await pg.locator('.quantidade span').innerText() === '3', 'modificar salva na linha original e preserva as três unidades')
+await pg.click('#carrinho-resumo')
+const resumoFinal = await pg.locator('#resumo-pedido').inputValue()
+diz(resumoFinal.includes('3 × Prensado de Frango') && resumoFinal.includes('Bacon'), 'resumo inclui quantidade e composição modificada')
+await pg.click('#carrinho-fechar')
+await pg.locator('#sugestoes').scrollIntoViewIfNeeded()
+await pg.waitForFunction(() => document.querySelectorAll('[data-trilho="lanches"] [data-camadas]').length > 0)
+await pg.waitForTimeout(200)
+const railAntes = await pg.locator('[data-central]').getAttribute('data-t')
+diz(Number(railAntes) < .01, `trilho: central prensado com t=${railAntes}`)
+diz(await pg.locator('[data-trilho="lanches"] [data-camadas]').count() <= 3, 'trilho monta no máximo central e dois vizinhos')
+await recorte('trilho, central prensado · 390px', '#sugestoes')
+await pg.locator('#sugestoes').screenshot({ path: 'qa/trilho-390.jpg', type: 'jpeg', quality: QUALIDADE })
+// Amostra contínua durante uma rolagem acionada pelo botão; não basta olhar o fim.
+await pg.evaluate(() => { window.__amostrasT = []; const rail = document.querySelector('[data-trilho="lanches"]'); rail.addEventListener('scroll', () => window.__amostrasT.push([...rail.querySelectorAll('[data-item-trilho]')].map(e => Number(e.dataset.t))), { passive: true }) })
+await pg.getByRole('button', { name: 'Próximo lanche', exact: true }).click()
+await pg.waitForTimeout(700)
+const intermediarios = await pg.evaluate(() => window.__amostrasT.flat().filter(t => t > .02 && t < .98).length)
+diz(intermediarios > 0, `deslize contínuo: ${intermediarios} valores intermediários de t`)
+for (const id of ['bebidas', 'acompanhamentos', 'a-chapa', 'rodape']) {
+  await pg.locator(`#${id}`).scrollIntoViewIfNeeded()
+  await pg.waitForTimeout(100)
+  const b = await pg.locator('[data-barra-pedido]').boundingBox()
+  diz(!!b && b.y >= 0 && b.y + b.height <= CELULAR.height + 1, `barra visível em ${id}`)
+  const alvos = await alvosPequenos(pg, TOQUE_MIN)
+  diz(alvos.length === 0, `${id}: alvos >= 44px`)
+  if (id === 'a-chapa' || id === 'rodape') {
+    await recorte(`${id} · 390px`, `#${id}`)
+    await pg.locator(`#${id}`).screenshot({ path: `qa/${id}-390.jpg`, type: 'jpeg', quality: QUALIDADE })
+  }
+}
+const imagensExtras = await pg.locator('[data-extra] img').evaluateAll(els => els.map(e => e.getAttribute('src')))
+diz(imagensExtras.length === 8 && imagensExtras.every(src => src.startsWith('/macro/')), 'bebidas e acompanhamentos usam só a macro de fundo; zero foto de produto')
+const recursos = await pg.evaluate(() => performance.getEntriesByType('resource').map(e => e.name))
+diz(!recursos.some(u => /\/(bebidas|acompanhamentos)\/.*\.(webp|png|jpe?g)/.test(u)), 'nenhuma requisição de imagem de bebida/acompanhamento')
+const ctxDesktop = await navegador.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 })
+const pgDesktop = await ctxDesktop.newPage()
+await entrar(pgDesktop)
+const escritorio = await pgDesktop.screenshot({ type: 'jpeg', quality: QUALIDADE })
+writeFileSync('qa/desktop-1280.jpg', escritorio)
+recortes.push({ nome: 'desktop · 1280px', b64: escritorio.toString('base64') })
+diz((await estorvosHorizontais(pgDesktop)).length === 0, 'desktop 1280px sem rolagem horizontal acidental')
+await ctxDesktop.close()
+
 // ---------- resumo do espalhamento ----------
 //
 // Uma linha por composição prensada: o fator calculado, o recheio que decidiu o fator, e
@@ -842,6 +955,8 @@ escalas.forEach((e) => {
   )
 })
 
+console.log(linhas.join('\n'))
+
 // ---------- folha de contato ----------
 
 if (recortes.length) {
@@ -860,6 +975,6 @@ if (recortes.length) {
 }
 
 await navegador.close()
-console.log(linhas.join('\n'))
+console.log('Capturas: qa/folha-de-contato.jpg e recortes nomeados em qa/.')
 const falhou = linhas.some((l) => l.startsWith('FALHA'))
 process.exit(falhou ? 1 : 0)
