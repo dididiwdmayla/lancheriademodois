@@ -579,11 +579,13 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
       <div
         id="rx-painel"
         data-prensado={g.prensa ? '' : undefined}
-        // A pilha escala para caber; só bate no piso (`PISO_ESCALA`, em prensa.ts) quando
-        // nem o mínimo aceitável coube na altura disponível — aí, e só aí, o painel rola.
+        // Quando a pilha não cabe, a folga entre camadas cede primeiro (até `PISO_FOLGA`),
+        // e só depois a escala (até `PISO_ESCALA`, em prensa.ts). O painel só rola quando
+        // nem o mínimo dos dois coube na altura disponível — aí, e só aí, `estourou`.
         data-estourou={g.estourou ? '' : undefined}
         data-escala={pronto ? g.k.toFixed(4) : undefined}
         data-escala-natural={pronto ? g.escalaNatural.toFixed(4) : undefined}
+        data-folga={pronto ? g.folga.toFixed(4) : undefined}
         style={g.estourou ? { overflowY: 'auto', overflowX: 'hidden' } : undefined}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}

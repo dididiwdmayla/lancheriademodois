@@ -113,18 +113,39 @@ Este `min` é estrutural, não margem de segurança. Nos seis lanches a menor ex
 exatamente 45,0%, ou seja, o limite é a restrição ativa em todos. Alterar qualquer
 `alturaPx` move várias camadas de uma vez. Não trate esses números como cosméticos.
 
-**Escala da pilha e piso, em `geometria()` (`prensa.ts`):**
+**Quando a pilha não cabe na altura, em `geometria()` (`prensa.ts`) — ordem de quem cede:**
+
+Escala é conteúdo — encolher a pilha encolhe as camadas finas até o molho virar um fio.
+Folga entre camadas é leitura — ela só separa as peças, e com mais peças cabe menos
+separação por peça sem perder o desenho. Por isso a folga cede **primeiro**, e só depois a
+escala:
+
+1. **Folga**, até o piso `PISO_FOLGA` = 0,40 (fração de `GAP`, 46px). Abaixo disso as linhas
+   de chamada se encavalam e o desenho vira sanduíche em vez de diagrama.
+2. **Escala**, até o piso `PISO_ESCALA` = 0,70 (fração da escala natural).
+3. **Rolagem**, só quando os dois pisos acima já foram gastos e ainda não coube.
+
 ```
 escalaNatural = larguraDoPainel / 2000
-kAltura       = (alturaDisponível × 0.94) / unidadesDaPilha
-k             = max(kAltura, escalaNatural × 0.70)
+alturaAlvo    = alturaDisponível × 0.94
+// 1) tenta caber cedendo só a folga, na escala natural
+folga         = clamp((alturaAlvo / escalaNatural − somaAlturas) / gapsBase, 0.40, 1.00)
+// 2) se nem a folga no piso bastou, a escala cede
+k             = max(alturaAlvo / (somaAlturas + gapsBase × folga), escalaNatural × 0.70)
 ```
 `alturaDisponível` é a altura do painel já descontada a faixa flutuante de aviso/recado
 (`#rx-flutua`), medida ao vivo — não a altura inteira do painel. `0.94` é ar vertical, não
-contrato; ajuste se a pilha parecer apertada ou solta demais. `0.70` é o piso: abaixo dele
-as camadas finas somem e o desenho perde sentido. Se `kAltura` cair abaixo do piso, a pilha
-para no piso e **o painel rola** (`overflow-y: auto` só nesse estado, alinhado pelo topo) —
-é a única situação em que o raio-x rola verticalmente.
+contrato; ajuste se a pilha parecer apertada ou solta demais. `0.40` e `0.70` são pisos:
+abaixo deles a leitura (o primeiro) ou o desenho (o segundo) perdem sentido. Se mesmo com os
+dois pisos gastos a pilha não coube, ela para no piso de escala e **o painel rola**
+(`overflow-y: auto` só nesse estado, alinhado pelo topo) — é a única situação em que o
+raio-x rola verticalmente. Nas seis composições fixas do cardápio isso não deve acontecer;
+só o sintético de 16 camadas (o teto do contrato) está autorizado a rolar.
+
+`k` e a folga saem sempre do estado explodido — a pilha não muda de escala nem de folga ao
+prensar, só a distância entre camadas encolhe (`fatorFechado`). `#rx-painel` expõe os três
+números vivos em `data-escala`, `data-escala-natural` e `data-folga`, mais `data-estourou`
+quando a rolagem entrou.
 
 **Prensa (só prensado), 340ms, aceleração forte e parada seca — sem mola:**
 ```
@@ -212,6 +233,9 @@ raio-x usam `/camadas/`, que são as camadas inteiras — encolher a 2000×1200 
 fora a silhueta e sobra a cor média (foi assim que quatro marrons viraram uma mancha só).
 Trocar um pelo outro quebra os dois.
 
+Exceção: o ghost de arrasto usa `/camadas/`, porque representa a camada real entrando na
+pilha e precisa da proporção verdadeira.
+
 Já normalizados. **Não redimensione, não reprocesse, não renomeie.**
 Bebidas e acompanhamentos **não têm imagem** e entram como peça tipográfica.
 
@@ -261,7 +285,7 @@ Se algum ponto do contrato não fechar na implementação, **pare e pergunte**. 
 
 `npm run qa` roda `scripts/qa-visual.mjs`. Ele devolve **texto primeiro** — uma linha por
 asserção numérica — e só depois uma **folha de contato única** em `qa/folha-de-contato.jpg`,
-com seis recortes num JPEG de qualidade 55.
+com os recortes reunidos num JPEG de qualidade 55.
 
 Regras:
 - Leia o texto primeiro. A maior parte dos defeitos aparece ali e nunca precisa de imagem.
@@ -276,6 +300,7 @@ Regras:
 Os seletores usados pelo QA são contrato: `[data-cardapio]`, `[data-item-cardapio]`,
 `[data-filtro-ingrediente]`, `[data-barra-pedido]`, `[data-abrir-carrinho]`,
 `[data-carrinho]`, `[data-medida]`, `[data-preco]`, `[data-carimbo]`, `[data-prensado]`,
+`[data-estourou]`, `[data-escala]`, `[data-escala-natural]`, `[data-folga]`,
 `[data-chamada]`, `[data-toque]`, `[data-tirar]`, mais os IDs `#rx-takeover`,
 `#rx-painel`, `#rx-desenho`, `#rx-medidor`, `#rx-selar`, `#rx-trilho`, `#rx-toques`,
 `#rx-composicao`, `#rx-ver-composicao` e os `#lt-*`.

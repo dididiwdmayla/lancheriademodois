@@ -3,8 +3,8 @@
 // Duas camadas, nesta ordem:
 //   1. Asserções numéricas em texto. Uma linha por checagem, custo desprezível.
 //      A maior parte dos defeitos aparece aqui e nunca precisa de imagem.
-//   2. UMA folha de contato: oito recortes num único JPEG, qualidade 55.
-//      Oito capturas separadas em 2x custariam mais de dez vezes mais tokens.
+//   2. UMA folha de contato: os recortes reunidos num único JPEG, qualidade 55.
+//      Capturas separadas em 2x custariam mais de dez vezes mais tokens.
 //
 // Regra para o agente: leia o texto primeiro. Só abra a folha de contato se uma
 // asserção falhar ou se a tarefa for de julgamento visual. Nunca capture a página
@@ -30,6 +30,9 @@ const ESPALHA_X_TETO = 1.3
 /** Piso da escala da pilha pela altura e teto de camadas. Duplicados de `prensa.ts` e
  * `casa.ts` pelo mesmo motivo de `ESPALHA_X_TETO`. */
 const PISO_ESCALA = 0.70
+/** Piso da folga entre camadas, como fração da folga base. Cede antes da escala — ver
+ * `PISO_FOLGA` em `prensa.ts`. Duplicado aqui pelo mesmo motivo de `PISO_ESCALA`. */
+const PISO_FOLGA = 0.40
 const MAX_CAMADAS_QA = 16
 const MAX_REPETICOES_QA = 3
 
@@ -206,26 +209,46 @@ async function medirFresta() {
 }
 
 /**
- * A escala aplicada à pilha e se ela bateu no piso, direto dos atributos que `RaioX.tsx`
- * expõe em `#rx-painel` (`data-escala`, `data-escala-natural`, `data-estourou`) — nenhum
- * recálculo aqui, só leitura do que o componente já decidiu.
+ * A escala e a folga aplicadas à pilha, e se ela bateu no piso, direto dos atributos que
+ * `RaioX.tsx` expõe em `#rx-painel` (`data-escala`, `data-escala-natural`, `data-folga`,
+ * `data-estourou`) — nenhum recálculo aqui, só leitura do que o componente já decidiu.
  *
  * Não mede `scrollHeight`: cada camada embrulha o canvas de 1200px inteiro do arquivo
  * (o objeto raramente ocupa tudo), então a caixa da camada estoura `#rx-painel` mesmo
  * quando o desenho visível cabe sobrando — `overflow: hidden` corta essa transparência de
  * propósito. `estourou` é o sinal correto: só é `true` quando a conta do componente não
- * coube nem no piso, e é aí, e só aí, que o painel precisa rolar de verdade.
+ * coube nem com a folga no piso e a escala no piso, e é aí, e só aí, que o painel precisa
+ * rolar de verdade.
  */
-async function medirEscala() {
-  return pg.evaluate(() => {
+async function medirEscala(pagina = pg) {
+  return pagina.evaluate(() => {
     const el = document.getElementById('rx-painel')
     if (!el) return null
     return {
       escala: Number(el.dataset.escala),
       escalaNatural: Number(el.dataset.escalaNatural),
+      folga: Number(el.dataset.folga),
       estourou: el.dataset.estourou !== undefined,
     }
   })
+}
+
+/**
+ * Uma asserção só, para as três chamadoras: as seis composições fixas (`exigirSemRolagem`
+ * true) e o sintético de 16 camadas (false — é o único autorizado a rolar). Cobra sempre
+ * os dois pisos, porque `folga` e `escala` nunca saem dos limites por construção; cobra
+ * `!estourou` só quando quem chama exige que a pilha caiba sem rolar.
+ */
+function validaGeometria(e, rotulo, exigirSemRolagem) {
+  const okFolga = e.folga >= PISO_FOLGA - 1e-6 && e.folga <= 1 + 1e-6
+  const okEscala = e.escala >= e.escalaNatural * PISO_ESCALA - 1e-6
+  const okRolagem = !exigirSemRolagem || !e.estourou
+  diz(
+    okFolga && okEscala && okRolagem,
+    `${rotulo}: escala aplicada ${e.escala.toFixed(3)} (natural ${e.escalaNatural.toFixed(3)}, piso ${PISO_ESCALA}× natural)` +
+      `, folga aplicada ${e.folga.toFixed(3)} (piso ${PISO_FOLGA})` +
+      `${e.estourou ? ' — BATEU NO PISO, painel rola' : ', sem rolagem'}`,
+  )
 }
 
 // ---------- 1. asserções numéricas ----------
@@ -276,19 +299,21 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
   })
   diz(bate.nos === bate.lido, `${slug}: medidor diz ${bate.lido}, painel desenha ${bate.nos} camadas`)
 
-  // A pilha cabe na altura disponível sem rolar, e a escala nunca cai abaixo do piso —
-  // ver "Escala da pilha e piso" no AGENTS.md. `#rx-painel` expõe os dois números.
+  // A pilha cabe na altura disponível sem rolar: a folga cede primeiro (até o piso
+  // `PISO_FOLGA`), a escala só depois (até `PISO_ESCALA`) — ver "Quando a pilha não cabe
+  // na altura" no AGENTS.md. `#rx-painel` expõe os três números.
   const escala = await medirEscala()
   if (escala) {
     escalas.push({ rotulo: slug, ...escala })
-    diz(
-      escala.escala >= escala.escalaNatural * PISO_ESCALA - 1e-6 && !escala.estourou,
-      `${slug}: escala aplicada ${escala.escala.toFixed(3)} (natural ${escala.escalaNatural.toFixed(3)}, piso ${PISO_ESCALA}× natural)` +
-        `${escala.estourou ? ' — BATEU NO PISO, painel rola' : ', sem rolagem'}`,
-    )
+    validaGeometria(escala, slug, true)
   } else {
     diz(false, `${slug}: #rx-painel sem atributos de escala`)
   }
+
+  // As duas composições que o relatório pediu de olho: o x-tudo, que bateu no piso de
+  // escala antes da folga ceder primeiro, e o prensado-completo (recortado mais abaixo,
+  // reaberto para o resto da passada de celular).
+  if (slug === 'x-tudo') await recorte('x-tudo explodido em 390px', '#rx-desenho')
 
   if (!PRENSADOS.includes(slug)) continue
   // Fresta da prensa: o recheio mais largo, já espalhado em scaleX, tem de alcançar a
@@ -444,7 +469,7 @@ diz(
 // ---------- 3. recortes ----------
 
 // explodido e medidor normal saem do lanche cheio: dez camadas.
-await recorte('raio-x em repouso · completo', '#rx-desenho')
+await recorte('prensado-completo explodido em 390px', '#rx-desenho')
 
 // Um toque na camada revela a chamada dela — e só a dela. O toque vai pelo mouse, em
 // coordenada: é o que um dedo faz. `click(seletor)` faria a checagem de acionabilidade do
@@ -475,32 +500,38 @@ await recorte('medidor em aviso · 11 camadas', '#rx-medidor')
 // molho de propósito: como o recheio novo entra ordenado por `ordem` e molho tem a menor
 // de todas, uma segunda instância nunca cai adjacente a um pão e a validação a barra sem
 // nunca desabilitar a ficha — "botão habilitado" e "adição bem-sucedida" divergem só nele.
-const contarPilha = () => pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)
-const CANDIDATOS_ENCHIMENTO = ['presunto', 'cebola', 'frango-desfiado', 'queijo', 'ovo', 'tomate', 'alface', 'milho']
-for (const slug of CANDIDATOS_ENCHIMENTO) {
-  if ((await contarPilha()) >= MAX_CAMADAS_QA) break
-  for (let i = 0; i < MAX_REPETICOES_QA; i++) {
-    if ((await contarPilha()) >= MAX_CAMADAS_QA) break
-    const btn = await pg.$(`#rx-trilho [data-slug="${slug}"]:not([disabled])`)
-    if (!btn) break
-    await btn.click()
-    await pg.waitForTimeout(50)
+const contarPilhaEm = (pagina) =>
+  pagina.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)
+const contarPilha = () => contarPilhaEm(pg)
+
+/** Enche a pilha até `MAX_CAMADAS_QA`, na página que for passada. Mesmo gesto do trilho
+ * usado no teste de celular — reaproveitado depois para forçar o mesmo teto em 900px. */
+async function encherPilha16(pagina) {
+  for (const slug of CANDIDATOS_ENCHIMENTO) {
+    if ((await contarPilhaEm(pagina)) >= MAX_CAMADAS_QA) break
+    for (let i = 0; i < MAX_REPETICOES_QA; i++) {
+      if ((await contarPilhaEm(pagina)) >= MAX_CAMADAS_QA) break
+      const btn = await pagina.$(`#rx-trilho [data-slug="${slug}"]:not([disabled])`)
+      if (!btn) break
+      await btn.click()
+      await pagina.waitForTimeout(50)
+    }
   }
+  return contarPilhaEm(pagina)
 }
-const n16 = await contarPilha()
+const CANDIDATOS_ENCHIMENTO = ['presunto', 'cebola', 'frango-desfiado', 'queijo', 'ovo', 'tomate', 'alface', 'milho']
+const n16 = await encherPilha16(pg)
 diz(n16 === MAX_CAMADAS_QA, `pilha de 16 camadas montada: ${n16} camadas`)
 const escala16 = await medirEscala()
 if (escala16) {
   escalas.push({ rotulo: `${MAX_CAMADAS_QA} camadas (sintético, teto do contrato)`, ...escala16 })
-  diz(
-    escala16.escala >= escala16.escalaNatural * PISO_ESCALA - 1e-6 && !escala16.estourou,
-    `16 camadas: escala aplicada ${escala16.escala.toFixed(3)} (natural ${escala16.escalaNatural.toFixed(3)}, piso ${PISO_ESCALA}× natural)` +
-      `${escala16.estourou ? ' — BATEU NO PISO, painel rola' : ', sem rolagem'}`,
-  )
+  // Único caso autorizado a rolar: o sintético de 16 camadas é o teto do contrato, fora
+  // das seis composições fixas — `exigirSemRolagem` false não cobra `!estourou`.
+  validaGeometria(escala16, '16 camadas', false)
 } else {
   diz(false, '16 camadas: #rx-painel sem atributos de escala')
 }
-await recorte('pilha de 16 camadas com aviso visível', '#rx-desenho')
+await recorte('sintético de 16 camadas', '#rx-desenho')
 await recorte('medidor com pilha de 16 camadas', '#rx-medidor')
 
 // prensado sai do mais magro: é nele que a fresta entre os pães aparece primeiro.
@@ -588,6 +619,38 @@ diz(
   `em ${AMPLO.width}px as chamadas voltam todas: ${noAmplo.chamadas} de ${noAmplo.camadas} camadas` +
     ` (coluna de ${noAmplo.colunaW}px)`,
 )
+
+/** Lê os retângulos de `[data-chamada]`, ordenados de cima para baixo, e conta quantos
+ * pares vizinhos se sobrepõem verticalmente — o sinal de que a folga comprimida encavalou
+ * duas linhas de chamada. */
+async function sobreposicaoDeChamadas(pagina) {
+  const retangulos = await pagina.evaluate(() =>
+    [...document.querySelectorAll('[data-chamada]')]
+      .map((e) => e.getBoundingClientRect())
+      .sort((a, b) => a.top - b.top)
+      .map((r) => ({ top: r.top, bottom: r.bottom })))
+  let pares = 0
+  for (let i = 1; i < retangulos.length; i++) {
+    if (retangulos[i].top < retangulos[i - 1].bottom - 0.5) pares++
+  }
+  return pares
+}
+
+// A folga cede primeiro quando a pilha não cabe (ver "Quando a pilha não cabe na altura"
+// no AGENTS.md); o risco dela ceder até o piso é a linha de chamada de uma camada fina
+// encavalar a vizinha. Cobrado aqui, onde as linhas existem — no celular não há coluna.
+const escalaAmplo = await medirEscala(pgAmpla)
+if (escalaAmplo) {
+  escalas.push({ rotulo: `${LANCHE_CHEIO} em ${AMPLO.width}px`, ...escalaAmplo })
+  validaGeometria(escalaAmplo, `${LANCHE_CHEIO} em ${AMPLO.width}px`, true)
+}
+const sobrepostas10 = await sobreposicaoDeChamadas(pgAmpla)
+diz(
+  sobrepostas10 === 0,
+  `linhas de chamada sem sobreposição em ${AMPLO.width}px, ${noAmplo.camadas} camadas` +
+    ` (folga aplicada ${escalaAmplo ? escalaAmplo.folga.toFixed(3) : 'n/d'}): ${sobrepostas10} par(es) sobrepostos`,
+)
+
 const estorvosAmplo = await estorvosHorizontais(pgAmpla)
 diz(
   estorvosAmplo.length === 0,
@@ -609,6 +672,24 @@ diz(
   `Delete na chamada tira uma camada: ${noAmplo.camadas} → ${depoisDoDelete}` +
     `${excecoesAmplo.length ? `, ${excecoesAmplo.length} exceção(ões)` : ''}`,
 )
+
+// O caso mais duro para a folga: a mesma pilha de 16 camadas do teste de celular, agora
+// nesta viewport mais larga — é onde a coluna de chamadas existe para medir a sobreposição.
+// Vem por último nesta passada porque enche a pilha até o teto e o resto dos testes acima
+// já rodou contra a composição original de dez camadas.
+const n16Amplo = await encherPilha16(pgAmpla)
+const escala16Amplo = await medirEscala(pgAmpla)
+if (escala16Amplo) {
+  escalas.push({ rotulo: `16 camadas em ${AMPLO.width}px`, ...escala16Amplo })
+  validaGeometria(escala16Amplo, `16 camadas em ${AMPLO.width}px`, false)
+}
+const sobrepostas16 = await sobreposicaoDeChamadas(pgAmpla)
+diz(
+  sobrepostas16 === 0,
+  `linhas de chamada sem sobreposição em ${AMPLO.width}px, ${n16Amplo} camadas` +
+    ` (folga aplicada ${escala16Amplo ? escala16Amplo.folga.toFixed(3) : 'n/d'}): ${sobrepostas16} par(es) sobrepostos`,
+)
+
 await ctxAmplo.close()
 
 // ---------- resumo do espalhamento ----------
@@ -624,10 +705,14 @@ frestas.forEach((f) => {
   )
 })
 
-linhas.push('', `resumo da escala (aplicada · natural · piso ${PISO_ESCALA}):`)
+linhas.push(
+  '',
+  `resumo da escala e da folga (escala aplicada · natural · piso ${PISO_ESCALA} — folga aplicada · piso ${PISO_FOLGA}):`,
+)
 escalas.forEach((e) => {
   linhas.push(
-    `  ${e.rotulo}: ${e.escala.toFixed(3)} · natural ${e.escalaNatural.toFixed(3)}` +
+    `  ${e.rotulo}: escala ${e.escala.toFixed(3)} · natural ${e.escalaNatural.toFixed(3)}` +
+      ` — folga ${e.folga.toFixed(3)}` +
       `${e.estourou ? ' · BATEU NO PISO, painel rola' : ' · sem rolagem'}`,
   )
 })
