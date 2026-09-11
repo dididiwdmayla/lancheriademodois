@@ -38,8 +38,10 @@ type Props = {
   transicao: string
 }
 
-/** Onde o topo do objeto cai na tela. O arquivo é 2000×1200 com o objeto centralizado. */
-function medidas(camada: DadosCamada, indice: number, g: Geometria) {
+/** Onde o topo do objeto cai na tela. O arquivo é 2000×1200 com o objeto centralizado.
+ * Exportada: `RaioX.tsx` usa `topoObjeto` para calcular a posição ideal de cada rótulo
+ * antes do leque (ver `rotulos.ts`), sem duplicar a conta aqui. */
+export function medidas(camada: DadosCamada, indice: number, g: Geometria) {
   const wTop = g.tops[indice] - g.minTop
   return {
     /** Topo do embrulho: recua meio quadro para o objeto pousar em `topoObjeto`. */
@@ -208,18 +210,29 @@ const nomeDaChamada: CSSProperties = {
 }
 
 /**
- * A chamada: rótulo numa coluna fixa à esquerda, e um fio até a aresta esquerda daquele
- * ingrediente. O rótulo alinha; o fio, não — ele mede a largura real da camada, que já
- * vem embutida no arquivo. Só o nome, em Archivo. Nenhum número aqui.
+ * A chamada: rótulo numa coluna fixa à esquerda, e uma linha de chamada até a aresta
+ * esquerda daquele ingrediente. Desenho técnico há muito tempo: quando o rótulo não cabe
+ * na altura exata da peça, ele desliza ao longo da coluna — `rotuloTop` já vem distribuído
+ * por `distribuirRotulos` em `RaioX.tsx`, com pelo menos `ESPACO_MIN_ROTULO` de vão entre
+ * vizinhos — e a linha vira diagonal para acompanhar. O ponto de 3px nunca sai do lugar:
+ * ele é a âncora na camada, não no rótulo. Só o nome, em Archivo. Nenhum número aqui.
  */
 export function Chamada({
   camada,
   n,
   indice,
   g,
-}: Pick<Props, 'camada' | 'n' | 'indice' | 'g'>) {
+  rotuloTop,
+}: Pick<Props, 'camada' | 'n' | 'indice' | 'g'> & { rotuloTop: number }) {
   const { topoObjeto } = medidas(camada, indice, g)
   const pontoX = g.x0 + caixaX0(camada.slug) * g.k
+
+  const x1 = g.colW + 6
+  const y1 = rotuloTop + TOQUE_MIN / 2
+  const dx = pontoX - x1
+  const dy = topoObjeto - y1
+  const comprimento = Math.hypot(dx, dy)
+  const angulo = (Math.atan2(dy, dx) * 180) / Math.PI
 
   return (
     <>
@@ -227,15 +240,17 @@ export function Chamada({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: g.colW + 6,
-          width: Math.max(0, pontoX - g.colW - 6),
-          top: topoObjeto,
+          left: x1,
+          top: y1,
+          width: Math.max(0, comprimento),
           height: 1,
           background: 'var(--letreiro)',
           opacity: 0.6,
           pointerEvents: 'none',
           zIndex: 26,
-          transition: 'top 300ms linear, width 300ms linear',
+          transformOrigin: '0 0',
+          transform: `rotate(${angulo}deg)`,
+          transition: 'top 300ms linear, left 300ms linear, width 300ms linear, transform 300ms linear',
         }}
       />
       <div
@@ -262,7 +277,7 @@ export function Chamada({
           position: 'absolute',
           left: 0,
           width: g.colW,
-          top: topoObjeto - TOQUE_MIN / 2,
+          top: rotuloTop,
           minHeight: TOQUE_MIN,
           display: 'flex',
           alignItems: 'center',

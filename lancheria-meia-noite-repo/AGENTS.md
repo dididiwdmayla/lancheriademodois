@@ -125,6 +125,17 @@ escala:
 2. **Escala**, até o piso `PISO_ESCALA` = 0,70 (fração da escala natural).
 3. **Rolagem**, só quando os dois pisos acima já foram gastos e ainda não coube.
 
+**Leque dos rótulos da coluna de chamadas (`Chamada`, em `Camada.tsx`, distribuído por
+`distribuirRotulos` em `rotulos.ts`):** mesmo com a folga no piso, camada fina ainda pode
+deixar menos de 44px entre duas alturas de objeto — o rótulo, que é um alvo de toque de
+44px, encavalaria o vizinho se ficasse preso na altura exata da peça. Por isso ele desliza
+ao longo da coluna, com `ESPACO_MIN_ROTULO` = 22px de vão mínimo entre vizinhos, ordem
+vertical idêntica à ordem física das camadas (nunca inverte) e a linha de chamada vira
+diagonal para acompanhar — o ponto de 3px continua ancorado na aresta real da camada, não
+no rótulo. Isso não substitui a folga: menos folga ainda significa mais camadas espremidas
+e mais deslocamento no leque, logo linhas mais inclinadas. A folga continua sendo o que
+mantém o leque discreto; o leque é a garantia de que ele nunca vira sobreposição.
+
 ```
 escalaNatural = larguraDoPainel / 2000
 alturaAlvo    = alturaDisponível × 0.94
@@ -301,9 +312,16 @@ Os seletores usados pelo QA são contrato: `[data-cardapio]`, `[data-item-cardap
 `[data-filtro-ingrediente]`, `[data-barra-pedido]`, `[data-abrir-carrinho]`,
 `[data-carrinho]`, `[data-medida]`, `[data-preco]`, `[data-carimbo]`, `[data-prensado]`,
 `[data-estourou]`, `[data-escala]`, `[data-escala-natural]`, `[data-folga]`,
-`[data-chamada]`, `[data-toque]`, `[data-tirar]`, mais os IDs `#rx-takeover`,
-`#rx-painel`, `#rx-desenho`, `#rx-medidor`, `#rx-selar`, `#rx-trilho`, `#rx-toques`,
-`#rx-composicao`, `#rx-ver-composicao` e os `#lt-*`.
+`[data-chamada]`, `[data-toque]`, `[data-tirar]`, `[data-folha]`, mais os IDs
+`#rx-takeover`, `#rx-painel`, `#rx-desenho`, `#rx-medidor`, `#rx-selar`, `#rx-trilho`,
+`#rx-abrir-trilho`, `#rx-trilho-cortina`, `#rx-trilho-folha`, `#rx-fechar-trilho`,
+`#rx-toques`, `#rx-composicao`, `#rx-ver-composicao` e os `#lt-*`.
+
+`#rx-trilho` só existe montado em tela — no trilho do modo montador, ou dentro da folha
+do modo editor quando ela está aberta (`#rx-trilho-cortina` > `#rx-trilho-folha` >
+`#rx-trilho[data-folha]`). Com o trilho recolhido (editor, estado padrão), quem ocupa o
+lugar dele é `#rx-abrir-trilho`. Ver "raio-x aberto a partir de um fixo (editor) vs. Monte
+o seu (montador)" no componente `RaioX.tsx`.
 
 O QA roda em 390 × 844 e, no fim, uma segunda passada em 900 × 800 só para o que muda de
 comportamento no corte. Três asserções são de mobile e valem para toda peça nova: nenhuma

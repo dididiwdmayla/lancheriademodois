@@ -18,9 +18,10 @@ import { CAMADAS, MAPA_CAMADAS, urlCamada } from '@/data/camadas'
 import { LIMIAR_AVISO_CAMADAS, MAX_CAMADAS, MAX_REPETICOES } from '@/data/casa'
 import { precoDaComposicao } from '@/lib/precos'
 import { prefersReducedMotion } from '@/lib/motion'
-import { Camada, Chamada, ChamadaChip, TiraDeToque } from './Camada'
+import { Camada, Chamada, ChamadaChip, medidas, TOQUE_MIN, TiraDeToque } from './Camada'
 import Composicao from './Composicao'
 import Medidor, { BotaoSelar } from './Medidor'
+import { distribuirRotulos } from './rotulos'
 import type { Origem } from './salto'
 import Trilho from './Trilho'
 import {
@@ -65,6 +66,15 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
   )
 
   const [pilha, setPilha] = useState<Instancia[]>(() => instanciar(camadasIniciais))
+  // Editor (raio-x aberto a partir de um fixo do cardápio) vs. montador ("Monte o seu"):
+  // o fixo sempre chega com a pilha cheia, o montador sempre nasce vazio — a mesma
+  // distinção que já existe nos dados, sem precisar de uma segunda flag para duplicá-la.
+  // Fixado no primeiro render: a sessão de raio-x não troca de modo no meio do caminho.
+  const [modoMontador] = useState(() => camadasIniciais.length === 0)
+  // Editor: o trilho nasce recolhido, e "Acrescentar ingrediente" abre ele como folha por
+  // cima do painel. Montador: o trilho é a ação principal e nasce aberto — sem alternância,
+  // a tira de sempre. Ver o comentário de `modoMontador` acima e o AGENTS.md.
+  const [trilhoAberto, setTrilhoAberto] = useState(modoMontador)
   const [comprimido, setComprimido] = useState(false)
   const [marca, setMarca] = useState(false)
   const [selando, setSelando] = useState(false)
@@ -158,6 +168,16 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
     return () => window.removeEventListener('keydown', aoTeclarFora)
   }, [composicao])
 
+  // A folha do trilho (modo editor) fecha no Escape, do mesmo jeito que a composição.
+  useEffect(() => {
+    if (modoMontador || !trilhoAberto) return
+    const aoTeclarFora = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTrilhoAberto(false)
+    }
+    window.addEventListener('keydown', aoTeclarFora)
+    return () => window.removeEventListener('keydown', aoTeclarFora)
+  }, [modoMontador, trilhoAberto])
+
   // ---------- regras de posição ----------
 
   const valida = useCallback(
@@ -223,6 +243,17 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
       setRevelada(arr.findIndex((x) => x.uid === uid))
     },
     [ausentes, forma, instanciar, trocarPilha, valida],
+  )
+
+  /** O mesmo `adicionar`, fechando a folha do trilho por cima — "escolher" é um dos dois
+   * jeitos de fechá-la (o outro é tocar fora). No modo montador o trilho não tem folha;
+   * fechar `trilhoAberto` ali não muda nada em tela. */
+  const aoEscolherDoTrilho = useCallback(
+    (slug: string) => {
+      adicionar(slug)
+      setTrilhoAberto(false)
+    },
+    [adicionar],
   )
 
   const remover = useCallback(
@@ -302,12 +333,12 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         const r = painel?.getBoundingClientRect()
         const dentro =
           !!r && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom
-        if (dentro) adicionar(slug)
+        if (dentro) aoEscolherDoTrilho(slug)
       }
       window.addEventListener('pointermove', mover_)
       window.addEventListener('pointerup', soltar)
     },
-    [adicionar],
+    [aoEscolherDoTrilho],
   )
 
   /** Arrastar uma camada da pilha: para cima e para baixo reordena, para fora tira. */
@@ -548,6 +579,24 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
 
   const aberta = revelada !== null && revelada >= 0 && revelada < numerada.length ? revelada : null
   const chamadasNaTela = pronto && !comprimido && !selando
+  const contarSlug = (s: string) => pilha.filter((i) => i.slug === s).length
+
+  // O leque dos rótulos da coluna de chamadas (só em `amplo`, onde a coluna existe). A
+  // ordem física vai de baixo (índice 0) para cima; a leitura na tela vai de cima para
+  // baixo — por isso o `topoObjeto` de cada camada, que decresce com o índice, já chega
+  // ordenado ao percorrer os índices do maior para o menor. `distribuirRotulos` preserva
+  // essa ordem por construção (ver `rotulos.ts`) e nunca a inverte.
+  const rotuloTopPorIndice: number[] = []
+  if (chamadasNaTela && amplo && numerada.length) {
+    const doTopoParaBase = numerada.map((_, i) => i).reverse()
+    const ideais = doTopoParaBase.map(
+      (i) => medidas(MAPA_CAMADAS[slugs[i]], i, g).topoObjeto - TOQUE_MIN / 2,
+    )
+    const distribuidos = distribuirRotulos(ideais, TOQUE_MIN)
+    doTopoParaBase.forEach((i, j) => {
+      rotuloTopPorIndice[i] = distribuidos[j]
+    })
+  }
 
   return (
     <div id="rx-takeover" aria-label={`Raio-x do ${nome}`}>
@@ -684,7 +733,14 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
           {chamadasNaTela &&
             amplo &&
             numerada.map(({ inst, n: ord }, i) => (
-              <Chamada key={inst.uid} camada={MAPA_CAMADAS[inst.slug]} n={ord} indice={i} g={g} />
+              <Chamada
+                key={inst.uid}
+                camada={MAPA_CAMADAS[inst.slug]}
+                n={ord}
+                indice={i}
+                g={g}
+                rotuloTop={rotuloTopPorIndice[i]}
+              />
             ))}
 
           {chamadasNaTela && !amplo && aberta !== null && (
@@ -748,18 +804,85 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         aviso={aviso}
         recado={recado}
         transicaoBarra={g.prensa ? `${PRENSA_MS}ms ${PRENSA_CURVA}` : '420ms cubic-bezier(.2,.7,.3,1)'}
-        onVerComposicao={() => setComposicao((v) => !v)}
+        onVerComposicao={() => {
+          setTrilhoAberto(modoMontador)
+          setComposicao((v) => !v)
+        }}
         flutuaRef={flutuaRef}
       />
 
-      <Trilho
-        contarSlug={(s) => pilha.filter((i) => i.slug === s).length}
-        ausentes={ausentes}
-        bloqueado={selando || selado}
-        cheio={n >= MAX_CAMADAS}
-        onAdicionar={adicionar}
-        onArrastar={arrastarDoTrilho}
-      />
+      {/* Editor: o lanche já chega pronto, acrescentar ingrediente é a ação secundária —
+          o trilho nasce recolhido atrás deste botão e só ocupa tela quando aberto como
+          folha, abaixo. Montador: sem alternância, a tira de sempre — é a ação principal
+          ali. Ver o comentário de `modoMontador`. */}
+      {modoMontador ? (
+        <Trilho
+          contarSlug={contarSlug}
+          ausentes={ausentes}
+          bloqueado={selando || selado}
+          cheio={n >= MAX_CAMADAS}
+          onAdicionar={aoEscolherDoTrilho}
+          onArrastar={arrastarDoTrilho}
+        />
+      ) : (
+        <button
+          id="rx-abrir-trilho"
+          type="button"
+          disabled={selando || selado}
+          onClick={() => {
+            setComposicao(false)
+            setTrilhoAberto(true)
+          }}
+        >
+          Acrescentar ingrediente
+        </button>
+      )}
+
+      {!modoMontador && trilhoAberto && (
+        <div
+          id="rx-trilho-cortina"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setTrilhoAberto(false)
+          }}
+        >
+          <div id="rx-trilho-folha" role="group" aria-label="Ingredientes disponíveis">
+            <div id="rx-trilho-folha-cabeca">
+              <span style={{ fontVariationSettings: "'wdth' 92, 'wght' 600", fontSize: '0.875rem' }}>
+                Ingredientes
+              </span>
+              <button
+                id="rx-fechar-trilho"
+                type="button"
+                onClick={() => setTrilhoAberto(false)}
+                aria-label="Fechar ingredientes"
+                style={{
+                  width: TOQUE_MIN,
+                  minHeight: TOQUE_MIN,
+                  padding: 0,
+                  background: 'none',
+                  border: 0,
+                  color: 'var(--osso)',
+                  fontSize: '1.125rem',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <Trilho
+              folha
+              contarSlug={contarSlug}
+              ausentes={ausentes}
+              bloqueado={selando || selado}
+              cheio={n >= MAX_CAMADAS}
+              onAdicionar={aoEscolherDoTrilho}
+              onArrastar={arrastarDoTrilho}
+            />
+          </div>
+        </div>
+      )}
 
       <BotaoSelar
         podeFechar={n > 0 && !selado && !selando}
