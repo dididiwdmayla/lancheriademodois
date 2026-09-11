@@ -34,7 +34,10 @@ que é acionável: trilho de ingredientes, medidor, botões, barra do pedido. Os
 de cima são para ver: a pilha, as chamadas, a foto. Nada que exija toque preciso mora no
 topo.
 
-**Alvo de toque mínimo de 44px.** Vale para camada, chamada, item de trilho e botão.
+**Alvo de toque mínimo de 44px.** Vale para camada, chamada, item de trilho e botão. Na
+pilha a tira de toque de uma camada fina cresce até 44px invadindo a vizinha — não é
+garantia por camada; quem garante toque, teclado e leitor de tela para toda camada é a
+lista de composição.
 
 Arrastar nunca é o único caminho. Todo gesto tem equivalente por toque.
 
@@ -110,6 +113,19 @@ Este `min` é estrutural, não margem de segurança. Nos seis lanches a menor ex
 exatamente 45,0%, ou seja, o limite é a restrição ativa em todos. Alterar qualquer
 `alturaPx` move várias camadas de uma vez. Não trate esses números como cosméticos.
 
+**Escala da pilha e piso, em `geometria()` (`prensa.ts`):**
+```
+escalaNatural = larguraDoPainel / 2000
+kAltura       = (alturaDisponível × 0.94) / unidadesDaPilha
+k             = max(kAltura, escalaNatural × 0.70)
+```
+`alturaDisponível` é a altura do painel já descontada a faixa flutuante de aviso/recado
+(`#rx-flutua`), medida ao vivo — não a altura inteira do painel. `0.94` é ar vertical, não
+contrato; ajuste se a pilha parecer apertada ou solta demais. `0.70` é o piso: abaixo dele
+as camadas finas somem e o desenho perde sentido. Se `kAltura` cair abaixo do piso, a pilha
+para no piso e **o painel rola** (`overflow-y: auto` só nesse estado, alinhado pelo topo) —
+é a única situação em que o raio-x rola verticalmente.
+
 **Prensa (só prensado), 340ms, aceleração forte e parada seca — sem mola:**
 ```
 espacamento = espacamento_explodido × 0.30
@@ -162,7 +178,7 @@ não é preciso mexer no código.
 
 ## Dados
 
-`camadas.ts` — 19 camadas. Campos: `slug`, `arquivo`, `alturaPx`, `afundamento`,
+`camadas.ts` — 19 camadas. Campos: `slug`, `arquivo`, `ficha`, `alturaPx`, `afundamento`,
 `precoCent`, `obrigatorio`.
 **Não existem `alturaCm` nem `pesoG`.** Foram removidos de propósito: nenhum dono de
 lancheria consegue preencher isso, e estimativa errada é pior que nada.
@@ -180,14 +196,21 @@ Aviso "risco de desmontar": **acima de 10 camadas.** Não existe limiar em cent�
 
 ---
 
-## Assets — 35 arquivos, finais
+## Assets — 54 arquivos, finais
 
 ```
 /public/camadas/   19 · 2000×1200 · alpha
 /public/fixos/     10 · 2000×2000 · alpha
 /public/chapa/      2 · 2400×1600
 /public/macro/      4 · 2000×1333
+/public/fichas/    19 ·  256× 256 · alpha
 ```
+
+`/public/fichas/` é miniatura de trilho: recorte 256×256 no ponto de maior estrutura de
+cada camada, feito para ler a 56px. Uso **exclusivo** do trilho. A pilha, o cardápio e o
+raio-x usam `/camadas/`, que são as camadas inteiras — encolher a 2000×1200 a 56px joga
+fora a silhueta e sobra a cor média (foi assim que quatro marrons viraram uma mancha só).
+Trocar um pelo outro quebra os dois.
 
 Já normalizados. **Não redimensione, não reprocesse, não renomeie.**
 Bebidas e acompanhamentos **não têm imagem** e entram como peça tipográfica.

@@ -5,14 +5,17 @@
 // também. Isso é requisito de teclado e leitor de tela, não concessão a mobile — e por
 // isso a ficha é um <button>, não uma <div> com listener.
 //
-// No celular a ficha é 56px de foto e mais nada: nome e preço não cabem embaixo de 56px
-// sem quebrar palavra, e cortar é a regra. O nome continua no `aria-label`, o preço aparece
-// no medidor no instante em que a camada entra, e a chamada da camada nova se revela
-// sozinha — é ela que diz, por escrito, o que acabou de ser posto. Acima de 900px a ficha
-// volta a ser a de sempre, com nome e preço. Quem troca é o CSS (app/globals.css).
+// No celular a ficha é a foto de 56px e o nome numa linha só, com reticências — "preço"
+// não cabe e aparece no medidor no instante em que a camada entra, e a chamada da camada
+// nova se revela sozinha. Acima de 900px a ficha volta a ser a de sempre, com nome e preço
+// completos. Quem troca é o CSS (app/globals.css).
+//
+// A foto vem de /fichas/, não de /camadas/: é um recorte 256×256 no ponto de maior
+// estrutura da camada, feito para ler a 56px. As camadas inteiras (2000×1200) encolhidas
+// a esse tamanho perdiam a silhueta e sobrava só a cor média — ver AGENTS.md.
 
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { CAMADAS, urlCamada } from '@/data/camadas'
+import { CAMADAS } from '@/data/camadas'
 import { MAX_REPETICOES } from '@/data/casa'
 import { brl } from '@/lib/precos'
 
@@ -69,9 +72,28 @@ export default function Trilho({
               data-ficha-foto
               aria-hidden="true"
               style={{
-                background: ausente ? 'none' : `center/contain no-repeat url("${urlCamada(c)}")`,
+                background: ausente ? 'none' : `center/contain no-repeat url("${c.ficha}")`,
               }}
             />
+            {/* Só no celular: nome numa linha, sem preço — o recorte já é legível e o
+                preço aparece no medidor assim que a camada entra. Some acima de 900px,
+                onde `data-ficha-texto` volta com nome e preço completos. */}
+            <span
+              data-ficha-nome
+              aria-hidden="true"
+              style={{
+                fontVariationSettings: "'wdth' 92, 'wght' 500",
+                fontSize: '0.6875rem',
+                lineHeight: 1,
+                color: 'var(--osso)',
+                width: '100%',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {c.nome}
+            </span>
             <span data-ficha-texto aria-hidden="true">
               <span
                 style={{
