@@ -69,6 +69,7 @@ export function salto(item: Item, origem: Origem | null, aoChegar: () => void): 
   const largura = 2000 * kk
   const fator = fatorFechado(item.forma)
   cont.setAttribute('aria-hidden', 'true')
+  cont.setAttribute('data-salto', '')
   cont.style.cssText =
     `position: fixed; left: ${origem.centroX - largura / 2}px; top: ${origem.baseY}px; ` +
     `width: ${largura}px; height: 0; z-index: 45; pointer-events: none; transform-origin: 50% 0;`

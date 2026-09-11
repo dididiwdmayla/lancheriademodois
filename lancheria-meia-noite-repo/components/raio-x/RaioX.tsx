@@ -52,12 +52,14 @@ type Props = {
   forma: Forma
   camadasIniciais: string[]
   onFechar: (item: LancheFechado, origem: Origem | null) => void
+  onSair?: () => void
+  editando?: boolean
 }
 
 const CURVA_ASSENTA = 'cubic-bezier(.32,.02,.24,1)'
 const CURVA_EXPLODE = 'cubic-bezier(.22,1.24,.36,1)'
 
-export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props) {
+export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, editando }: Props) {
   const uidRef = useRef(1)
   const instanciar = useCallback(
     (slugs: string[]): Instancia[] =>
@@ -623,6 +625,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         >
           {nome}
         </h2>
+        <button id="rx-fechar" className="botao-texto" type="button" onClick={onSair}>Voltar</button>
       </header>
 
       <div
@@ -794,7 +797,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
       </div>
 
       {composicao && (
-        <Composicao pilha={pilha} onTirar={remover} onFechar={() => setComposicao(false)} />
+        <Composicao pilha={pilha} onMover={mover} onTirar={remover} onFechar={() => setComposicao(false)} />
       )}
 
       <Medidor
@@ -894,8 +897,8 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
                 ? 'Prensando…'
                 : 'Selando…'
               : ehPrensado
-                ? 'Prensar na chapa'
-                : 'Selar na chapa'
+                ? editando ? 'Prensar e salvar' : 'Prensar na chapa'
+                : editando ? 'Selar e salvar' : 'Selar na chapa'
         }
         onSelar={fechamento}
       />

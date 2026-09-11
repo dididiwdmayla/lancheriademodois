@@ -1,6 +1,6 @@
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import LetreiroSvg from './LetreiroSvg'
 import {
   ATRASO_MARCA_MS,
@@ -15,21 +15,32 @@ import { prefersReducedMotion, umaVezPorSessao } from '@/lib/motion'
 // poupava uma linha no QA e cobrava o preço errado: a animação de ignição vai no
 // shorthand `animation` do elemento que as escreve, e na raiz ela brigaria com qualquer
 // animação futura de <html>. O clock fica onde o letreiro está; quem mede vai até ele.
-export default function Letreiro() {
+export default function Letreiro({ onConcluir }: { onConcluir: () => void }) {
+  const [fim, setFim] = useState(false)
+  const concluir = useRef(onConcluir)
+  concluir.current = onConcluir
+  const sair = () => {
+    try { sessionStorage.setItem(CHAVE_SESSAO, '1') } catch {}
+    document.documentElement.setAttribute('data-lt-aceso', '1')
+    setFim(true)
+    concluir.current()
+  }
   const raizRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     const svg = raizRef.current?.querySelector<SVGSVGElement>('#lt-svg')
     if (!svg) return
-    const { jaAconteceu, marcar } = umaVezPorSessao(CHAVE_SESSAO)
+    const { jaAconteceu, marcar: marcarSessao } = umaVezPorSessao(CHAVE_SESSAO)
 
     // Já acendeu nesta sessão: nasce aceso, sem sequência, sem frame apagado.
     if (jaAconteceu) {
       svg.style.setProperty('--lt-acende', '1')
       svg.style.setProperty('--lt-letras', '1')
+      setFim(true); concluir.current()
       return
     }
 
+    const marcar = () => { marcarSessao(); setFim(true); concluir.current() }
     const reduzido = prefersReducedMotion()
     const timers: number[] = []
     const agendar = (fn: () => void, ms: number) => {
@@ -103,11 +114,15 @@ export default function Letreiro() {
         }}
       />
       <div
+        id="intro"
+        hidden={fim}
         ref={raizRef}
         style={{
           width: '100%',
-          minHeight: '100dvh',
-          display: 'grid',
+          position: 'fixed',
+          inset: '0 0 var(--barra-altura)',
+          zIndex: 40,
+          display: fim ? 'none' : 'grid',
           placeItems: 'center',
           background: 'var(--borra)',
           padding: 'clamp(20px, 5vw, 64px)',
@@ -116,6 +131,7 @@ export default function Letreiro() {
         <div style={{ width: '100%', maxWidth: 'min(620px, 62vh)', display: 'grid', placeItems: 'center' }}>
           <LetreiroSvg />
         </div>
+        <button id="intro-pular" className="botao-texto" onClick={sair}>Entrar no cardápio</button>
       </div>
     </>
   )

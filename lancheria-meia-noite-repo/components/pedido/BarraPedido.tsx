@@ -1,7 +1,6 @@
 'use client'
 
-// A barra do pedido. Nesta rodada ela é o destino do salto e mais nada: contagem, total,
-// e um botão de abrir que ainda não leva a lugar nenhum. O carrinho é fase seguinte.
+// A barra é o destino do salto e a porta permanente do pedido.
 //
 // O total sobe contando e é escrito direto no nó — 320ms de requestAnimationFrame
 // re-renderizando a página inteira seria caro por nada.
@@ -9,6 +8,7 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import { brl } from '@/lib/precos'
 import { prefersReducedMotion } from '@/lib/motion'
+import type { ItemPedido } from '@/lib/pedido'
 
 export type ChegadaBarra = {
   /** Leva o solavanco e conta o total até o novo valor. */
@@ -19,6 +19,9 @@ type Props = {
   itens: number
   totalCent: number
   ref?: Ref<ChegadaBarra>
+  onAbrir: () => void
+  ultimo?: ItemPedido
+  onModificar: (id: string) => void
 }
 
 const CONTAGEM_MS = 320
@@ -26,17 +29,23 @@ const CONTAGEM_MS = 320
 /** A altura mora em --barra-altura (app/globals.css): CSS e componente precisam dela. */
 export const ALTURA_BARRA = 'var(--barra-altura)'
 
-export default function BarraPedido({ itens, totalCent, ref }: Props) {
+export default function BarraPedido({ itens, totalCent, ref, onAbrir, ultimo, onModificar }: Props) {
   const totalRef = useRef<HTMLSpanElement>(null)
   const ficha = useRef(0)
+  const destinoAnimado = useRef<number | null>(null)
 
   const escrever = useCallback((cent: number) => {
     if (totalRef.current) totalRef.current.textContent = brl(cent)
   }, [])
 
   useEffect(() => {
+    if (destinoAnimado.current === totalCent) return
+    ficha.current++
+    destinoAnimado.current = null
     escrever(totalCent)
   }, [escrever, totalCent])
+
+  useEffect(() => () => { ficha.current++ }, [])
 
   useImperativeHandle(ref, () => ({
     chegou(de, para) {
@@ -54,9 +63,12 @@ export default function BarraPedido({ itens, totalCent, ref }: Props) {
         )
       }
       if (de === para || reduzido) {
+        ficha.current++
+        destinoAnimado.current = null
         escrever(para)
         return
       }
+      destinoAnimado.current = para
       const minha = ++ficha.current
       const t0 = performance.now()
       const passo = (t: number) => {
@@ -64,7 +76,7 @@ export default function BarraPedido({ itens, totalCent, ref }: Props) {
         const p = Math.min(1, (t - t0) / CONTAGEM_MS)
         escrever(Math.round(de + (para - de) * (1 - Math.pow(1 - p, 3))))
         if (p < 1) requestAnimationFrame(passo)
-        else escrever(para)
+        else { destinoAnimado.current = null; escrever(para) }
       }
       requestAnimationFrame(passo)
     },
@@ -81,13 +93,15 @@ export default function BarraPedido({ itens, totalCent, ref }: Props) {
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 20,
+        zIndex: 38,
         minHeight: ALTURA_BARRA,
-        background: 'rgba(28,21,18,0.97)',
+        background: 'var(--fumo)',
         borderTop: '1px solid var(--traco)',
       }}
     >
+      {ultimo && <div className="barra-modificar"><span>{ultimo.nome}</span><button className="botao-texto" onClick={() => onModificar(ultimo.id)}>Modificar lanche</button></div>}
       <div
+        className="barra-conteudo"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -121,16 +135,16 @@ export default function BarraPedido({ itens, totalCent, ref }: Props) {
               letterSpacing: '-0.01em',
               color: 'var(--latao)',
             }}
-          />
+          >{brl(totalCent)}</span>
         </div>
         <button
           id="barra-abrir"
           type="button"
           data-abrir-carrinho
-          disabled={!cheio}
+          onClick={onAbrir}
           style={{
             minHeight: 46,
-            padding: '13px 20px',
+            padding: '13px 14px',
             background: cheio ? 'var(--latao)' : 'var(--fumo)',
             color: cheio ? 'var(--borra)' : 'var(--osso)',
             border: `1px solid ${cheio ? 'var(--latao)' : 'var(--traco)'}`,
@@ -138,8 +152,8 @@ export default function BarraPedido({ itens, totalCent, ref }: Props) {
             fontFamily: 'var(--fonte-corpo), sans-serif',
             fontSize: '1rem',
             fontVariationSettings: "'wght' 600",
-            cursor: cheio ? 'pointer' : 'default',
-            opacity: cheio ? 1 : 0.45,
+            cursor: 'pointer',
+            opacity: 1,
           }}
         >
           Abrir pedido

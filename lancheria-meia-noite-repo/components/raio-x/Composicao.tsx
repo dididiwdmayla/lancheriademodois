@@ -19,10 +19,11 @@ type Props = {
   /** A pilha, da base para o topo — a mesma ordem do estado. */
   pilha: Instancia[]
   onTirar: (indice: number) => void
+  onMover: (indice: number, delta: number) => number
   onFechar: () => void
 }
 
-export default function Composicao({ pilha, onTirar, onFechar }: Props) {
+export default function Composicao({ pilha, onTirar, onMover, onFechar }: Props) {
   // De cima para baixo: é assim que a pilha é vista, e o pão de cima é o primeiro nome
   // que a pessoa procura.
   const linhas = pilha.map((inst, indice) => ({ inst, indice })).reverse()
@@ -77,6 +78,7 @@ export default function Composicao({ pilha, onTirar, onFechar }: Props) {
           return (
             <li
               key={inst.uid}
+              className="composicao-linha"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -109,6 +111,10 @@ export default function Composicao({ pilha, onTirar, onFechar }: Props) {
               >
                 {c.precoCent ? brl(c.precoCent) : '—'}
               </span>
+              {!c.obrigatorio && <div className="composicao-mover">
+                <button type="button" className="botao-texto" data-mover-cima={indice} aria-label={`Subir ${c.nome.toLowerCase()}`} disabled={indice >= pilha.length - 2} onClick={() => onMover(indice, 1)}>↑</button>
+                <button type="button" className="botao-texto" data-mover-baixo={indice} aria-label={`Descer ${c.nome.toLowerCase()}`} disabled={indice <= 1} onClick={() => onMover(indice, -1)}>↓</button>
+              </div>}
               {c.obrigatorio ? (
                 <span
                   style={{
@@ -161,7 +167,7 @@ export default function Composicao({ pilha, onTirar, onFechar }: Props) {
         }}
       >
         Toque no trilho para pôr. Toque numa camada da pilha para ver o nome dela. No
-        teclado: setas movem, Delete tira.
+        teclado: setas movem, Delete tira. Os botões ↑ e ↓ também mudam a ordem.
       </p>
     </div>
   )

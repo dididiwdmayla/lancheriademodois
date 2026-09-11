@@ -2,11 +2,12 @@
   "name": "lancheria-meia-noite",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "qa": "node scripts/qa-visual.mjs"
+    "qa": "node scripts/qa-visual.mjs",
+    "test": "node scripts/qa-regras.mjs"
   },
   "dependencies": {
     "next": "^15.1.0",
