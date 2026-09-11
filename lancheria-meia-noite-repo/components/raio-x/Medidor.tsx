@@ -12,7 +12,7 @@
 //
 // Plex Mono vive aqui e nos preços. Em qualquer outro lugar é erro.
 
-import type { CSSProperties } from 'react'
+import type { CSSProperties, Ref } from 'react'
 import { LIMIAR_AVISO_CAMADAS } from '@/data/casa'
 import { brl } from '@/lib/precos'
 
@@ -39,6 +39,9 @@ type Props = {
   recado: string
   transicaoBarra: string
   onVerComposicao: () => void
+  /** Mede a faixa de aviso/recado: no celular ela flutua sobre o painel e a altura
+   * disponível da pilha precisa descontá-la. Ver `RaioX.tsx`. */
+  flutuaRef?: Ref<HTMLDivElement>
 }
 
 export default function Medidor({
@@ -49,6 +52,7 @@ export default function Medidor({
   recado,
   transicaoBarra,
   onVerComposicao,
+  flutuaRef,
 }: Props) {
   const contagem = camadas === 0 ? 'painel vazio' : camadas === 1 ? '1 camada' : `${camadas} camadas`
 
@@ -118,7 +122,7 @@ export default function Medidor({
         />
       </div>
 
-      <div id="rx-flutua">
+      <div id="rx-flutua" ref={flutuaRef}>
         <span
           id="rx-aviso"
           data-aviso={aviso ? '' : undefined}

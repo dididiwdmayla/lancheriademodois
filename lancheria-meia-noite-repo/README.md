@@ -78,7 +78,7 @@ components/    letreiro/, raio-x/, pedido/ — ver Estado
 data/          camadas.ts, fixos.ts, casa.ts, baselines.json
 design/        briefings e prompts, na ordem em que foram dados
 export/        o HTML do Claude Design
-public/        35 assets finais — não reprocessar
+public/        54 assets finais — não reprocessar
 scripts/       qa-visual.mjs
 ```
 

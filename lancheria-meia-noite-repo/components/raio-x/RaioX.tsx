@@ -83,8 +83,13 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
   // Só camadas sem altura medida são sondadas — hoje não há nenhuma. O caminho existe
   // porque falta de asset vira "em falta" no trilho, nunca placeholder de imagem.
   const [ausentes, setAusentes] = useState<Record<string, boolean>>({})
+  // Altura da faixa flutuante de aviso/recado (#rx-flutua), medida ao vivo. No celular ela
+  // flutua sobre o painel; a pilha escala para a altura que sobra depois de descontá-la, e
+  // não para a altura inteira do painel. Fica 0 quando a faixa não tem nada para mostrar.
+  const [flutuaH, setFlutuaH] = useState(0)
 
   const desenhoRef = useRef<HTMLDivElement>(null)
+  const flutuaRef = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
   const agendar = useCallback((fn: () => void, ms: number) => {
     timers.current.push(window.setTimeout(fn, ms))
@@ -103,6 +108,19 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
     const medir = () => {
       const r = alvo.getBoundingClientRect()
       setArea((a) => (Math.abs(r.width - a.w) > 1 || Math.abs(r.height - a.h) > 1 ? { w: r.width, h: r.height } : a))
+    }
+    medir()
+    const ro = new ResizeObserver(medir)
+    ro.observe(alvo)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const alvo = flutuaRef.current
+    if (!alvo) return
+    const medir = () => {
+      const r = alvo.getBoundingClientRect()
+      setFlutuaH((h) => (Math.abs(r.height - h) > 0.5 ? r.height : h))
     }
     medir()
     const ro = new ResizeObserver(medir)
@@ -141,11 +159,6 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
   }, [composicao])
 
   // ---------- regras de posição ----------
-
-  const contarSlug = useCallback(
-    (slug: string) => vivo.current.pilha.filter((i) => i.slug === slug).length,
-    [],
-  )
 
   const valida = useCallback(
     (arr: Instancia[]): boolean => {
@@ -186,10 +199,6 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         setRecado('Dezesseis camadas é o teto. Tire uma antes.')
         return
       }
-      if (contarSlug(slug) >= MAX_REPETICOES) {
-        setRecado(`Três ${c.nome.toLowerCase()} já é exagero. O quarto não entra.`)
-        return
-      }
       let arr = v.pilha.slice()
       // Painel vazio: os dois pães entram junto com o primeiro recheio.
       if (!arr.length) arr = instanciar(PAES[forma])
@@ -203,11 +212,17 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         return
       }
       trocarPilha(arr)
+      // A ficha desabilita assim que a terceira instância entra — é este o momento em que
+      // o recado explica alguma coisa. Um recado antes da terceira nunca dispara: a ficha
+      // barra a quarta antes que o clique chegue aqui.
+      if (arr.filter((i) => i.slug === slug).length === MAX_REPETICOES) {
+        setRecado(`Três ${c.nome.toLowerCase()} já é exagero. O quarto não entra.`)
+      }
       // A chamada da camada nova se revela sozinha. No celular a ficha do trilho é só a
       // foto em 56px — é esta chamada que diz, por escrito, o que acabou de entrar.
       setRevelada(arr.findIndex((x) => x.uid === uid))
     },
-    [ausentes, contarSlug, forma, instanciar, trocarPilha, valida],
+    [ausentes, forma, instanciar, trocarPilha, valida],
   )
 
   const remover = useCallback(
@@ -494,7 +509,10 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
 
   const lista = pilha.filter((i) => !ausentes[i.slug] && MAPA_CAMADAS[i.slug].alturaPx > 0)
   const slugs = lista.map((i) => i.slug)
-  const g = geometria({ slugs, areaW: area.w, areaH: area.h, comprimido, forma, chamadas: amplo })
+  // No celular a faixa de aviso/recado flutua por cima do painel; no desktop ela mora na
+  // coluna do medidor e não toma espaço da pilha. Só desconta no primeiro caso.
+  const alturaDisponivel = Math.max(0, area.h - (amplo ? 0 : flutuaH))
+  const g = geometria({ slugs, areaW: area.w, areaH: alturaDisponivel, comprimido, forma, chamadas: amplo })
   const pronto = area.w > 0 && area.h > 0
 
   const transicao = g.prensa
@@ -558,7 +576,16 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         </h2>
       </header>
 
-      <div id="rx-painel" data-prensado={g.prensa ? '' : undefined}>
+      <div
+        id="rx-painel"
+        data-prensado={g.prensa ? '' : undefined}
+        // A pilha escala para caber; só bate no piso (`PISO_ESCALA`, em prensa.ts) quando
+        // nem o mínimo aceitável coube na altura disponível — aí, e só aí, o painel rola.
+        data-estourou={g.estourou ? '' : undefined}
+        data-escala={pronto ? g.k.toFixed(4) : undefined}
+        data-escala-natural={pronto ? g.escalaNatural.toFixed(4) : undefined}
+        style={g.estourou ? { overflowY: 'auto', overflowX: 'hidden' } : undefined}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/macro/macro-chapa.webp"
@@ -720,6 +747,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         recado={recado}
         transicaoBarra={g.prensa ? `${PRENSA_MS}ms ${PRENSA_CURVA}` : '420ms cubic-bezier(.2,.7,.3,1)'}
         onVerComposicao={() => setComposicao((v) => !v)}
+        flutuaRef={flutuaRef}
       />
 
       <Trilho

@@ -40,6 +40,19 @@ export const ASSENTA_Y = 0.9
 export const AFUNDAMENTO_TOPO_MAX = 0.65
 /** Teto do afundamento como fração da camada de baixo. É este número que salva o tomate. */
 export const TETO_SOBRE_A_DE_BAIXO = 0.55
+/**
+ * Ar entre a pilha e a borda da altura disponível — a altura do painel já descontada a
+ * faixa flutuante de aviso/recado, quando ela aparece (ver `RaioX.tsx`). Puro respiro
+ * visual agora que a faixa não mora mais dentro dessa conta: não é contrato, ajuste se a
+ * pilha parecer apertada ou solta demais depois de escalar.
+ */
+export const FATOR_RESPIRO_ALTURA = 0.94
+/**
+ * Piso da escala pela altura, como fração da escala natural (a que a largura do painel já
+ * permite, sem nenhum corte por altura). Abaixo disso as camadas finas somem e o desenho
+ * perde sentido — aí a pilha para de encolher e o painel passa a rolar.
+ */
+export const PISO_ESCALA = 0.70
 
 function paesDe(forma: Forma): [string, string] {
   const p = CAMADAS.filter((c) => c.pao === forma).sort((a, b) => a.ordem - b.ordem)
@@ -142,6 +155,11 @@ export type Geometria = {
   assenta: boolean
   /** Espalhamento do recheio nesta composição. Só importa quando `prensa` é true. */
   espalhaX: number
+  /** A escala que a largura do painel sozinha permitiria, sem nenhum corte por altura. */
+  escalaNatural: number
+  /** `k` bateu no piso de `PISO_ESCALA`: a pilha não coube na altura mesmo no mínimo, e
+   * o painel precisa rolar para mostrar o resto. Ver `RaioX.tsx`. */
+  estourou: boolean
 }
 
 /**
@@ -170,7 +188,14 @@ export function geometria(opcoes: {
   slugs.forEach((s, i) => {
     unidades += (MAPA_CAMADAS[s]?.alturaPx ?? 0) + (i > 0 ? GAP : 0)
   })
-  const k = Math.min(larguraPilha / 2000, unidades ? (areaH * 0.88) / unidades : 1)
+  // Escala natural: a que a largura sozinha permite, sem nenhum corte por altura — é o
+  // teto que a pilha nunca ultrapassa, e a referência do piso de `PISO_ESCALA`.
+  const escalaNatural = larguraPilha / 2000
+  const kAltura = unidades ? (areaH * FATOR_RESPIRO_ALTURA) / unidades : Infinity
+  const kAjustado = Math.min(escalaNatural, kAltura)
+  const piso = escalaNatural * PISO_ESCALA
+  const estourou = kAjustado < piso
+  const k = estourou ? piso : kAjustado
 
   const tops: number[] = []
   let cursor = 0
@@ -182,10 +207,26 @@ export function geometria(opcoes: {
     tops.push(cursor)
   })
   const minTop = tops.length ? tops[tops.length - 1] : 0
-  const offsetY = (areaH - -minTop * k) / 2
+  // Quando bate no piso a pilha não cabe mesmo no menor tamanho aceitável: em vez de
+  // centralizar (que cortaria igualmente em cima e embaixo, sem jeito de rolar até o
+  // topo), alinha o topo ao topo do painel — o painel rola para revelar o resto por baixo.
+  const offsetY = estourou ? 0 : (areaH - -minTop * k) / 2
   // Calculado no momento de prensar: fora dele o valor não é usado, e computar sempre
   // gastaria a mesma volta pelas larguras à toa em cada render explodido.
   const espalhaX = prensa ? espalhaXDe(slugs) : ESPALHA_X_MIN
 
-  return { colW, x0, larguraPilha, k, tops, minTop, offsetY, prensa, assenta, espalhaX }
+  return {
+    colW,
+    x0,
+    larguraPilha,
+    k,
+    tops,
+    minTop,
+    offsetY,
+    prensa,
+    assenta,
+    espalhaX,
+    escalaNatural,
+    estourou,
+  }
 }

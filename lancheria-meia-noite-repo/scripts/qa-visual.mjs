@@ -3,8 +3,8 @@
 // Duas camadas, nesta ordem:
 //   1. Asserções numéricas em texto. Uma linha por checagem, custo desprezível.
 //      A maior parte dos defeitos aparece aqui e nunca precisa de imagem.
-//   2. UMA folha de contato: seis recortes num único JPEG, qualidade 55.
-//      Seis capturas separadas em 2x custariam mais de dez vezes mais tokens.
+//   2. UMA folha de contato: oito recortes num único JPEG, qualidade 55.
+//      Oito capturas separadas em 2x custariam mais de dez vezes mais tokens.
 //
 // Regra para o agente: leia o texto primeiro. Só abra a folha de contato se uma
 // asserção falhar ou se a tarefa for de julgamento visual. Nunca capture a página
@@ -27,6 +27,11 @@ const larguraDe = (slug) => CAIXAS[slug].caixa[2] - CAIXAS[slug].caixa[0]
 /** Teto do fator de espalhamento. Duplicado de `prensa.ts` pelo mesmo motivo de
  * `larguraDe`: este script é puro Node, sem passar pelo build do TypeScript. */
 const ESPALHA_X_TETO = 1.3
+/** Piso da escala da pilha pela altura e teto de camadas. Duplicados de `prensa.ts` e
+ * `casa.ts` pelo mesmo motivo de `ESPALHA_X_TETO`. */
+const PISO_ESCALA = 0.70
+const MAX_CAMADAS_QA = 16
+const MAX_REPETICOES_QA = 3
 
 const URL = process.argv[2] ?? 'http://localhost:3000'
 const LARGURA_RECORTE = 360
@@ -129,6 +134,10 @@ async function estorvosHorizontais(pagina) {
       if (cs.display === 'none' || cs.visibility === 'hidden') continue
       if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') continue
       if (e.clientWidth === 0) continue
+      // Reticências de uma linha (overflow:hidden + white-space:nowrap + text-overflow:
+      // ellipsis) cortam de propósito: o texto que sobra não pinta fora da caixa, só
+      // engorda o scrollWidth. Não é a caixa estourando por quem não foi feita pra rolar.
+      if (cs.overflowX === 'hidden' && cs.whiteSpace === 'nowrap' && cs.textOverflow === 'ellipsis') continue
       if (e.scrollWidth > e.clientWidth + 1) fora.push(`${nome(e)} ${e.scrollWidth}>${e.clientWidth}`)
     }
     const raiz = document.documentElement
@@ -196,6 +205,29 @@ async function medirFresta() {
   return { maisLargo: maisLargo.slug, pao, fator, alcance }
 }
 
+/**
+ * A escala aplicada à pilha e se ela bateu no piso, direto dos atributos que `RaioX.tsx`
+ * expõe em `#rx-painel` (`data-escala`, `data-escala-natural`, `data-estourou`) — nenhum
+ * recálculo aqui, só leitura do que o componente já decidiu.
+ *
+ * Não mede `scrollHeight`: cada camada embrulha o canvas de 1200px inteiro do arquivo
+ * (o objeto raramente ocupa tudo), então a caixa da camada estoura `#rx-painel` mesmo
+ * quando o desenho visível cabe sobrando — `overflow: hidden` corta essa transparência de
+ * propósito. `estourou` é o sinal correto: só é `true` quando a conta do componente não
+ * coube nem no piso, e é aí, e só aí, que o painel precisa rolar de verdade.
+ */
+async function medirEscala() {
+  return pg.evaluate(() => {
+    const el = document.getElementById('rx-painel')
+    if (!el) return null
+    return {
+      escala: Number(el.dataset.escala),
+      escalaNatural: Number(el.dataset.escalaNatural),
+      estourou: el.dataset.estourou !== undefined,
+    }
+  })
+}
+
 // ---------- 1. asserções numéricas ----------
 
 await abrir(LANCHE_CHEIO)
@@ -215,6 +247,9 @@ pula('filtro por ingrediente como eixo separado', 'cardápio em grade')
 // Fator, recheio mais largo e alcance de cada prensado — o relatório final soma o
 // sintético a esta mesma lista.
 const frestas = []
+// Escala aplicada à pilha em cada composição fixa — o relatório final soma a de 16
+// camadas a esta mesma lista.
+const escalas = []
 
 // Teto de afundamento: nenhuma camada some atrás da de cima. É o teste do tomate, e ele
 // roda em todas as composições do cardápio — não só na que tem mais recheio.
@@ -240,6 +275,20 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
     return { nos, lido }
   })
   diz(bate.nos === bate.lido, `${slug}: medidor diz ${bate.lido}, painel desenha ${bate.nos} camadas`)
+
+  // A pilha cabe na altura disponível sem rolar, e a escala nunca cai abaixo do piso —
+  // ver "Escala da pilha e piso" no AGENTS.md. `#rx-painel` expõe os dois números.
+  const escala = await medirEscala()
+  if (escala) {
+    escalas.push({ rotulo: slug, ...escala })
+    diz(
+      escala.escala >= escala.escalaNatural * PISO_ESCALA - 1e-6 && !escala.estourou,
+      `${slug}: escala aplicada ${escala.escala.toFixed(3)} (natural ${escala.escalaNatural.toFixed(3)}, piso ${PISO_ESCALA}× natural)` +
+        `${escala.estourou ? ' — BATEU NO PISO, painel rola' : ', sem rolagem'}`,
+    )
+  } else {
+    diz(false, `${slug}: #rx-painel sem atributos de escala`)
+  }
 
   if (!PRENSADOS.includes(slug)) continue
   // Fresta da prensa: o recheio mais largo, já espalhado em scaleX, tem de alcançar a
@@ -381,6 +430,17 @@ if (faixas.length) {
   )
 }
 
+// Nenhuma ficha do trilho carrega de /camadas/: a foto de 56px é sempre o recorte de
+// /fichas/, senão a silhueta some e sobra a cor média — ver AGENTS.md.
+const fichasErradas = await pg.evaluate(() =>
+  [...document.querySelectorAll('#rx-trilho [data-ficha-foto]')]
+    .map((e) => getComputedStyle(e).backgroundImage)
+    .filter((bg) => bg.includes('/camadas/') || !bg.includes('/fichas/')))
+diz(
+  fichasErradas.length === 0,
+  `fichas do trilho fora de /fichas/: ${fichasErradas.length}${fichasErradas.length ? ` — ${fichasErradas.join(', ')}` : ''}`,
+)
+
 // ---------- 3. recortes ----------
 
 // explodido e medidor normal saem do lanche cheio: dez camadas.
@@ -409,6 +469,39 @@ if (ficha) { await ficha.click(); await pg.waitForTimeout(500) }
 const nAviso = await pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)
 diz(nAviso === 11, `medidor em aviso com ${nAviso} camadas (limiar 10)`)
 await recorte('medidor em aviso · 11 camadas', '#rx-medidor')
+
+// Pilha de 16 camadas: o teto do contrato, e o pior caso vertical para a escala e o piso.
+// Continua enchendo a partir do estado de aviso acima, em vez de remontar do zero. Evita
+// molho de propósito: como o recheio novo entra ordenado por `ordem` e molho tem a menor
+// de todas, uma segunda instância nunca cai adjacente a um pão e a validação a barra sem
+// nunca desabilitar a ficha — "botão habilitado" e "adição bem-sucedida" divergem só nele.
+const contarPilha = () => pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)
+const CANDIDATOS_ENCHIMENTO = ['presunto', 'cebola', 'frango-desfiado', 'queijo', 'ovo', 'tomate', 'alface', 'milho']
+for (const slug of CANDIDATOS_ENCHIMENTO) {
+  if ((await contarPilha()) >= MAX_CAMADAS_QA) break
+  for (let i = 0; i < MAX_REPETICOES_QA; i++) {
+    if ((await contarPilha()) >= MAX_CAMADAS_QA) break
+    const btn = await pg.$(`#rx-trilho [data-slug="${slug}"]:not([disabled])`)
+    if (!btn) break
+    await btn.click()
+    await pg.waitForTimeout(50)
+  }
+}
+const n16 = await contarPilha()
+diz(n16 === MAX_CAMADAS_QA, `pilha de 16 camadas montada: ${n16} camadas`)
+const escala16 = await medirEscala()
+if (escala16) {
+  escalas.push({ rotulo: `${MAX_CAMADAS_QA} camadas (sintético, teto do contrato)`, ...escala16 })
+  diz(
+    escala16.escala >= escala16.escalaNatural * PISO_ESCALA - 1e-6 && !escala16.estourou,
+    `16 camadas: escala aplicada ${escala16.escala.toFixed(3)} (natural ${escala16.escalaNatural.toFixed(3)}, piso ${PISO_ESCALA}× natural)` +
+      `${escala16.estourou ? ' — BATEU NO PISO, painel rola' : ', sem rolagem'}`,
+  )
+} else {
+  diz(false, '16 camadas: #rx-painel sem atributos de escala')
+}
+await recorte('pilha de 16 camadas com aviso visível', '#rx-desenho')
+await recorte('medidor com pilha de 16 camadas', '#rx-medidor')
 
 // prensado sai do mais magro: é nele que a fresta entre os pães aparece primeiro.
 await abrir(LANCHE_MAGRO)
@@ -528,6 +621,14 @@ frestas.forEach((f) => {
   linhas.push(
     `  ${f.rotulo}: fator ${f.fator.toFixed(3)} · ${f.maisLargo} (${larguraDe(f.maisLargo)}px)` +
       ` · alcança ${f.alcance}/${f.pao}`,
+  )
+})
+
+linhas.push('', `resumo da escala (aplicada · natural · piso ${PISO_ESCALA}):`)
+escalas.forEach((e) => {
+  linhas.push(
+    `  ${e.rotulo}: ${e.escala.toFixed(3)} · natural ${e.escalaNatural.toFixed(3)}` +
+      `${e.estourou ? ' · BATEU NO PISO, painel rola' : ' · sem rolagem'}`,
   )
 })
 
