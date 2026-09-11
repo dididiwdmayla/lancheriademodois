@@ -239,10 +239,14 @@ Aviso "risco de desmontar": **acima de 10 camadas.** Não existe limiar em cent�
 ```
 
 `/public/fichas/` é miniatura de trilho: recorte 256×256 no ponto de maior estrutura de
-cada camada, feito para ler a 56px. Uso **exclusivo** do trilho. A pilha, o cardápio e o
-raio-x usam `/camadas/`, que são as camadas inteiras — encolher a 2000×1200 a 56px joga
-fora a silhueta e sobra a cor média (foi assim que quatro marrons viraram uma mancha só).
-Trocar um pelo outro quebra os dois.
+cada camada, feito para ler a 56px. Uso **exclusivo da tira de 56px** do trilho — não do
+trilho inteiro. A pilha, o cardápio, o raio-x **e a folha do trilho** (a ficha maior, ~130px,
+que se abre por cima do painel no modo editor) usam `/camadas/`, que são as camadas
+inteiras: encolher a 2000×1200 a 56px joga fora a silhueta e sobra a cor média (foi assim
+que quatro marrons viraram uma mancha só) — e o recorte de 256×256 tem o problema oposto
+acima de 56px, close demais para ler como o ingrediente inteiro (o molho vira um pôr do
+sol, o tomate um retângulo vermelho chapado). Trocar um pelo outro em qualquer um dos dois
+tamanhos quebra a leitura.
 
 Exceção: o ghost de arrasto usa `/camadas/`, porque representa a camada real entrando na
 pilha e precisa da proporção verdadeira.

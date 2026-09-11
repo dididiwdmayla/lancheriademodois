@@ -5,7 +5,9 @@
 export type Camada = {
   slug: string
   arquivo: string
-  /** Miniatura de trilho: recorte 256×256 no ponto de maior estrutura. Só o trilho usa. */
+  /** Miniatura da TIRA de 56px do trilho: recorte 256×256 no ponto de maior estrutura,
+   * feito para ler pequeno. A folha do trilho (ficha maior, ~130px) não usa este campo —
+   * ela usa `arquivo`, a camada inteira, como a pilha e o cardápio. Ver AGENTS.md. */
   ficha: string
   nome: string
   alt: string

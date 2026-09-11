@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import RaioX, { type LancheFechado } from '@/components/raio-x/RaioX'
 import { salto, type Origem } from '@/components/raio-x/salto'
-import BarraPedido, { ALTURA_BARRA, type ChegadaBarra } from './BarraPedido'
+import BarraPedido, { type ChegadaBarra } from './BarraPedido'
 import type { Forma } from '@/components/raio-x/prensa'
 
 type ItemPedido = LancheFechado & { id: string; qtd: number }
@@ -59,7 +59,13 @@ export default function Balcao({ nome, forma, camadasIniciais }: Props) {
 
   return (
     <>
-      <div style={{ height: `calc(100dvh - ${ALTURA_BARRA})` }}>
+      {/* O raio-x é um TAKEOVER de verdade: ocupa a tela inteira, por cima de tudo — a
+          barra do pedido incluída. Ela mora por baixo, coberta pelo fundo opaco de
+          #rx-takeover, e não "por baixo dele" na tela: prensar é a ação daquele momento,
+          não o pedido. Nesta rodada o raio-x nunca fecha (o cardápio que vai fechá-lo é
+          fase seguinte), então a barra fica sempre coberta — no dia em que o raio-x
+          souber fechar, ela reaparece sozinha, sem precisar de um segundo controle aqui. */}
+      <div style={{ position: 'fixed', inset: 0, height: '100dvh', zIndex: 21 }}>
         <RaioX nome={nome} forma={forma} camadasIniciais={camadasIniciais} onFechar={aoFechar} />
       </div>
       <BarraPedido

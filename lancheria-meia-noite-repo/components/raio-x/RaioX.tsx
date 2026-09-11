@@ -57,6 +57,11 @@ type Props = {
 const CURVA_ASSENTA = 'cubic-bezier(.32,.02,.24,1)'
 const CURVA_EXPLODE = 'cubic-bezier(.22,1.24,.36,1)'
 
+/** Ver `arrastarDoTrilho`: quanto tempo de pressão inicia o arrasto, e quanto de
+ * movimento horizontal antes disso cancela e vira rolagem do trilho. */
+const ESPERA_ARRASTO_MS = 400
+const LIMIAR_CANCELA_PX = 10
+
 export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props) {
   const uidRef = useRef(1)
   const instanciar = useCallback(
@@ -256,6 +261,13 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
     [adicionar],
   )
 
+  /** Abre a folha do trilho (modo editor). Compartilhado entre a versão de texto (amplo)
+   * e a versão de ícone 44×44 que divide a linha com o botão de prensar no celular. */
+  const abrirTrilho = useCallback(() => {
+    setComposicao(false)
+    setTrilhoAberto(true)
+  }, [])
+
   const remover = useCallback(
     (i: number) => {
       const arr = vivo.current.pilha.slice()
@@ -300,34 +312,81 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
 
   // ---------- gestos ----------
 
-  /** Arrastar uma ficha do trilho até o painel. Tocar sem arrastar já adiciona pelo click. */
+  /**
+   * Pressionar e segurar por 400ms inicia o arrasto de uma ficha do trilho até o painel —
+   * para quem quer escolher a posição na pilha. Toque simples (sem segurar) já adiciona
+   * pelo onClick do próprio <button>, na posição padrão; é o caminho comum e não passa
+   * por aqui.
+   *
+   * Antes dos 400ms, movimento horizontal cancela o temporizador e devolve o gesto para o
+   * navegador: como o toque nunca foi capturado (nenhum `preventDefault`, nenhum
+   * `setPointerCapture`) e a ficha leva `touch-action: pan-x`, o dedo continua de onde
+   * estava e rola o trilho — sem isso, tocar uma ficha para rolar de lado virava arrasto
+   * antes de a rolagem começar, e o trilho não rolava no dedo nem no mouse.
+   */
   const arrastarDoTrilho = useCallback(
     (e: ReactPointerEvent<HTMLElement>, slug: string) => {
       const c = MAPA_CAMADAS[slug]
       if (!c) return
+      const alvo = e.currentTarget
       const painel = document.getElementById('rx-painel')
       const x0 = e.clientX
       const y0 = e.clientY
       let fantasma: HTMLDivElement | null = null
+      let arrastando = false
+
+      const pararDeOuvir = () => {
+        window.removeEventListener('pointermove', mover_)
+        window.removeEventListener('pointerup', soltar)
+        window.removeEventListener('pointercancel', cancelar)
+      }
+
+      const iniciarArrasto = () => {
+        arrastando = true
+        // O salto de escala avisa: a partir daqui o gesto é arrasto, não rolagem.
+        if (!prefersReducedMotion()) {
+          alvo.style.transition = 'transform 140ms cubic-bezier(.2,1.4,.4,1)'
+          alvo.style.transform = 'scale(1.14)'
+        }
+      }
+      const temporizador = window.setTimeout(iniciarArrasto, ESPERA_ARRASTO_MS)
+
+      const limpar = () => {
+        window.clearTimeout(temporizador)
+        alvo.style.transition = ''
+        alvo.style.transform = ''
+        fantasma?.remove()
+        fantasma = null
+      }
+
+      const cancelar = () => {
+        pararDeOuvir()
+        limpar()
+      }
 
       const mover_ = (ev: PointerEvent) => {
         const dx = ev.clientX - x0
-        const dy = ev.clientY - y0
-        if (!fantasma && Math.hypot(dx, dy) > 10) {
+        if (!arrastando) {
+          // Movimento horizontal antes do temporizador: solta o gesto de volta para o
+          // navegador tratar como rolagem do trilho.
+          if (Math.abs(dx) > LIMIAR_CANCELA_PX) cancelar()
+          return
+        }
+        if (!fantasma) {
           fantasma = document.createElement('div')
           fantasma.style.cssText =
             'position:fixed;z-index:40;width:180px;height:108px;pointer-events:none;opacity:.85;background:center/contain no-repeat;'
           fantasma.style.backgroundImage = `url("${urlCamada(c)}")`
           document.body.appendChild(fantasma)
         }
-        if (fantasma) {
-          fantasma.style.left = `${ev.clientX - 90}px`
-          fantasma.style.top = `${ev.clientY - 54}px`
-        }
+        fantasma.style.left = `${ev.clientX - 90}px`
+        fantasma.style.top = `${ev.clientY - 54}px`
       }
       const soltar = (ev: PointerEvent) => {
-        window.removeEventListener('pointermove', mover_)
-        window.removeEventListener('pointerup', soltar)
+        pararDeOuvir()
+        window.clearTimeout(temporizador)
+        alvo.style.transition = ''
+        alvo.style.transform = ''
         if (!fantasma) return
         fantasma.remove()
         const r = painel?.getBoundingClientRect()
@@ -337,6 +396,9 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
       }
       window.addEventListener('pointermove', mover_)
       window.addEventListener('pointerup', soltar)
+      // O navegador pode assumir a rolagem no meio do gesto (é o que `touch-action: pan-x`
+      // pede que ele faça) e cancelar o ponteiro em vez de mandar mais `pointermove`.
+      window.addEventListener('pointercancel', cancelar)
     },
     [aoEscolherDoTrilho],
   )
@@ -557,6 +619,16 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
   const unidades = unidadesPilha(slugs, comprimido ? fatorFechado(forma) : 1)
   const pct = Math.max(n ? 2 : 0, Math.min(100, (unidades / MEDIDA_MAX_U) * 100))
   const ehPrensado = forma === 'prensado'
+  const podeSelar = n > 0 && !selado && !selando
+  const textoSelar = selado
+    ? 'No papel'
+    : selando
+      ? ehPrensado
+        ? 'Prensando…'
+        : 'Selando…'
+      : ehPrensado
+        ? 'Prensar na chapa'
+        : 'Selar na chapa'
 
   // n = 1ª, 2ª, 3ª instância daquele slug. Vira o sufixo do id #rx-camada-{slug}-{n}.
   const ordinais: Record<string, number> = {}
@@ -811,10 +883,11 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         flutuaRef={flutuaRef}
       />
 
-      {/* Editor: o lanche já chega pronto, acrescentar ingrediente é a ação secundária —
-          o trilho nasce recolhido atrás deste botão e só ocupa tela quando aberto como
-          folha, abaixo. Montador: sem alternância, a tira de sempre — é a ação principal
-          ali. Ver o comentário de `modoMontador`. */}
+      {/* Editor no celular: as duas linhas de largura cheia ("Acrescentar ingrediente" e
+          "Prensar na chapa") se fundem numa só — o ícone à esquerda, o botão de prensar
+          ocupando o resto. Devolve ~48px ao terço inferior, que é o que faltava para o
+          x-tudo caber sem rolar. Editor amplo e montador não mudam: lá sobra altura (o
+          medidor vira coluna) ou o trilho já é a ação principal, sem botão para fundir. */}
       {modoMontador ? (
         <Trilho
           contarSlug={contarSlug}
@@ -824,18 +897,23 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
           onAdicionar={aoEscolherDoTrilho}
           onArrastar={arrastarDoTrilho}
         />
-      ) : (
-        <button
-          id="rx-abrir-trilho"
-          type="button"
-          disabled={selando || selado}
-          onClick={() => {
-            setComposicao(false)
-            setTrilhoAberto(true)
-          }}
-        >
+      ) : amplo ? (
+        <button id="rx-abrir-trilho" type="button" disabled={selando || selado} onClick={abrirTrilho}>
           Acrescentar ingrediente
         </button>
+      ) : (
+        <div id="rx-acao">
+          <button
+            id="rx-abrir-trilho"
+            type="button"
+            aria-label="Acrescentar ingrediente"
+            disabled={selando || selado}
+            onClick={abrirTrilho}
+          >
+            +
+          </button>
+          <BotaoSelar podeFechar={podeSelar} texto={textoSelar} onSelar={fechamento} />
+        </div>
       )}
 
       {!modoMontador && trilhoAberto && (
@@ -884,21 +962,11 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar }: Props)
         </div>
       )}
 
-      <BotaoSelar
-        podeFechar={n > 0 && !selado && !selando}
-        texto={
-          selado
-            ? 'No papel'
-            : selando
-              ? ehPrensado
-                ? 'Prensando…'
-                : 'Selando…'
-              : ehPrensado
-                ? 'Prensar na chapa'
-                : 'Selar na chapa'
-        }
-        onSelar={fechamento}
-      />
+      {/* Fundido dentro de #rx-acao quando o editor está compacto (ver acima) — aqui só
+          nos dois casos em que ele mora sozinho na própria linha. */}
+      {(modoMontador || amplo) && (
+        <BotaoSelar podeFechar={podeSelar} texto={textoSelar} onSelar={fechamento} />
+      )}
     </div>
   )
 }

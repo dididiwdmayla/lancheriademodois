@@ -488,20 +488,22 @@ diz(
     `, #rx-trilho ${editorFechado.trilhoExiste ? 'presente' : 'ausente'}`,
 )
 
-// Abre a folha para o resto da passada: a ficha aqui dentro segue vindo de /fichas/, igual
-// à tira — só o tamanho muda (ver `data-folha` em `Trilho.tsx`).
+// Abre a folha para o resto da passada: a ficha aqui dentro vem de /camadas/, a camada
+// inteira — o recorte apertado de /fichas/ lê bem a 56px e vira abstrato acima disso (ver
+// `data-folha` em `Trilho.tsx` e AGENTS.md).
 await pg.click('#rx-abrir-trilho')
 await pg.waitForSelector('#rx-trilho-folha', { timeout: 3000 })
 
-// Nenhuma ficha do trilho carrega de /camadas/: a foto de 56px (ou maior, na folha) é
-// sempre o recorte de /fichas/, senão a silhueta some e sobra a cor média — ver AGENTS.md.
-const fichasErradas = await pg.evaluate(() =>
+// Na folha nenhuma ficha carrega de /fichas/: acima de 56px o recorte apertado vira
+// abstrato (o molho parece um pôr do sol), e é `/camadas/` que mantém a silhueta legível.
+const fichasErradasNaFolha = await pg.evaluate(() =>
   [...document.querySelectorAll('#rx-trilho [data-ficha-foto]')]
     .map((e) => getComputedStyle(e).backgroundImage)
-    .filter((bg) => bg.includes('/camadas/') || !bg.includes('/fichas/')))
+    .filter((bg) => bg.includes('/fichas/') || !bg.includes('/camadas/')))
 diz(
-  fichasErradas.length === 0,
-  `fichas do trilho fora de /fichas/: ${fichasErradas.length}${fichasErradas.length ? ` — ${fichasErradas.join(', ')}` : ''}`,
+  fichasErradasNaFolha.length === 0,
+  `fichas da folha fora de /camadas/: ${fichasErradasNaFolha.length}` +
+    `${fichasErradasNaFolha.length ? ` — ${fichasErradasNaFolha.join(', ')}` : ''}`,
 )
 
 await recorte('trilho aberto como folha, em 390px', '#rx-trilho-folha')
@@ -556,6 +558,17 @@ await recorte('medidor · faixa horizontal, 10 camadas', '#rx-medidor')
   const pgMontador = await ctx.newPage()
   await pgMontador.goto(`${URL}/?lanche=montar`, { waitUntil: 'networkidle' })
   await pgMontador.waitForSelector('#rx-trilho', { timeout: 5000 })
+  // Na tira de 56px é o oposto da folha: nenhuma ficha carrega de /camadas/, senão a
+  // camada inteira encolhida perde a silhueta e sobra a cor média — ver AGENTS.md.
+  const fichasErradasNaTira = await pgMontador.evaluate(() =>
+    [...document.querySelectorAll('#rx-trilho [data-ficha-foto]')]
+      .map((e) => getComputedStyle(e).backgroundImage)
+      .filter((bg) => bg.includes('/camadas/') || !bg.includes('/fichas/')))
+  diz(
+    fichasErradasNaTira.length === 0,
+    `fichas da tira de 56px fora de /fichas/: ${fichasErradasNaTira.length}` +
+      `${fichasErradasNaTira.length ? ` — ${fichasErradasNaTira.join(', ')}` : ''}`,
+  )
   await recorte('trilho · fichas de 56px (modo montador)', '#rx-trilho', pgMontador)
   await pgMontador.close()
 }

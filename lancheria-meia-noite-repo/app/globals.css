@@ -210,8 +210,14 @@ html[data-lt-aceso='1'] #lt-svg {
    acima, sem `[data-folha]`) continua igual. Especificidade de atributo já vence a regra
    de cima sem precisar de `!important`. */
 #rx-trilho[data-folha] {
+  /* Cancela o `grid-area: trilho` da regra de cima: aqui `#rx-trilho` é filho de
+     `#rx-trilho-folha`, que não tem área nenhuma chamada "trilho". Sem isto o navegador
+     cria uma linha implícita de mesmo nome para satisfazer a área que não existe, e a
+     folha nasce com duas colunas — a primeira vazia, a segunda com a lista espremida à
+     direita e vazando pela base. */
+  grid-area: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   padding: 14px clamp(12px, 4vw, 20px);
   overflow-x: hidden;
@@ -243,6 +249,40 @@ html[data-lt-aceso='1'] #lt-svg {
 }
 #rx-abrir-trilho:disabled { opacity: 0.45; cursor: default; }
 
+/* No celular, o editor funde "Acrescentar ingrediente" e "Prensar na chapa" numa linha só
+   — as duas faixas de largura cheia juntas custavam ~92px do terço inferior, e é isso que
+   faltava para o x-tudo caber sem rolar (ver "Quando a pilha não cabe na altura" no
+   AGENTS.md). #rx-acao ocupa sozinho a área "selar" da grade; a área "trilho" fica vazia e
+   encolhe a zero. Dentro dela, o `#rx-abrir-trilho` de cima vira ícone 44×44 — a
+   especificidade do seletor composto (`#rx-acao #rx-abrir-trilho`, dois ids) já vence a
+   regra de largura cheia acima sem precisar de `!important`. Acima de 900px e no montador
+   este bloco não é usado — ver o `amplo`/`modoMontador` em RaioX.tsx. */
+#rx-acao {
+  grid-area: selar;
+  display: flex;
+  gap: 8px;
+  padding: 8px clamp(12px, 4vw, 20px);
+  border-top: 1px solid var(--traco);
+  background: var(--fumo);
+}
+#rx-acao #rx-abrir-trilho {
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--traco);
+  border-radius: 2px;
+  font-size: 1.375rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+#rx-acao #rx-selar {
+  flex: 1 1 auto;
+  width: auto;
+  min-height: 44px;
+}
+
 /* A folha do trilho: sobe por cima da base inteira, como um bottom sheet — "tocar fora"
    fecha porque a cortina, e só ela, escuta o clique (o conteúdo da folha para propagação
    por estar dentro, não por handler próprio). */
@@ -256,7 +296,7 @@ html[data-lt-aceso='1'] #lt-svg {
 }
 #rx-trilho-folha {
   width: 100%;
-  max-height: 72vh;
+  max-height: 60vh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   background: var(--borra);
