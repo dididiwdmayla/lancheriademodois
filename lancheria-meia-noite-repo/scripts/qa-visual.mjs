@@ -97,11 +97,25 @@ const recortes = []
 const diz = (ok, txt) => linhas.push(`${ok ? 'ok  ' : 'FALHA'} ${txt}`)
 const pula = (txt, fase) => linhas.push(`pula  ${txt} — chega na fase: ${fase}`)
 
-async function recorte(nome, seletor) {
-  const el = await pg.$(seletor)
+async function recorte(nome, seletor, pagina = pg) {
+  const el = await pagina.$(seletor)
   if (!el) { diz(false, `${nome}: seletor ${seletor} não encontrado`); return }
   const buf = await el.screenshot({ type: 'jpeg', quality: QUALIDADE })
   recortes.push({ nome, b64: buf.toString('base64') })
+}
+
+/**
+ * Reabre a folha do trilho se ela estiver fechada — modo editor, onde `#rx-abrir-trilho`
+ * fica no lugar do trilho por padrão. Cada escolha do trilho fecha a folha de novo (ver
+ * `aoEscolherDoTrilho` em `RaioX.tsx`), então isto tem de rodar antes de CADA clique num
+ * ingrediente, não só uma vez. No modo montador `#rx-abrir-trilho` nunca existe — o trilho
+ * já está aberto — e a função não faz nada.
+ */
+async function abrirTrilhoSeRecolhido(pagina) {
+  const abrir = await pagina.$('#rx-abrir-trilho:not([disabled])')
+  if (!abrir) return
+  await abrir.click()
+  await pagina.waitForSelector('#rx-trilho-folha', { timeout: 3000 })
 }
 
 /** Abre o raio-x com uma composição do cardápio e espera a pilha existir. */
@@ -347,8 +361,10 @@ while ((await pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-ca
 }
 await pg.click('#rx-fechar-composicao')
 await pg.waitForTimeout(60)
+await abrirTrilhoSeRecolhido(pg)
 await pg.click('#rx-trilho [data-slug="molho"]')
 await pg.waitForTimeout(80)
+await abrirTrilhoSeRecolhido(pg)
 await pg.click('#rx-trilho [data-slug="tomate"]')
 await pg.waitForTimeout(80)
 const composto = await pg.evaluate(() =>
@@ -417,7 +433,9 @@ diz(
   `alvos acionáveis abaixo de ${TOQUE_MIN}×${TOQUE_MIN}: ${pequenos.length}${pequenos.length ? ` — ${pequenos.join(', ')}` : ''}`,
 )
 
-// Olhar em cima, tocar embaixo: medidor, trilho e botão inteiros no terço inferior.
+// Olhar em cima, tocar embaixo: medidor, trilho (ou o botão que fica no lugar dele, no
+// modo editor com o trilho recolhido — ver "trilho recolhível" abaixo) e botão inteiros
+// no terço inferior.
 const terco = await pg.evaluate(() => {
   const caixa = (id) => {
     const r = document.getElementById(id)?.getBoundingClientRect()
@@ -426,7 +444,7 @@ const terco = await pg.evaluate(() => {
   return {
     altura: window.innerHeight,
     medidor: caixa('rx-medidor'),
-    trilho: caixa('rx-trilho'),
+    trilho: caixa('rx-trilho') ?? caixa('rx-abrir-trilho'),
     selar: caixa('rx-selar'),
   }
 })
@@ -455,8 +473,28 @@ if (faixas.length) {
   )
 }
 
-// Nenhuma ficha do trilho carrega de /camadas/: a foto de 56px é sempre o recorte de
-// /fichas/, senão a silhueta some e sobra a cor média — ver AGENTS.md.
+// ---------- trilho recolhível ----------
+//
+// Editor (raio-x aberto a partir de um fixo — o estado em que `pg` já está, desde
+// `abrir(LANCHE_CHEIO)` no início da seção 1): o trilho nasce recolhido atrás de
+// #rx-abrir-trilho, e só existe em tela como #rx-trilho quando aberto como folha.
+const editorFechado = await pg.evaluate(() => ({
+  abrirExiste: !!document.getElementById('rx-abrir-trilho'),
+  trilhoExiste: !!document.getElementById('rx-trilho'),
+}))
+diz(
+  editorFechado.abrirExiste && !editorFechado.trilhoExiste,
+  `modo editor nasce com o trilho recolhido: #rx-abrir-trilho ${editorFechado.abrirExiste ? 'presente' : 'ausente'}` +
+    `, #rx-trilho ${editorFechado.trilhoExiste ? 'presente' : 'ausente'}`,
+)
+
+// Abre a folha para o resto da passada: a ficha aqui dentro segue vindo de /fichas/, igual
+// à tira — só o tamanho muda (ver `data-folha` em `Trilho.tsx`).
+await pg.click('#rx-abrir-trilho')
+await pg.waitForSelector('#rx-trilho-folha', { timeout: 3000 })
+
+// Nenhuma ficha do trilho carrega de /camadas/: a foto de 56px (ou maior, na folha) é
+// sempre o recorte de /fichas/, senão a silhueta some e sobra a cor média — ver AGENTS.md.
 const fichasErradas = await pg.evaluate(() =>
   [...document.querySelectorAll('#rx-trilho [data-ficha-foto]')]
     .map((e) => getComputedStyle(e).backgroundImage)
@@ -465,6 +503,29 @@ diz(
   fichasErradas.length === 0,
   `fichas do trilho fora de /fichas/: ${fichasErradas.length}${fichasErradas.length ? ` — ${fichasErradas.join(', ')}` : ''}`,
 )
+
+await recorte('trilho aberto como folha, em 390px', '#rx-trilho-folha')
+await pg.click('#rx-fechar-trilho')
+await pg.waitForTimeout(120)
+await recorte('raio-x em 390px com o trilho recolhido', '#rx-takeover')
+
+// Montador ("Monte o seu"): nasce com o trilho aberto, sem o botão — a ação principal ali
+// não passa por folha. Rota provisória `?lanche=montar`, ver o comentário em `page.tsx`.
+await pg.goto(`${URL}/?lanche=montar`, { waitUntil: 'networkidle' })
+await pg.waitForSelector('#rx-takeover', { timeout: 5000 })
+const montadorAberto = await pg.evaluate(() => ({
+  trilhoExiste: !!document.getElementById('rx-trilho'),
+  abrirExiste: !!document.getElementById('rx-abrir-trilho'),
+}))
+diz(
+  montadorAberto.trilhoExiste && !montadorAberto.abrirExiste,
+  `modo montador nasce com o trilho aberto: #rx-trilho ${montadorAberto.trilhoExiste ? 'presente' : 'ausente'}` +
+    `, #rx-abrir-trilho ${montadorAberto.abrirExiste ? 'presente' : 'ausente'}`,
+)
+
+// volta ao lanche cheio para o resto da passada de celular (recortes, aviso, 16 camadas).
+await abrir(LANCHE_CHEIO)
+await encarar()
 
 // ---------- 3. recortes ----------
 
@@ -486,9 +547,21 @@ const reveladas = await pg.evaluate(() => document.querySelectorAll('[data-chama
 diz(reveladas === 1, `toque na camada revela ${reveladas} chamada (esperado 1)`)
 await recorte('raio-x com uma chamada revelada', '#rx-desenho')
 await recorte('medidor · faixa horizontal, 10 camadas', '#rx-medidor')
-await recorte('trilho · fichas de 56px', '#rx-trilho')
+
+// A ficha de 56px, truncada, só existe hoje na tira sempre aberta do modo montador — no
+// editor ela mora dentro da folha, maior e sem reticências (recorte já feito acima, em
+// "trilho recolhível"). Página à parte para não perturbar o estado de `pg` (dez camadas,
+// chamada revelada) no meio da passada.
+{
+  const pgMontador = await ctx.newPage()
+  await pgMontador.goto(`${URL}/?lanche=montar`, { waitUntil: 'networkidle' })
+  await pgMontador.waitForSelector('#rx-trilho', { timeout: 5000 })
+  await recorte('trilho · fichas de 56px (modo montador)', '#rx-trilho', pgMontador)
+  await pgMontador.close()
+}
 
 // aviso: uma camada acima do limiar. Entra pelo trilho, que é o gesto sem arrasto.
+await abrirTrilhoSeRecolhido(pg)
 const ficha = await pg.$('#rx-trilho [data-slug="ovo"]:not([disabled])')
 if (ficha) { await ficha.click(); await pg.waitForTimeout(500) }
 const nAviso = await pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)
@@ -511,12 +584,22 @@ async function encherPilha16(pagina) {
     if ((await contarPilhaEm(pagina)) >= MAX_CAMADAS_QA) break
     for (let i = 0; i < MAX_REPETICOES_QA; i++) {
       if ((await contarPilhaEm(pagina)) >= MAX_CAMADAS_QA) break
+      // No editor cada escolha fecha a folha de novo — reabre antes de cada clique. No
+      // montador `#rx-abrir-trilho` não existe e a função não faz nada.
+      await abrirTrilhoSeRecolhido(pagina)
       const btn = await pagina.$(`#rx-trilho [data-slug="${slug}"]:not([disabled])`)
       if (!btn) break
       await btn.click()
       await pagina.waitForTimeout(50)
     }
   }
+  // Cada clique dispara a transição de 300ms do rótulo (`top 300ms linear` em `Camada.tsx`)
+  // — cliques em sequência rápida interrompem a transição anterior, e o navegador retoma
+  // do valor animado corrente, então o alvo final só é alcançado 300ms depois do ÚLTIMO
+  // clique. Sem esperar aqui, `getBoundingClientRect()` mede posição em trânsito, não a
+  // do leque já distribuído — e um par que está no meio do caminho pode medir mais perto
+  // (ou mais sobreposto) do que o vão mínimo real.
+  await pagina.waitForTimeout(350)
   return contarPilhaEm(pagina)
 }
 const CANDIDATOS_ENCHIMENTO = ['presunto', 'cebola', 'frango-desfiado', 'queijo', 'ovo', 'tomate', 'alface', 'milho']
@@ -620,36 +703,75 @@ diz(
     ` (coluna de ${noAmplo.colunaW}px)`,
 )
 
-/** Lê os retângulos de `[data-chamada]`, ordenados de cima para baixo, e conta quantos
- * pares vizinhos se sobrepõem verticalmente — o sinal de que a folga comprimida encavalou
- * duas linhas de chamada. */
-async function sobreposicaoDeChamadas(pagina) {
-  const retangulos = await pagina.evaluate(() =>
+/** Espaço mínimo entre rótulos vizinhos — ESPACO_MIN_ROTULO em `rotulos.ts`. Duplicado
+ * aqui pelo mesmo motivo de ESPALHA_X_TETO e PISO_ESCALA: este script é Node puro. */
+const ESPACO_MIN_ROTULO = 22
+
+/** Lê os retângulos de `[data-chamada]`, ordenados de cima para baixo (a leitura na
+ * tela), junto com o índice (`data-chamada`, a posição na pilha) de cada um. */
+async function leituraDeChamadas(pagina) {
+  return pagina.evaluate(() =>
     [...document.querySelectorAll('[data-chamada]')]
-      .map((e) => e.getBoundingClientRect())
-      .sort((a, b) => a.top - b.top)
-      .map((r) => ({ top: r.top, bottom: r.bottom })))
-  let pares = 0
-  for (let i = 1; i < retangulos.length; i++) {
-    if (retangulos[i].top < retangulos[i - 1].bottom - 0.5) pares++
+      .map((e) => ({ indice: Number(e.dataset.chamada), r: e.getBoundingClientRect() }))
+      .map((o) => ({ indice: o.indice, top: o.r.top, bottom: o.r.bottom }))
+      .sort((a, b) => a.top - b.top))
+}
+
+/**
+ * O leque dos rótulos: cobra as duas garantias do prompt 16 de uma vez.
+ *   - `menorGap`: a menor distância entre o fim de um rótulo e o começo do próximo, na
+ *     coluna inteira — nunca pode ficar abaixo de `ESPACO_MIN_ROTULO`.
+ *   - `foraDeOrdem`: quantos pares vizinhos, lidos de cima para baixo, têm o índice na
+ *     ordem errada. Índice cresce da base para o topo da pilha, e a tela decresce (a base
+ *     fica embaixo); por isso, lendo de cima para baixo, o índice tem de vir sempre
+ *     decrescendo — nunca pode inverter.
+ */
+function checarLequeDeChamadas(lista) {
+  let menorGap = lista.length ? Infinity : 0
+  let foraDeOrdem = 0
+  for (let i = 1; i < lista.length; i++) {
+    const gap = lista[i].top - lista[i - 1].bottom
+    if (gap < menorGap) menorGap = gap
+    if (lista[i].indice >= lista[i - 1].indice) foraDeOrdem++
   }
-  return pares
+  return { menorGap, foraDeOrdem, n: lista.length }
 }
 
 // A folga cede primeiro quando a pilha não cabe (ver "Quando a pilha não cabe na altura"
-// no AGENTS.md); o risco dela ceder até o piso é a linha de chamada de uma camada fina
-// encavalar a vizinha. Cobrado aqui, onde as linhas existem — no celular não há coluna.
+// no AGENTS.md); o risco dela ceder até o piso é o rótulo de uma camada fina precisar de
+// mais leque. Cobrado aqui, onde a coluna de chamadas existe — no celular não há coluna.
 const escalaAmplo = await medirEscala(pgAmpla)
 if (escalaAmplo) {
   escalas.push({ rotulo: `${LANCHE_CHEIO} em ${AMPLO.width}px`, ...escalaAmplo })
   validaGeometria(escalaAmplo, `${LANCHE_CHEIO} em ${AMPLO.width}px`, true)
 }
-const sobrepostas10 = await sobreposicaoDeChamadas(pgAmpla)
+const lequeCheio = checarLequeDeChamadas(await leituraDeChamadas(pgAmpla))
 diz(
-  sobrepostas10 === 0,
-  `linhas de chamada sem sobreposição em ${AMPLO.width}px, ${noAmplo.camadas} camadas` +
-    ` (folga aplicada ${escalaAmplo ? escalaAmplo.folga.toFixed(3) : 'n/d'}): ${sobrepostas10} par(es) sobrepostos`,
+  lequeCheio.menorGap >= ESPACO_MIN_ROTULO - 0.5 && lequeCheio.foraDeOrdem === 0,
+  `leque de rótulos em ${AMPLO.width}px, ${noAmplo.camadas} camadas: menor vão ` +
+    `${lequeCheio.menorGap.toFixed(1)}px (piso ${ESPACO_MIN_ROTULO}), ` +
+    `${lequeCheio.foraDeOrdem} par(es) fora de ordem` +
+    ` (folga aplicada ${escalaAmplo ? escalaAmplo.folga.toFixed(3) : 'n/d'})`,
 )
+
+// A mesma checagem, nas seis composições fixas do cardápio — não só na mais cheia. É o
+// "nas seis composições" do prompt: cada fixo abre do zero em 900px, sem herdar estado.
+for (const slug of [...PRENSADOS, ...REDONDOS]) {
+  await pgAmpla.goto(`${URL}/?lanche=${slug}`, { waitUntil: 'networkidle' })
+  await pgAmpla.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
+  await pgAmpla.waitForTimeout(150)
+  const leque = checarLequeDeChamadas(await leituraDeChamadas(pgAmpla))
+  diz(
+    leque.n > 0 && leque.menorGap >= ESPACO_MIN_ROTULO - 0.5 && leque.foraDeOrdem === 0,
+    `leque de rótulos em ${AMPLO.width}px, ${slug} (${leque.n} camadas): menor vão ` +
+      `${Number.isFinite(leque.menorGap) ? leque.menorGap.toFixed(1) : 'n/d'}px` +
+      ` (piso ${ESPACO_MIN_ROTULO}), ${leque.foraDeOrdem} par(es) fora de ordem`,
+  )
+}
+// Volta ao lanche cheio: o resto da passada de 900px continua a partir dele.
+await pgAmpla.goto(`${URL}/?lanche=${LANCHE_CHEIO}`, { waitUntil: 'networkidle' })
+await pgAmpla.waitForSelector('#rx-pilha [id^="rx-camada-"]', { timeout: 5000 })
+await pgAmpla.waitForTimeout(150)
 
 const estorvosAmplo = await estorvosHorizontais(pgAmpla)
 diz(
@@ -683,12 +805,15 @@ if (escala16Amplo) {
   escalas.push({ rotulo: `16 camadas em ${AMPLO.width}px`, ...escala16Amplo })
   validaGeometria(escala16Amplo, `16 camadas em ${AMPLO.width}px`, false)
 }
-const sobrepostas16 = await sobreposicaoDeChamadas(pgAmpla)
+const leque16 = checarLequeDeChamadas(await leituraDeChamadas(pgAmpla))
 diz(
-  sobrepostas16 === 0,
-  `linhas de chamada sem sobreposição em ${AMPLO.width}px, ${n16Amplo} camadas` +
-    ` (folga aplicada ${escala16Amplo ? escala16Amplo.folga.toFixed(3) : 'n/d'}): ${sobrepostas16} par(es) sobrepostos`,
+  leque16.menorGap >= ESPACO_MIN_ROTULO - 0.5 && leque16.foraDeOrdem === 0,
+  `leque de rótulos em ${AMPLO.width}px, ${n16Amplo} camadas (o sintético, teto do` +
+    ` contrato): menor vão ${leque16.menorGap.toFixed(1)}px (piso ${ESPACO_MIN_ROTULO}), ` +
+    `${leque16.foraDeOrdem} par(es) fora de ordem` +
+    ` (folga aplicada ${escala16Amplo ? escala16Amplo.folga.toFixed(3) : 'n/d'})`,
 )
+await recorte('chamadas em leque · 16 camadas em 900px', '#rx-desenho', pgAmpla)
 
 await ctxAmplo.close()
 

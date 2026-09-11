@@ -10,6 +10,11 @@
 // nova se revela sozinha. Acima de 900px a ficha volta a ser a de sempre, com nome e preço
 // completos. Quem troca é o CSS (app/globals.css).
 //
+// `folha`: o mesmo trilho, mas desenhado como a folha que se abre por cima do painel no
+// modo editor (ver `RaioX.tsx`) — sobra altura ali, então a ficha ganha o nome inteiro e o
+// preço, sem reticências, mesmo abaixo de 900px. A tira recolhida do modo montador não
+// muda: `folha` fica de fora dela de propósito.
+//
 // A foto vem de /fichas/, não de /camadas/: é um recorte 256×256 no ponto de maior
 // estrutura da camada, feito para ler a 56px. As camadas inteiras (2000×1200) encolhidas
 // a esse tamanho perdiam a silhueta e sobrava só a cor média — ver AGENTS.md.
@@ -29,6 +34,9 @@ type Props = {
   cheio: boolean
   onAdicionar: (slug: string) => void
   onArrastar: (e: ReactPointerEvent<HTMLElement>, slug: string) => void
+  /** Desenha como a folha do modo editor: ficha maior, rótulo inteiro. Ver o comentário
+   * no topo do arquivo. */
+  folha?: boolean
 }
 
 export default function Trilho({
@@ -38,9 +46,10 @@ export default function Trilho({
   cheio,
   onAdicionar,
   onArrastar,
+  folha,
 }: Props) {
   return (
-    <div id="rx-trilho" role="group" aria-label="Ingredientes disponíveis">
+    <div id="rx-trilho" data-folha={folha ? '' : undefined} role="group" aria-label="Ingredientes disponíveis">
       {RECHEIOS.map((c) => {
         const n = contarSlug(c.slug)
         const ausente = !!ausentes[c.slug]
