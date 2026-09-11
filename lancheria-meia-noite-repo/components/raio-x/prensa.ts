@@ -51,8 +51,19 @@ export const FATOR_RESPIRO_ALTURA = 0.94
  * Piso da escala pela altura, como fração da escala natural (a que a largura do painel já
  * permite, sem nenhum corte por altura). Abaixo disso as camadas finas somem e o desenho
  * perde sentido — aí a pilha para de encolher e o painel passa a rolar.
+ *
+ * É a SEGUNDA coisa a ceder quando a pilha não cabe — depois da folga (`PISO_FOLGA`), nunca
+ * antes. Escala é conteúdo: encolher a pilha encolhe as camadas finas até o molho virar um
+ * fio. Folga é leitura: ela separa as peças, e com mais peças cabe menos separação por
+ * peça sem perder o desenho.
  */
 export const PISO_ESCALA = 0.70
+/**
+ * Piso da folga entre camadas (`GAP`), como fração da folga base. É a PRIMEIRA coisa a
+ * ceder quando a pilha não cabe na altura disponível — antes da escala. Abaixo deste piso
+ * as linhas de chamada se encavalam e o desenho vira sanduíche em vez de diagrama.
+ */
+export const PISO_FOLGA = 0.40
 
 function paesDe(forma: Forma): [string, string] {
   const p = CAMADAS.filter((c) => c.pao === forma).sort((a, b) => a.ordem - b.ordem)
@@ -157,9 +168,12 @@ export type Geometria = {
   espalhaX: number
   /** A escala que a largura do painel sozinha permitiria, sem nenhum corte por altura. */
   escalaNatural: number
-  /** `k` bateu no piso de `PISO_ESCALA`: a pilha não coube na altura mesmo no mínimo, e
-   * o painel precisa rolar para mostrar o resto. Ver `RaioX.tsx`. */
+  /** `k` bateu no piso de `PISO_ESCALA`: a pilha não coube na altura mesmo com a folga no
+   * piso e a escala no piso, e o painel precisa rolar para mostrar o resto. Ver `RaioX.tsx`. */
   estourou: boolean
+  /** A folga entre camadas (fração de `GAP`) nesta pilha. Cede primeiro, até `PISO_FOLGA`,
+   * antes de a escala ceder — ver o comentário de `PISO_FOLGA`. */
+  folga: number
 }
 
 /**
@@ -183,19 +197,44 @@ export function geometria(opcoes: {
   const prensa = comprimido && forma === 'prensado'
   const assenta = comprimido && forma !== 'prensado'
 
-  // k sai sempre do estado explodido: a pilha não muda de escala ao prensar, só encolhe.
-  let unidades = 0
-  slugs.forEach((s, i) => {
-    unidades += (MAPA_CAMADAS[s]?.alturaPx ?? 0) + (i > 0 ? GAP : 0)
-  })
+  // k e a folga saem sempre do estado explodido: a pilha não muda de escala nem de folga
+  // ao prensar, só a distância entre camadas encolhe (ver `fatorFechado`).
+  //
+  // Quando a pilha não cabe na altura disponível, quem cede primeiro é a folga entre
+  // camadas — ela é separação de leitura, não conteúdo — até o piso `PISO_FOLGA`. Só
+  // depois disso esgotado é que a escala cede, até `PISO_ESCALA`. Ver os comentários das
+  // duas constantes.
+  const somaAlturas = slugs.reduce((soma, s) => soma + (MAPA_CAMADAS[s]?.alturaPx ?? 0), 0)
+  const gapsBase = Math.max(0, slugs.length - 1) * GAP
   // Escala natural: a que a largura sozinha permite, sem nenhum corte por altura — é o
   // teto que a pilha nunca ultrapassa, e a referência do piso de `PISO_ESCALA`.
   const escalaNatural = larguraPilha / 2000
-  const kAltura = unidades ? (areaH * FATOR_RESPIRO_ALTURA) / unidades : Infinity
-  const kAjustado = Math.min(escalaNatural, kAltura)
-  const piso = escalaNatural * PISO_ESCALA
-  const estourou = kAjustado < piso
-  const k = estourou ? piso : kAjustado
+  const alturaAlvo = areaH * FATOR_RESPIRO_ALTURA
+  const cabeNaAltura = (folgaFracao: number, escala: number) =>
+    escala * (somaAlturas + gapsBase * folgaFracao) <= alturaAlvo
+
+  let folga = 1
+  let k = escalaNatural
+  let estourou = false
+
+  if (!cabeNaAltura(1, escalaNatural)) {
+    if (gapsBase > 0) {
+      // A menor folga que, na escala natural, já basta para caber — nunca menos que o
+      // piso, nunca mais do que a folga cheia.
+      folga = Math.min(
+        1,
+        Math.max(PISO_FOLGA, (alturaAlvo / escalaNatural - somaAlturas) / gapsBase),
+      )
+    }
+    if (!cabeNaAltura(folga, escalaNatural)) {
+      // A folga já está no piso e ainda não coube: agora é a escala que cede.
+      const unidadesComFolgaMin = somaAlturas + gapsBase * folga
+      const kAltura = unidadesComFolgaMin ? alturaAlvo / unidadesComFolgaMin : escalaNatural
+      const piso = escalaNatural * PISO_ESCALA
+      estourou = kAltura < piso
+      k = estourou ? piso : kAltura
+    }
+  }
 
   const tops: number[] = []
   let cursor = 0
@@ -203,7 +242,7 @@ export function geometria(opcoes: {
     const c = MAPA_CAMADAS[s]
     if (i === 0) cursor = -(c?.alturaPx ?? 0)
     else if (comprimido) cursor -= visivelPx(slugs, i) * fatorFechado(forma)
-    else cursor -= (c?.alturaPx ?? 0) + GAP
+    else cursor -= (c?.alturaPx ?? 0) + GAP * folga
     tops.push(cursor)
   })
   const minTop = tops.length ? tops[tops.length - 1] : 0
@@ -228,5 +267,6 @@ export function geometria(opcoes: {
     espalhaX,
     escalaNatural,
     estourou,
+    folga,
   }
 }
