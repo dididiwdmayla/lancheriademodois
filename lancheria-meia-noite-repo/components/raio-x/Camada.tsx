@@ -128,7 +128,7 @@ export function Camada({ camada, uid, n, indice, slugs, g, estado, transicao }: 
             opacity: marca ? 0.27 : 0.12,
             transition: 'opacity 200ms linear',
             background:
-              'repeating-linear-gradient(97deg, rgba(169,118,47,0) 0 24px, rgba(169,118,47,0.92) 24px 36px, rgba(169,118,47,0) 36px 58px)',
+              'repeating-linear-gradient(97deg, transparent 0 24px, color-mix(in srgb, var(--latao) 92%, transparent) 24px 36px, transparent 36px 58px)',
             WebkitMaskImage: `url("${arquivo}")`,
             maskImage: `url("${arquivo}")`,
             WebkitMaskSize: 'contain',

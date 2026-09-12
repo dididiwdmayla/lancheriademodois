@@ -88,3 +88,17 @@ Componentes que faltam portar: ver "Estado" acima.
 
 - Fotos de bebida e acompanhamento — hoje as duas seções são peça tipográfica
 - Série de giro 360° — adiada, o hero funciona sem ela
+
+## Quatro temas — Prompt 24
+
+O padrão é Meia-Noite. Para revisão provisória, recarregue a página com
+`?tema=meia-noite`, `?tema=diner`, `?tema=pratico` ou `?tema=cantina`.
+A futura integração no Radar injeta o mesmo contrato `Tema`; não duplica o projeto.
+As fontes são locais e somente as famílias do tema ativo são carregadas.
+
+Veja [o relatório e as decisões de desenho](design/RELATORIO-PROMPT-24.md),
+[as capturas comparativas](qa/prompt-24/folha-de-contato.jpg) e
+[o registro literal do handshake](design/HANDSHAKE-PROMPT-24.md).
+
+QA dos quatro temas: `npm run qa:temas -- --serve`. Para testar produção, rode antes
+`npm run build` e use `QA_PRODUCTION=1 npm run qa:temas -- --serve`.

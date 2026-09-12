@@ -7,6 +7,37 @@ Site vitrine da WillDev. Vira template do nicho lancheria no Radar depois.
 
 ---
 
+## Atualização vigente — Prompt 24
+
+As escolhas explícitas desta rodada substituem as restrições visuais antigas quando o
+ativo não for Meia-Noite. O motor, os dados e os 54 assets permanecem compartilhados.
+
+- `/temas/index.ts` define `Tema`, o registro e a seleção. Um arquivo por identidade:
+  `meia-noite`, `diner`, `pratico`, `cantina`. Padrão: Meia-Noite.
+- `?tema=<slug>` é provisório até o Radar injetar o objeto. O middleware valida o slug;
+  o layout aplica cores, fontes, raio, densidade e contexto antes de renderizar.
+- São seis cores por tema: `base`, `superficie`, `traco`, `texto`, `quente`, `frio`.
+  Os aliases históricos continuam disponíveis; não criar cor genérica de destaque.
+- Preços, CTA e calor usam `quente`; estados, filtros e medições usam `frio`.
+  A barra de medição permanece fria inclusive no limite; o aviso de risco é separado.
+- Meia-Noite conserva letreiro e as três famílias originais. Diner usa placa de porta
+  ligada ao mesmo relógio do horário da casa. Cantina usa toldo e números antiquários.
+- Prático abre direto no cardápio em lista, com foto de 88px, adicionar antes de
+  Personalizar e transições de tela de 120ms. Nenhuma alteração nos 340ms da prensa
+  nem nos 640ms do salto: os tempos físicos não pertencem ao tema.
+- Fontes locais em `/public/fontes/`, com licenças. O servidor inclui somente o CSS do
+  tema ativo. Prático só carrega Inter; Cantina, Playfair Display e Lora, sem mono.
+- Mascote só em Meia-Noite e Diner. Cabeça entre 97,5px e 130px na largura 390px.
+  Caixa absoluta; braços recortados para proteger o título. Nunca no DOM do raio-x.
+- Primeira reordenação válida por sessão mostra o aviso do desenho por sete segundos
+  ou até o toque. Tentativa inválida não consome o aviso. Botões, teclado e arrasto
+  passam pela mesma função. A chave é compartilhada entre os temas.
+- `npm run qa:temas -- --serve` verifica os quatro, gera recortes em 390×844 e compara
+  os arquivos físicos e fotos byte a byte com a base do Prompt 24. Testes de movimento
+  continuam limitando CSS a transform e opacity.
+
+---
+
 ## Atualização vigente — Prompt 23
 
 Estas decisões, autorizadas pelo usuário, substituem as orientações anteriores de movimento

@@ -1,5 +1,7 @@
 'use client'
 
+import { useTema } from '@/components/TemaAtivo'
+
 // A barra é o destino do salto e a porta permanente do pedido.
 //
 // O total sobe contando e é escrito direto no nó — 320ms de requestAnimationFrame
@@ -30,6 +32,7 @@ const CONTAGEM_MS = 320
 export const ALTURA_BARRA = 'var(--barra-altura)'
 
 export default function BarraPedido({ itens, totalCent, ref, onAbrir, ultimo, onModificar }: Props) {
+  const pratico = useTema().slug === 'pratico'
   const totalRef = useRef<HTMLSpanElement>(null)
   const ficha = useRef(0)
   const destinoAnimado = useRef<number | null>(null)
@@ -99,7 +102,7 @@ export default function BarraPedido({ itens, totalCent, ref, onAbrir, ultimo, on
         borderTop: '1px solid var(--traco)',
       }}
     >
-      {ultimo && <div className="barra-modificar"><span>{ultimo.nome}</span><button className="botao-texto" onClick={e => onModificar(ultimo.id, e.currentTarget.closest('.barra-modificar'))}>Modificar lanche</button></div>}
+      {ultimo && <div className="barra-modificar"><span>{ultimo.nome}</span><button className="botao-texto" onClick={e => onModificar(ultimo.id, e.currentTarget.closest('.barra-modificar'))}>{pratico ? 'Personalizar' : 'Modificar lanche'}</button></div>}
       <div
         className="barra-conteudo"
         style={{
@@ -128,10 +131,10 @@ export default function BarraPedido({ itens, totalCent, ref, onAbrir, ultimo, on
             data-preco
             ref={totalRef}
             style={{
-              fontFamily: 'var(--fonte-medida), ui-monospace, monospace',
+              fontFamily: 'var(--fonte-medida)',
               fontWeight: 500,
               fontSize: '1.5rem',
-              fontVariantNumeric: 'tabular-nums',
+              fontVariantNumeric: 'var(--numerais)',
               letterSpacing: '-0.01em',
               color: 'var(--latao)',
             }}

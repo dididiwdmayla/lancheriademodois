@@ -1,6 +1,7 @@
 'use client'
 
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useTema } from '@/components/TemaAtivo'
 import { movimentoPausado, observarPausa } from '@/lib/motion'
 import { DesenhoMascote, RaioXAberto } from './Mascote'
 
@@ -10,7 +11,7 @@ const suave = (t: number) => t * t * (3 - 2 * t)
 
 /** Mesmo desenho, pendurado: a boca fica acima da borda, nunca uma segunda ilustração. */
 export default function HeroMascote() {
-  const aberto = useContext(RaioXAberto)
+  const aberto = useContext(RaioXAberto) || !useTema().mascote
   return aberto ? null : <Espiando />
 }
 
@@ -35,10 +36,17 @@ function Espiando() {
       const texto = faixa.getBoundingClientRect()
       const aoLado = Math.max(0, h.right - texto.right - 24)
       const acima = Math.max(0, texto.top - h.top - 10)
-      // O SVG inteiro, incluindo braços em alcance máximo, cabe fora do título.
-      const largura = Math.min(112, Math.max(aoLado, acima * 1.5))
+      // A cabeça usa cerca de 83% da caixa: em 390px, 152px de SVG dão 127px
+      // de pão. Recorta só o alcance dos braços, sem encolher o rosto para caber.
+      const largura = Math.min(196, h.width * .39)
+      const altura = largura * 2 / 3
+      const visivel = aoLado >= largura ? altura : Math.min(altura, acima)
       svg.style.width = `${largura}px`
-      setCabe(largura >= 32)
+      svg.style.clipPath = `inset(0 0 ${Math.max(0, altura - visivel)}px 0)`
+      svg.dataset.alturaVisivel = String(visivel)
+      // Texto muito ampliado pode consumir toda a faixa; nunca cobre os glifos.
+      setCabe(visivel >= largura * .27)
+
     }
     const ro = new ResizeObserver(posicionar)
     ro.observe(hero)

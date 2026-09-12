@@ -104,9 +104,9 @@ export default function Composicao({ pilha, fixa, onTirar, onMover, onFechar }: 
               <span
                 data-preco
                 style={{
-                  fontFamily: 'var(--fonte-medida), ui-monospace, monospace',
+                  fontFamily: 'var(--fonte-medida)',
                   fontWeight: 500,
-                  fontVariantNumeric: 'tabular-nums',
+                  fontVariantNumeric: 'var(--numerais)',
                   fontSize: '0.8125rem',
                   color: 'var(--latao)',
                   opacity: c.precoCent ? 1 : 0.4,

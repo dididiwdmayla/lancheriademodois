@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTema } from '@/components/TemaAtivo'
 import Letreiro from '@/components/letreiro/Letreiro'
 import { RaioXAberto } from '@/components/letreiro/Mascote'
 import RaioX, { type LancheFechado } from '@/components/raio-x/RaioX'
@@ -26,12 +27,13 @@ const preparar = (slugs: string[]) => Promise.all(slugs.map(s => {
 }))
 
 export default function Balcao() {
+  const tema = useTema()
   const [pedido, setPedido] = useState<ItemPedido[]>([])
   const atual = useRef<ItemPedido[]>([])
   const [editor, setEditor] = useState<Editor | null>(null)
   const [confirmacao, setConfirmacao] = useState(CONFIRMACAO_INICIAL)
   const [carrinho, setCarrinho] = useState(false)
-  const [intro, setIntro] = useState(true)
+  const [intro, setIntro] = useState(tema.assinatura === 'letreiro')
   const [ultimo, setUltimo] = useState<string | null>(null)
   const [aviso, setAviso] = useState('')
   const [ganchos, setGanchos] = useState<{ vistos: string[]; dispensados: string[] }>({ vistos: [], dispensados: [] })
@@ -135,7 +137,7 @@ export default function Balcao() {
   const ultimoItem = pedido.find(p => p.id === ultimo)
 
   return <RaioXAberto.Provider value={!!editor}>
-    <Letreiro onConcluir={() => setIntro(false)} />
+    {tema.assinatura === 'letreiro' && <Letreiro onConcluir={() => setIntro(false)} />}
     <main id="conteudo" inert={!!editor || carrinho || intro} className={ultimoItem ? 'tem-modificar' : undefined}>
       <Hero />
       <Cardapio pedido={pedido} onAdicionar={adicionarFixo} onModificar={modificar} onMontar={montar} />

@@ -1,49 +1,24 @@
 import type { Metadata } from 'next'
-import { Fraunces, Archivo, IBM_Plex_Mono } from 'next/font/google'
+import { headers } from 'next/headers'
+import { ProvedorTema } from '@/components/TemaAtivo'
+import { estiloTema, selecionarTema } from '@/temas'
 import './globals.css'
-
-// Fontes variáveis: NÃO passar `weight` junto com `axes` — next/font trata a fonte como
-// estática quando há lista de pesos, e aí os eixos viram erro de build.
-// Sem `weight`, a variável carrega a faixa inteira de wght, que é o que a gente quer.
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  axes: ['SOFT', 'WONK', 'opsz'],
-  variable: '--fonte-display',
-  display: 'swap',
-})
-
-const archivo = Archivo({
-  subsets: ['latin'],
-  axes: ['wdth'],
-  variable: '--fonte-corpo',
-  display: 'swap',
-})
-
-// IBM Plex Mono não é variável — aqui `weight` é obrigatório e correto.
-// Só no medidor, nos preços e nos carimbos.
-const plexMono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['500'],
-  variable: '--fonte-medida',
-  display: 'swap',
-})
+import './temas.css'
 
 export const metadata: Metadata = {
   title: 'Lancheria Meia-Noite',
   description: 'Prensado de esquina em Maringá. Das 18h às 4h.',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html
-      lang="pt-BR"
-      className={`${fraunces.variable} ${archivo.variable} ${plexMono.variable}`}
-      // data-lt-aceso é escrito por um script inline (components/letreiro/Letreiro.tsx)
-      // antes da hidratação, pra evitar o letreiro nascer apagado na 2ª visita da sessão.
-      suppressHydrationWarning
-    >
-      <body>{children}</body>
-    </html>
-  )
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const tema = selecionarTema((await headers()).get('x-lancheria-tema'))
+  return <html lang="pt-BR" data-tema={tema.slug} data-fundo={tema.fundo}
+    data-densidade={tema.densidade} data-assinatura={tema.assinatura}
+    style={estiloTema(tema)} suppressHydrationWarning>
+    <head>
+      {/* Só a folha ativa: sem next/font global nem preload das outras famílias. */}
+      <link rel="stylesheet" href={`/fontes/${tema.slug}.css`} />
+    </head>
+    <body><ProvedorTema tema={tema}>{children}</ProvedorTema></body>
+  </html>
 }
