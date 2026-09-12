@@ -1,20 +1,21 @@
 // Preço do fixo é CALCULADO da composição: PRECO_BASE_CENT + soma dos precoCent.
-// Nunca fixado à mão — senão editar o lanche não move o valor.
+// No editor, este valor é o piso; só os acréscimos além do original são cobrados.
 
 export type Fixo = {
   slug: string
   nome: string
   forma: 'prensado' | 'redondo'
   camadas: string[]
+  essenciais: string[]
 }
 
 export const FIXOS: Fixo[] = [
-    { slug: 'prensado-completo', nome: 'Prensado Completo', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'tomate', 'carne', 'bacon', 'calabresa', 'milho', 'queijo-ralado', 'batata-palha', 'pao-prensado-topo'] },
-    { slug: 'prensado-frango', nome: 'Prensado de Frango', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'tomate', 'frango-desfiado', 'milho', 'queijo-ralado', 'pao-prensado-topo'] },
-    { slug: 'prensado-calabresa', nome: 'Prensado de Calabresa', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'calabresa', 'cebola', 'queijo-ralado', 'pao-prensado-topo'] },
-    { slug: 'prensado-meia-noite', nome: 'Prensado Meia-Noite', forma: 'prensado', camadas: ['pao-prensado-base', 'tomate', 'carne', 'bacon', 'ovo', 'queijo-ralado', 'batata-palha', 'pao-prensado-topo'] },
-    { slug: 'x-salada', nome: 'X-Salada', forma: 'redondo', camadas: ['pao-base', 'alface', 'tomate', 'carne', 'queijo', 'pao-topo'] },
-    { slug: 'x-tudo', nome: 'X-Tudo', forma: 'redondo', camadas: ['pao-base', 'molho', 'alface', 'tomate', 'carne', 'presunto', 'queijo', 'bacon', 'ovo', 'batata-palha', 'pao-topo'] }
+    { slug: 'prensado-completo', essenciais: ['pao-prensado-base', 'pao-prensado-topo', 'carne'], nome: 'Prensado Completo', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'tomate', 'carne', 'bacon', 'calabresa', 'milho', 'queijo-ralado', 'batata-palha', 'pao-prensado-topo'] },
+    { slug: 'prensado-frango', essenciais: ['pao-prensado-base', 'pao-prensado-topo', 'frango-desfiado'], nome: 'Prensado de Frango', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'tomate', 'frango-desfiado', 'milho', 'queijo-ralado', 'pao-prensado-topo'] },
+    { slug: 'prensado-calabresa', essenciais: ['pao-prensado-base', 'pao-prensado-topo', 'calabresa'], nome: 'Prensado de Calabresa', forma: 'prensado', camadas: ['pao-prensado-base', 'alface', 'calabresa', 'cebola', 'queijo-ralado', 'pao-prensado-topo'] },
+    { slug: 'prensado-meia-noite', essenciais: ['pao-prensado-base', 'pao-prensado-topo', 'carne'], nome: 'Prensado Meia-Noite', forma: 'prensado', camadas: ['pao-prensado-base', 'tomate', 'carne', 'bacon', 'ovo', 'queijo-ralado', 'batata-palha', 'pao-prensado-topo'] },
+    { slug: 'x-salada', essenciais: ['pao-base', 'pao-topo', 'carne'], nome: 'X-Salada', forma: 'redondo', camadas: ['pao-base', 'alface', 'tomate', 'carne', 'queijo', 'pao-topo'] },
+    { slug: 'x-tudo', essenciais: ['pao-base', 'pao-topo', 'carne'], nome: 'X-Tudo', forma: 'redondo', camadas: ['pao-base', 'molho', 'alface', 'tomate', 'carne', 'presunto', 'queijo', 'bacon', 'ovo', 'batata-palha', 'pao-topo'] }
 ]
 
 export type Extra = {

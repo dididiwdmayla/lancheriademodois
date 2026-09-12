@@ -18,12 +18,13 @@ import type { Instancia } from './RaioX'
 type Props = {
   /** A pilha, da base para o topo — a mesma ordem do estado. */
   pilha: Instancia[]
+  fixa: (slug: string) => boolean
   onTirar: (indice: number) => void
   onMover: (indice: number, delta: number) => number
   onFechar: () => void
 }
 
-export default function Composicao({ pilha, onTirar, onMover, onFechar }: Props) {
+export default function Composicao({ pilha, fixa, onTirar, onMover, onFechar }: Props) {
   // De cima para baixo: é assim que a pilha é vista, e o pão de cima é o primeiro nome
   // que a pessoa procura.
   const linhas = pilha.map((inst, indice) => ({ inst, indice })).reverse()
@@ -79,6 +80,8 @@ export default function Composicao({ pilha, onTirar, onMover, onFechar }: Props)
             <li
               key={inst.uid}
               className="composicao-linha"
+              data-slug={inst.slug}
+              data-fixa={fixa(inst.slug) ? '' : undefined}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -115,7 +118,7 @@ export default function Composicao({ pilha, onTirar, onMover, onFechar }: Props)
                 <button type="button" className="botao-texto" data-mover-cima={indice} aria-label={`Subir ${c.nome.toLowerCase()}`} disabled={indice >= pilha.length - 2} onClick={() => onMover(indice, 1)}>↑</button>
                 <button type="button" className="botao-texto" data-mover-baixo={indice} aria-label={`Descer ${c.nome.toLowerCase()}`} disabled={indice <= 1} onClick={() => onMover(indice, -1)}>↓</button>
               </div>}
-              {c.obrigatorio ? (
+              {fixa(inst.slug) ? (
                 <span
                   style={{
                     width: TOQUE_MIN,
@@ -126,7 +129,7 @@ export default function Composicao({ pilha, onTirar, onMover, onFechar }: Props)
                     opacity: 0.4,
                   }}
                 >
-                  fixo
+                  fixa
                 </span>
               ) : (
                 <button

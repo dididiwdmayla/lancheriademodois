@@ -16,7 +16,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { PointerEvent as ReactPointerEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { CAMADAS, MAPA_CAMADAS, urlCamada } from '@/data/camadas'
 import { LIMIAR_AVISO_CAMADAS, MAX_CAMADAS, MAX_REPETICOES } from '@/data/casa'
-import { precoDaComposicao } from '@/lib/precos'
+import { precoDoLanche, camadaFixa } from '@/lib/precos'
 import { prefersReducedMotion } from '@/lib/motion'
 import { Camada, Chamada, ChamadaChip, medidas, TOQUE_MIN, TiraDeToque } from './Camada'
 import Composicao from './Composicao'
@@ -45,6 +45,8 @@ export type LancheFechado = {
   camadas: string[]
   resumo: string
   cent: number
+  fixoSlug?: string
+  observacao?: string
 }
 
 type Props = {
@@ -53,13 +55,17 @@ type Props = {
   camadasIniciais: string[]
   onFechar: (item: LancheFechado, origem: Origem | null) => void
   onSair?: () => void
+  fixoSlug?: string
+  observacaoInicial?: string
   editando?: boolean
 }
 
 const CURVA_ASSENTA = 'cubic-bezier(.32,.02,.24,1)'
 const CURVA_EXPLODE = 'cubic-bezier(.22,1.24,.36,1)'
 
-export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, editando }: Props) {
+export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, editando, fixoSlug, observacaoInicial = '' }: Props) {
+  const [observacao, setObservacao] = useState(observacaoInicial.slice(0, 120))
+  const fixa = useCallback((slug: string) => camadaFixa(slug, fixoSlug), [fixoSlug])
   const uidRef = useRef(1)
   const instanciar = useCallback(
     (slugs: string[]): Instancia[] =>
@@ -68,10 +74,8 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
   )
 
   const [pilha, setPilha] = useState<Instancia[]>(() => instanciar(camadasIniciais))
-  // Editor (raio-x aberto a partir de um fixo do cardápio) vs. montador ("Monte o seu"):
-  // o fixo sempre chega com a pilha cheia, o montador sempre nasce vazio — a mesma
-  // distinção que já existe nos dados, sem precisar de uma segunda flag para duplicá-la.
-  // Fixado no primeiro render: a sessão de raio-x não troca de modo no meio do caminho.
+  // Pilha vazia abre o trilho contínuo. Ao reabrir uma montagem, usamos a folha.
+  // Preço e essenciais dependem de fixoSlug, nunca de a pilha estar preenchida.
   const [modoMontador] = useState(() => camadasIniciais.length === 0)
   // Editor: o trilho nasce recolhido, e "Acrescentar ingrediente" abre ele como folha por
   // cima do painel. Montador: o trilho é a ação principal e nasce aberto — sem alternância,
@@ -263,8 +267,8 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
       const arr = vivo.current.pilha.slice()
       const inst = arr[i]
       if (!inst) return
-      if (MAPA_CAMADAS[inst.slug].obrigatorio) {
-        setRecado('Os pães ficam. Sem eles não é lanche.')
+      if (fixa(inst.slug)) {
+        setRecado('Camada fixa.')
         return
       }
       arr.splice(i, 1)
@@ -279,7 +283,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
       trocarPilha(arr.length === 2 ? [] : arr)
       setRevelada(null)
     },
-    [trocarPilha],
+    [trocarPilha, fixa],
   )
 
   /** Troca a camada `i` com a vizinha. Devolve o novo índice, ou -1 se a troca não vale. */
@@ -382,7 +386,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
         const dx = ev.clientX - x0
         if (Math.hypot(dx, ev.clientY - y0) > 8) mexeu = true
         const r = painel?.getBoundingClientRect()
-        const fora = !!r && (ev.clientX < r.left - 40 || ev.clientX > r.right + 40 || Math.abs(dx) > 150)
+        const fora = !fixa(vivo.current.pilha[idx]?.slug) && !!r && (ev.clientX < r.left - 40 || ev.clientX > r.right + 40 || Math.abs(dx) > 150)
         if (fora !== removendo) {
           removendo = fora
           const el = elDe()
@@ -400,7 +404,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
         window.removeEventListener('pointerup', soltar)
         const inst = vivo.current.pilha[idx]
         const el = elDe()
-        if (removendo && inst && !MAPA_CAMADAS[inst.slug].obrigatorio) {
+        if (removendo && inst && !fixa(inst.slug)) {
           if (el) {
             const dir = ev.clientX < x0 ? -1 : 1
             el.style.transition = 'transform 220ms cubic-bezier(.4,0,1,1), opacity 220ms linear'
@@ -410,7 +414,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
           agendar(() => remover(idx), el ? 200 : 0)
         } else {
           if (el) el.style.opacity = '1'
-          if (removendo) setRecado('Os pães ficam. Sem eles não é lanche.')
+          if (removendo) setRecado('Camada fixa.')
           else if (!mexeu) {
             // Toque sem arrasto: revela a chamada daquela camada, e só dela. Tocar de novo
             // fecha. No desktop as chamadas já estão todas na tela e isto não muda nada.
@@ -422,7 +426,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
       window.addEventListener('pointermove', mover_)
       window.addEventListener('pointerup', soltar)
     },
-    [agendar, mover, remover],
+    [agendar, mover, remover, fixa],
   )
 
   /** O mesmo que o arrasto faz, no teclado. Requisito, não alternativa. */
@@ -442,7 +446,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
         remover(i)
       }
     },
-    [agendar, mover, remover],
+    [agendar, mover, remover, fixa],
   )
 
   // ---------- prensa, gravidade e despacho ----------
@@ -474,7 +478,8 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
       forma,
       camadas,
       resumo: recheio.length ? recheio.join(', ') : 'Só o pão',
-      cent: precoDaComposicao(camadas),
+      cent: precoDoLanche(camadas, fixoSlug),
+      fixoSlug, observacao: observacao.trim(),
     }
 
     vivo.current.pilha = []
@@ -487,7 +492,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
     setRevelada(null)
     setComposicao(false)
     onFechar(item, origem)
-  }, [forma, nome, onFechar])
+  }, [forma, nome, onFechar, fixoSlug, observacao])
 
   /** Prensado: a chapa fecha. 340ms, aceleração forte e parada seca. */
   const prensar = useCallback(() => {
@@ -743,6 +748,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
                 indice={i}
                 g={g}
                 rotuloTop={rotuloTopPorIndice[i]}
+                fixa={fixa(inst.slug)}
               />
             ))}
 
@@ -754,6 +760,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
               indice={aberta}
               g={g}
               alturaArea={area.h}
+              fixa={fixa(numerada[aberta].inst.slug)}
               onTirar={remover}
             />
           )}
@@ -797,11 +804,17 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
       </div>
 
       {composicao && (
-        <Composicao pilha={pilha} onMover={mover} onTirar={remover} onFechar={() => setComposicao(false)} />
+        <Composicao fixa={fixa} pilha={pilha} onMover={mover} onTirar={remover} onFechar={() => setComposicao(false)} />
       )}
 
+      <label id="rx-observacao" htmlFor="observacao-item">
+        <span>Observação</span>
+        <input id="observacao-item" type="text" maxLength={120} value={observacao}
+          placeholder="Bem passado" disabled={selando || selado}
+          onChange={e => setObservacao(e.target.value)} />
+      </label>
       <Medidor
-        precoCent={precoDaComposicao(pilha.map((i) => i.slug))}
+        precoCent={precoDoLanche(pilha.map((i) => i.slug), fixoSlug)}
         camadas={n}
         pct={pct}
         aviso={aviso}

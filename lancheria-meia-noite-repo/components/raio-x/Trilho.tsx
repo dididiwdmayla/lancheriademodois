@@ -62,7 +62,7 @@ export default function Trilho({
             disabled={off}
             aria-label={`${c.nome}, ${ausente ? 'em falta' : brl(c.precoCent)}${n ? `, ${n} na pilha` : ''}`}
             onClick={() => onAdicionar(c.slug)}
-            onPointerDown={(e) => onArrastar(e, c.slug)}
+            onPointerDown={(e) => { if (!folha || e.pointerType === 'mouse') onArrastar(e, c.slug) }}
             style={{
               display: 'grid',
               gap: 2,
@@ -73,7 +73,7 @@ export default function Trilho({
               borderRadius: 2,
               cursor: off ? 'default' : 'pointer',
               textAlign: 'left',
-              touchAction: 'none',
+              touchAction: folha ? 'pan-y' : 'none',
               opacity: off ? 0.34 : 1,
             }}
           >
@@ -114,11 +114,11 @@ export default function Trilho({
                 {c.nome}
               </span>
               <span
+                data-preco
                 style={{
                   fontSize: '0.75rem',
                   fontVariantNumeric: 'tabular-nums',
-                  color: 'var(--osso)',
-                  opacity: 0.55,
+                  color: 'var(--latao)',
                 }}
               >
                 {brl(c.precoCent)}

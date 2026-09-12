@@ -21,7 +21,7 @@ const arestaDoCorte: CSSProperties = {
 }
 
 const fonteLetreiro: CSSProperties = {
-  fontFamily: "'Fraunces', Georgia, serif",
+  fontFamily: "var(--fonte-display), Georgia, serif",
   fontSize: '260px',
   fontVariationSettings: "'opsz' 144, 'wght' 900, 'SOFT' 12, 'WONK' 1",
   textAnchor: 'middle',

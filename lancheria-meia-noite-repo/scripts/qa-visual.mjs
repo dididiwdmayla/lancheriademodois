@@ -19,6 +19,7 @@
 // uso:  node scripts/qa-visual.mjs [url]
 
 import { chromium } from 'playwright'
+import { verificarPrompt19 } from './qa-prompt19.mjs'
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs'
 
 /** Caixa de cada silhueta, a mesma que a sombra de contato usa. Nenhuma imagem é lida. */
@@ -360,20 +361,9 @@ for (const slug of [...PRENSADOS, ...REDONDOS]) {
 // pelos mesmos gestos do cliente: Delete tira pelo teclado, o trilho põe. Existe para
 // confirmar que o fator bate no teto de 1.30 sem lançar exceção, não só nas seis
 // composições fixas.
-await abrir(LANCHE_MAGRO)
-// Em 390px as chamadas nascem ocultas, então o caminho de tirar camada é a lista de
-// composição — que é justamente o equivalente por toque exigido pelo contrato. O caminho
-// por teclado (Delete na chamada) é cobrado na passada de 900px, onde as chamadas moram.
-await pg.click('#rx-ver-composicao')
-await pg.waitForSelector('#rx-composicao', { timeout: 3000 })
-while ((await pg.evaluate(() => document.querySelectorAll('#rx-pilha [id^="rx-camada-"]').length)) > 2) {
-  const tirar = await pg.$('#rx-composicao [data-tirar]')
-  if (!tirar) break
-  await tirar.click()
-  await pg.waitForTimeout(60)
-}
-await pg.click('#rx-fechar-composicao')
-await pg.waitForTimeout(60)
+// Agora os essenciais do fixo são travados. O sintético continua a mesma composição,
+// construído pelo caminho correto: Monte o seu, onde só os pães ficam.
+await montar(pg)
 await abrirTrilhoSeRecolhido(pg)
 await pg.click('#rx-trilho [data-slug="molho"]')
 await pg.waitForTimeout(80)
@@ -888,8 +878,8 @@ await pg.click('#rx-selar')
 await pg.waitForSelector('[data-carrinho]', { timeout: 6000 })
 diz(await pg.locator('[data-linha-pedido]').count() === 1 && await pg.locator('.quantidade span').innerText() === '3', 'modificar salva na linha original e preserva as três unidades')
 await pg.click('#carrinho-resumo')
-const resumoFinal = await pg.locator('#resumo-pedido').inputValue()
-diz(resumoFinal.includes('3 × Prensado de Frango') && resumoFinal.includes('Bacon'), 'resumo inclui quantidade e composição modificada')
+const resumoFinal = await pg.locator('.conferir-itens pre').textContent()
+diz(resumoFinal.includes('3× Prensado de Frango') && resumoFinal.includes('+ bacon'), 'resumo inclui quantidade e composição modificada')
 await pg.click('#carrinho-fechar')
 await pg.locator('#sugestoes').scrollIntoViewIfNeeded()
 await pg.waitForFunction(() => document.querySelectorAll('[data-trilho="lanches"] [data-camadas]').length > 0)
@@ -929,6 +919,8 @@ writeFileSync('qa/desktop-1280.jpg', escritorio)
 recortes.push({ nome: 'desktop · 1280px', b64: escritorio.toString('base64') })
 diz((await estorvosHorizontais(pgDesktop)).length === 0, 'desktop 1280px sem rolagem horizontal acidental')
 await ctxDesktop.close()
+
+await verificarPrompt19(navegador, URL, diz, recorte)
 
 // ---------- resumo do espalhamento ----------
 //
