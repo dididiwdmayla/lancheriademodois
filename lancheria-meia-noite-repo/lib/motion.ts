@@ -21,3 +21,24 @@ export function umaVezPorSessao(chave: string): { jaAconteceu: boolean; marcar: 
 
   return { jaAconteceu, marcar }
 }
+
+/** Pausa compartilhada, inclusive para relógios JS: nenhum rAF continua só para testar uma flag. */
+const pausas = new Set<symbol>()
+const ouvintes = new Set<(pausado: boolean) => void>()
+export const movimentoPausado = () => pausas.size > 0
+export function observarPausa(ouvinte: (pausado: boolean) => void) {
+  ouvintes.add(ouvinte)
+  ouvinte(movimentoPausado())
+  return () => { ouvintes.delete(ouvinte) }
+}
+export function pausarMovimento() {
+  const chave = Symbol()
+  pausas.add(chave)
+  document.documentElement.dataset.movimentoPausado = '1'
+  ouvintes.forEach(fn => fn(true))
+  return () => {
+    if (!pausas.delete(chave) || pausas.size) return
+    delete document.documentElement.dataset.movimentoPausado
+    ouvintes.forEach(fn => fn(false))
+  }
+}

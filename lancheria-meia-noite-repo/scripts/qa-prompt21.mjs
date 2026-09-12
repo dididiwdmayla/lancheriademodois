@@ -133,53 +133,15 @@ export async function verificarPrompt21(navegador, url, diz, recorte, guardarFot
     medidas.push({ nome: 'cardápio → raio-x', ms: maisLonga(entrada), n: entrada.length })
     await pg.waitForSelector('#rx-takeover', { timeout: 5000 })
 
+    // Prompt 23 substituiu clip-path por deslocamento + scale leve.
     const origem = await pg.evaluate(() => {
       const cs = getComputedStyle(document.documentElement)
-      const n = (p) => parseFloat(cs.getPropertyValue(p))
-      return {
-        topo: n('--tr-origem-topo'),
-        direita: n('--tr-origem-direita'),
-        base: n('--tr-origem-base'),
-        esquerda: n('--tr-origem-esquerda'),
-        largura: innerWidth,
-        altura: innerHeight,
-      }
+      return { x: parseFloat(cs.getPropertyValue('--tr-origem-x')), y: parseFloat(cs.getPropertyValue('--tr-origem-y')) }
     })
-    const erroDoRetangulo = Math.max(
-      Math.abs(origem.topo - cartao.y),
-      Math.abs(origem.esquerda - cartao.x),
-      Math.abs(origem.direita - (origem.largura - (cartao.x + cartao.width))),
-      Math.abs(origem.base - (origem.altura - (cartao.y + cartao.height))),
-    )
-    diz(
-      erroDoRetangulo <= 1,
-      `P21: o raio-x parte do retângulo do cartão tocado — recuos ${origem.topo}/${origem.direita}/` +
-        `${origem.base}/${origem.esquerda}px contra o cartão em ${Math.round(cartao.x)},${Math.round(cartao.y)} ` +
-        `${Math.round(cartao.width)}×${Math.round(cartao.height)} (erro ${erroDoRetangulo.toFixed(1)}px)`,
-    )
-    // Não é o centro da tela: um `inset` centrado teria os quatro recuos parecidos.
-    const centrado =
-      Math.abs(origem.esquerda - origem.direita) < 12 && Math.abs(origem.topo - origem.base) < 12
-    diz(!centrado, `P21: o corte inicial não é um retângulo centrado na tela`)
-
-    // A prova direta: o primeiro quadro da animação é um `inset()` com os quatro recuos
-    // do cartão. Quando a API devolve o recorte já resolvido, ele é conferido número a
-    // número; quando não devolve, sobram os recuos da raiz, conferidos logo acima.
-    const cresce = entrada.find((a) => a.nome === 'tr-cresce-do-cartao')
-    const daKeyframe = cresce?.recorte ? (cresce.recorte.match(/-?[\d.]+px/g) ?? []).map(parseFloat) : []
-    const erroDaKeyframe = daKeyframe.length >= 4
-      ? Math.max(
-          Math.abs(daKeyframe[0] - origem.topo),
-          Math.abs(daKeyframe[1] - origem.direita),
-          Math.abs(daKeyframe[2] - origem.base),
-          Math.abs(daKeyframe[3] - origem.esquerda),
-        )
-      : 0
-    diz(
-      !!cresce && erroDaKeyframe <= 1,
-      `P21: quem anima é o recorte que cresce — ${creske(cresce)}` +
-        `${daKeyframe.length >= 4 ? ` (erro ${erroDaKeyframe.toFixed(1)}px contra o cartão)` : ''}`,
-    )
+    const erro = Math.max(Math.abs(origem.x - cartao.x - cartao.width / 2), Math.abs(origem.y - cartao.y - cartao.height / 2))
+    diz(erro <= 1, `P23: origem do gesto é o cartão tocado (erro ${erro.toFixed(1)}px)`)
+    const cresce = entrada.find(a => a.nome === 'tr-cresce-do-cartao')
+    diz(!!cresce && !cresce.pseudo && !cresce.recorte, 'P23: celular usa crescimento no elemento real, sem clip-path e sem captura')
 
     // ---------- o mascote não existe no DOM com o raio-x aberto ----------
     const comRaioX = await pg.evaluate(() => ({
@@ -240,23 +202,7 @@ export async function verificarPrompt21(navegador, url, diz, recorte, guardarFot
 
     // ---------- troca de filtro: a grade reencaixa escalonada ----------
     const grade = await observar(pg, () => pg.click('[data-filtro-forma="redondo"]'))
-    const itens = await pg.evaluate(() =>
-      [...document.querySelectorAll('.cardapio-grade[data-troca] > *')].map((e) => {
-        const a = e.getAnimations()[0]
-        if (!a) return null
-        const t = a.effect.getComputedTiming()
-        return { dur: Number(t.duration) || 0, atraso: Number(t.delay) || 0 }
-      }))
-    const validos = itens.filter(Boolean)
-    const totalGrade = validos.length ? Math.max(...validos.map((i) => i.dur + i.atraso)) : 0
-    const passos = validos.map((i) => i.atraso).sort((a, b) => a - b)
-    const escalonamento = passos.length > 1 ? passos[1] - passos[0] : 0
-    diz(
-      validos.length > 0 && Math.abs(totalGrade - 200) <= 1 && Math.abs(escalonamento - 20) <= 1,
-      `P21: troca de filtro — ${validos.length} itens, escalonamento ${escalonamento}ms, ` +
-        `total ${totalGrade}ms (esperado 20ms e 200ms)`,
-    )
-    medidas.push({ nome: 'troca de filtro', ms: totalGrade, n: validos.length })
+    diz(!grade.some(a => a.nome === 'tr-reencaixa'), 'P23: filtro no celular troca de uma vez, sem escalonamento por item')
 
     // ---------- o teto ----------
     const estouros = medidas.filter((m) => m.ms > TETO_MS + 0.5)
@@ -270,15 +216,16 @@ export async function verificarPrompt21(navegador, url, diz, recorte, guardarFot
 
     // ---------- os olhos seguem, e o carrinho vazio recebe o mascote ----------
     await entrar(pg, url)
+    await pg.locator('.hero-faixa').scrollIntoViewIfNeeded()
     await pg.mouse.move(20, 120)
     await pg.waitForTimeout(650)
     const olharEsquerda = await pg.evaluate(() =>
-      document.querySelector('[data-mascote] [data-pupila]')?.getAttribute('transform'))
+      document.querySelector('[data-hero-mascote] [data-pupila]')?.getBoundingClientRect().x)
     await pg.mouse.move(370, 700)
     await pg.waitForTimeout(650)
     const olharDireita = await pg.evaluate(() =>
-      document.querySelector('[data-mascote] [data-pupila]')?.getAttribute('transform'))
-    const lerX = (t) => (t ? Number(/translate\((-?[\d.]+)/.exec(t)?.[1] ?? 0) : null)
+      document.querySelector('[data-hero-mascote] [data-pupila]')?.getBoundingClientRect().x)
+    const lerX = (x) => x ?? null
     diz(
       olharEsquerda !== null && olharDireita !== null && lerX(olharDireita) > lerX(olharEsquerda) + 1,
       `P21: a pupila acompanha o cursor (x ${lerX(olharEsquerda)} → ${lerX(olharDireita)})`,
@@ -412,8 +359,7 @@ async function congelarLetreiro(pg, url) {
     intro.style.transform = 'none'
     const svg = document.getElementById('lt-svg')
     svg.style.animation = 'none'
-    svg.style.setProperty('--lt-acende', '1')
-    svg.style.setProperty('--lt-letras', '1')
+    for (const el of svg.querySelectorAll('#lt-halo, #lt-letras-acesas')) { el.style.animation = 'none'; el.style.opacity = '1' }
   })
   await pg.waitForTimeout(250)
 }

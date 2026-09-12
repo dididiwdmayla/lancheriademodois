@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
+import { pausarMovimento, prefersReducedMotion } from '@/lib/motion'
+import { GRADE_TOTAL_MS } from '@/lib/transicoes'
 import { CAMADAS } from '@/data/camadas'
 import { FIXOS, type Fixo } from '@/data/fixos'
 import type { Forma } from '@/components/raio-x/prensa'
@@ -19,6 +21,12 @@ export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }:
   const [forma, setForma] = useState<Forma | 'monte'>('prensado')
   const [ingredientes, setIngredientes] = useState<string[]>([])
   const [filtroAberto, setFiltroAberto] = useState(false)
+  useEffect(() => {
+    if (prefersReducedMotion() || !window.matchMedia('(min-width: 900px)').matches) return
+    const retomar = pausarMovimento()
+    const timer = window.setTimeout(retomar, GRADE_TOTAL_MS)
+    return () => { clearTimeout(timer); retomar() }
+  }, [forma, ingredientes])
   const visiveis = FIXOS.filter(f => f.forma === forma && ingredientes.every(s => f.camadas.includes(s)))
   return <section id="cardapio" data-cardapio className="cardapio moldura">
     <div className="cabecalho-secao"><h2>Cardápio</h2><span className="nota">Direto da chapa.</span></div>

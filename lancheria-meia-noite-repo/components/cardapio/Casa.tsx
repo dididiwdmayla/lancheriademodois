@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import HeroMascote from '@/components/letreiro/HeroMascote'
 import { DesenhoMascote } from '@/components/letreiro/Mascote'
 import { CASA } from '@/data/casa'
 import { horarioDaCasa } from '@/lib/horario'
@@ -25,6 +26,7 @@ export function Hero() {
     <header className="cabecalho-casa moldura"><span className="marca-texto">Meia-Noite</span><span className="nota">Lancheria em Maringá</span></header>
     <section className="hero-faixa" aria-labelledby="titulo-casa">
       <img src="/chapa/chapa-selagem.webp" alt="Prensado fechando na chapa" width={2400} height={1600} fetchPriority="high" />
+      <HeroMascote />
       <div className="hero-texto moldura"><h1 id="titulo-casa">A noite pede<br />um prensado.</h1><p>Pão na chapa. Recheio no lugar.</p></div>
     </section>
     <div className="moldura"><Horario compacto /></div>

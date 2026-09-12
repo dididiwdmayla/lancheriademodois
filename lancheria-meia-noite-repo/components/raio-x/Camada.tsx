@@ -60,7 +60,8 @@ export function Camada({ camada, uid, n, indice, slugs, g, estado, transicao }: 
     position: 'absolute',
     left: g.x0,
     width: g.larguraPilha,
-    top: topoEmbrulho,
+    top: 0,
+    transform: `translateY(${topoEmbrulho}px)`,
     height: 1200 * g.k,
     zIndex: 10 + indice,
     cursor: 'grab',
@@ -68,11 +69,12 @@ export function Camada({ camada, uid, n, indice, slugs, g, estado, transicao }: 
     transformOrigin: '50% 50%',
     transition: `${transicao}, opacity 200ms linear`,
   }
+  const visual: CSSProperties = { position: 'absolute', inset: 0, transition: transicao }
   // A pilha explodida respira. Cada camada fora de fase das outras, senão vira acordeão.
-  if (!parado) estilo.animation = `rx-osc ${6.4 + indice * 0.7}s ease-in-out ${-indice * 1.3}s infinite`
+  if (!parado) visual.animation = `rx-osc ${6.4 + indice * 0.7}s ease-in-out ${-indice * 1.3}s infinite`
   // Prensa: o recheio espalha para os lados. Gravidade: o que é mole só assenta.
-  if (g.prensa && !camada.pao) estilo.transform = `scaleX(${g.espalhaX}) scaleY(${ESPALHA_Y})`
-  else if (g.assenta && !camada.pao && !camada.firme) estilo.transform = `scaleY(${ASSENTA_Y})`
+  if (g.prensa && !camada.pao) visual.transform = `scaleX(${g.espalhaX}) scaleY(${ESPALHA_Y})`
+  else if (g.assenta && !camada.pao && !camada.firme) visual.transform = `scaleY(${ASSENTA_Y})`
 
   const sombra = comprimido ? sombraDe(camada.slug, g.k) : null
   const arquivo = urlCamada(camada)
@@ -87,6 +89,7 @@ export function Camada({ camada, uid, n, indice, slugs, g, estado, transicao }: 
       data-exposto-px={expostoPx(slugs, indice).toFixed(2)}
       style={estilo}
     >
+      <div className="camada-visual" style={visual}>
       {sombra && (
         <div
           aria-hidden="true"
@@ -137,6 +140,7 @@ export function Camada({ camada, uid, n, indice, slugs, g, estado, transicao }: 
           }}
         />
       )}
+      </div>
     </div>
   )
 }
@@ -241,32 +245,33 @@ export function Chamada({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: x1,
-          top: y1,
-          width: Math.max(0, comprimento),
+          left: 0,
+          top: 0,
+          width: 1,
           height: 1,
           background: 'var(--letreiro)',
           opacity: 0.6,
           pointerEvents: 'none',
           zIndex: 26,
           transformOrigin: '0 0',
-          transform: `rotate(${angulo}deg)`,
-          transition: 'top 300ms linear, left 300ms linear, width 300ms linear, transform 300ms linear',
+          transform: `translate(${x1}px, ${y1}px) rotate(${angulo}deg) scaleX(${Math.max(0, comprimento)})`,
+          transition: 'transform 300ms linear',
         }}
       />
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: pontoX - 1.5,
-          top: topoObjeto - 1.5,
+          left: 0,
+          top: 0,
+          transform: `translate(${pontoX - 1.5}px, ${topoObjeto - 1.5}px)`,
           width: 3,
           height: 3,
           background: 'var(--letreiro)',
           borderRadius: '50%',
           pointerEvents: 'none',
           zIndex: 27,
-          transition: 'top 300ms linear, left 300ms linear',
+          transition: 'transform 300ms linear',
         }}
       />
       <button
@@ -278,7 +283,8 @@ export function Chamada({
           position: 'absolute',
           left: 0,
           width: g.colW,
-          top: rotuloTop,
+          top: 0,
+          transform: `translateY(${rotuloTop}px)`,
           minHeight: TOQUE_MIN,
           display: 'flex',
           alignItems: 'center',
@@ -290,7 +296,7 @@ export function Chamada({
           textAlign: 'left',
           zIndex: 28,
           touchAction: 'none',
-          transition: 'top 300ms linear',
+          transition: 'transform 300ms linear',
         }}
       >
         <span style={nomeDaChamada}>{camada.nome}{fixa && <small className="camada-fixa">fixa</small>}</span>

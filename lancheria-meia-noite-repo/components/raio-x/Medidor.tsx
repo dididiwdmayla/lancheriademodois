@@ -114,10 +114,12 @@ export default function Medidor({
       >
         <div
           style={{
-            width: `${pct.toFixed(1)}%`,
+            width: '100%',
+            transform: `scaleX(${pct / 100})`,
+            transformOrigin: 'left center',
             height: '100%',
             background: aviso ? 'var(--latao)' : 'var(--letreiro)',
-            transition: `width ${transicaoBarra}, background-color 200ms linear`,
+            transition: `transform ${transicaoBarra}`,
           }}
         />
       </div>

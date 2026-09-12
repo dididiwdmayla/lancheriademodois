@@ -1,6 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useRef, useState } from 'react'
+import { pausarMovimento } from '@/lib/motion'
 import LetreiroSvg from './LetreiroSvg'
 import { CHAVE_SESSAO, DURACAO_IGNICAO_MS, DURACAO_ENTRADA_MS, DURACAO_TOTAL_MS, SCRIPT_ENTRADA } from './sequencia'
 
@@ -12,12 +13,14 @@ export default function Letreiro({ onConcluir }: { onConcluir: () => void }) {
 
   useLayoutEffect(() => {
     const raiz = document.documentElement
+    const retomar = pausarMovimento()
     let encerrado = false
     const terminar = () => {
       if (encerrado) return
       encerrado = true
       raiz.setAttribute('data-lt-aceso', '1')
       try { sessionStorage.setItem(CHAVE_SESSAO, '1') } catch {}
+      retomar()
       setFim(true)
       concluir.current()
     }
@@ -26,13 +29,14 @@ export default function Letreiro({ onConcluir }: { onConcluir: () => void }) {
     const restante = Math.max(0, DURACAO_TOTAL_MS - (performance.now() - inicio))
     if (raiz.getAttribute('data-lt-aceso') === '1' || restante === 0) { terminar(); return }
     const timer = window.setTimeout(terminar, restante)
-    return () => { window.clearTimeout(timer) }
+    return () => { window.clearTimeout(timer); retomar() }
   }, [])
 
   return <>
     <script dangerouslySetInnerHTML={{ __html: SCRIPT_ENTRADA }} />
     <style>{`
-      html:not([data-lt-aceso='1']) #lt-svg { animation: lt-ignicao ${DURACAO_IGNICAO_MS}ms linear both; }
+      html:not([data-lt-aceso='1']) #lt-halo { animation: lt-ignicao ${DURACAO_IGNICAO_MS}ms linear both; }
+      html:not([data-lt-aceso='1']) #lt-letras-acesas { animation: lt-ignicao-letras ${DURACAO_IGNICAO_MS}ms linear both; }
       html:not([data-lt-aceso='1']) #intro { animation: lt-cruzar ${DURACAO_ENTRADA_MS}ms cubic-bezier(.32,0,.2,1) ${DURACAO_IGNICAO_MS}ms both; }
       html:not([data-lt-aceso='1']) #conteudo { animation: lt-entrar ${DURACAO_ENTRADA_MS}ms cubic-bezier(.32,0,.2,1) ${DURACAO_IGNICAO_MS}ms both; }
     `}</style>
