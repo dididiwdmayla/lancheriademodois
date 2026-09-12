@@ -4,8 +4,8 @@ export const CASA = {
   nome: 'Lancheria Meia-Noite',
   cidade: 'Maringá, PR',
   endereco: 'Rua Exemplo, 000 — Zona 7',
-  telefone: '(44) 0000-0000',
-  whatsapp: '5544000000000',
+  telefone: '(44) 98457-0105',
+  whatsapp: '5544984570105',
   fuso: 'America/Sao_Paulo',
   abre: 18,   // hora local da casa
   fecha: 4,   // hora local da casa, no dia seguinte

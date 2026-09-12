@@ -38,11 +38,11 @@ body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-seri
   5%    { --lt-acende: 0.40; --lt-letras: 0; }
   10.9% { --lt-acende: 0.40; --lt-letras: 0; }
   11%   { --lt-acende: 0;    --lt-letras: 0; }
-  42%   { --lt-acende: 0;    --lt-letras: 0; }
-  47%   { --lt-acende: 0.90; --lt-letras: 0.30; }
-  53%   { --lt-acende: 0.44; --lt-letras: 0.16; }
-  64%   { --lt-acende: 0.97; --lt-letras: 0.86; }
-  73%   { --lt-acende: 0.78; --lt-letras: 0.70; }
+  36%   { --lt-acende: 0;    --lt-letras: 0; }
+  41%   { --lt-acende: 0.90; --lt-letras: 0.30; }
+  48%   { --lt-acende: 0.44; --lt-letras: 0.16; }
+  60%   { --lt-acende: 0.97; --lt-letras: 0.86; }
+  71%   { --lt-acende: 0.78; --lt-letras: 0.70; }
   100%  { --lt-acende: 1;    --lt-letras: 1; }
 }
 @keyframes lt-tremor {
@@ -113,8 +113,8 @@ html[data-lt-aceso='1'] #lt-svg {
   min-height: 320px;
   background: var(--borra);
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
-  grid-template-areas: 'cabeca' 'painel' 'medidor' 'trilho' 'selar';
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto auto;
+  grid-template-areas: 'cabeca' 'painel' 'observacao' 'medidor' 'trilho' 'selar';
 }
 
 #rx-cabeca { grid-area: cabeca; padding: 9px clamp(12px, 4vw, 20px); }
@@ -211,7 +211,15 @@ html[data-lt-aceso='1'] #lt-svg {
    de cima sem precisar de `!important`. */
 #rx-trilho[data-folha] {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  /* A área nomeada só existe no takeover. Aqui ela criava trilhas implícitas. */
+  grid-area: auto;
+  grid-column: 1;
+  grid-row: 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
   gap: 10px;
   padding: 14px clamp(12px, 4vw, 20px);
   overflow-x: hidden;
@@ -219,8 +227,8 @@ html[data-lt-aceso='1'] #lt-svg {
   overscroll-behavior-y: contain;
   touch-action: pan-y;
 }
-#rx-trilho[data-folha] > button { width: 100%; min-height: 72px; padding: 9px; }
-#rx-trilho[data-folha] [data-ficha-foto] { width: 100%; height: 40px; aspect-ratio: auto; }
+#rx-trilho[data-folha] > button { width: 100%; height: auto; min-width: 0; min-height: 124px; padding: 12px; touch-action: pan-y; }
+#rx-trilho[data-folha] [data-ficha-foto] { width: 100%; height: 54px; aspect-ratio: auto; }
 #rx-trilho[data-folha] [data-ficha-nome] { display: none; }
 #rx-trilho[data-folha] [data-ficha-texto] { display: grid; gap: 2px; width: 100%; }
 
@@ -256,8 +264,11 @@ html[data-lt-aceso='1'] #lt-svg {
 }
 #rx-trilho-folha {
   width: 100%;
-  max-height: 72vh;
+  height: min(72dvh, 680px);
+  max-height: 72dvh;
+  min-height: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   background: var(--borra);
   border-top: 1px solid var(--traco);
@@ -295,10 +306,11 @@ html[data-lt-aceso='1'] #lt-svg {
 @media (min-width: 900px) {
   #rx-takeover {
     grid-template-columns: minmax(0, 1fr) 288px;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto;
     grid-template-areas:
       'cabeca cabeca'
       'painel medidor'
+      'painel observacao'
       'painel selar'
       'trilho trilho';
   }
@@ -334,7 +346,7 @@ button, a { touch-action: manipulation; }
 button { cursor: pointer; }
 a { color: var(--osso); text-underline-offset: .25em; }
 button:disabled { cursor: default; opacity: .4; }
-button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 2px solid var(--osso); outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--osso); outline-offset: 3px; }
 ::selection { color: var(--osso); background: var(--traco); }
 h1, h2, h3, p { margin: 0; }
 h1, h2, h3 { font-family: var(--fonte-display), Georgia, serif; font-variation-settings: 'opsz' 72, 'wght' 780, 'SOFT' 12, 'WONK' 1; line-height: 1.05; }
@@ -510,3 +522,54 @@ html[data-lt-aceso='1'] #intro { display: none !important; }
 .composicao-linha > button, .composicao-linha > span:last-child:not([data-preco]) { grid-column: 3; grid-row: 1 / span 2; }
 .composicao-mover { grid-column: 1 / 3; display: flex; justify-content: end; gap: 8px; }
 .composicao-mover button { border-color: var(--traco); padding: 0; width: 44px; }
+
+/* Campos em Archivo; só preços e medição usam Plex. */
+input, select, textarea { font: inherit; color: var(--osso); background: var(--fumo); border: 1px solid var(--traco); border-radius: 2px; min-width: 0; max-width: 100%; }
+input, select { min-height: 44px; padding: 10px 12px; font-size: 1rem; }
+textarea { padding: 12px; font-size: 1rem; line-height: 1.4; }
+#rx-observacao { grid-area: observacao; display: flex; align-items: center; gap: 10px; padding: 6px clamp(12px, 4vw, 20px); border-top: 1px solid var(--traco); font-size: .8125rem; }
+#rx-observacao input { flex: 1; width: 100%; }
+.camada-fixa { margin-left: 8px; font-family: var(--fonte-corpo), sans-serif; font-size: .6875rem; opacity: .55; }
+#rx-trilho[data-folha] [data-ficha-texto] { min-width: 0; line-height: 1.3; overflow-wrap: anywhere; }
+@media (min-width: 900px) {
+  #rx-observacao { flex-direction: column; align-items: stretch; padding: 12px 20px; border-left: 1px solid var(--traco); }
+  #rx-trilho-folha { max-width: 720px; margin-inline: auto; }
+}
+
+/* O fundo sobe com o letreiro, descobrindo a sala; a sala sobe um passo menor. */
+#intro { position: fixed; inset: 0 0 var(--barra-altura); z-index: 40; display: grid; place-items: center; width: 100%; background: var(--borra); padding: clamp(20px, 5vw, 64px); }
+#intro[hidden] { display: none; }
+.intro-letreiro { width: 100%; max-width: min(620px, 62vh); }
+@keyframes lt-cruzar { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@keyframes lt-entrar { from { transform: translateY(80px); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  #intro { display: none !important; }
+  #conteudo { animation: none !important; transform: none !important; }
+}
+
+.confirmacao { display: grid; gap: 14px; padding-block: 12px; }
+.campo { display: grid; gap: 6px; min-width: 0; font-size: .875rem; }
+.campo small { opacity: .55; margin-left: 5px; }
+.campo input, .campo select, .campo textarea { width: 100%; }
+.campo-erro { color: var(--latao); font-size: .8125rem; }
+.campo [aria-invalid='true'] { border-color: var(--latao); }
+.recebimento { border: 0; padding: 0; margin: 0; min-width: 0; }
+.recebimento legend { font-size: .875rem; margin-bottom: 6px; }
+.recebimento > div { display: flex; gap: 8px; }
+.recebimento label { position: relative; display: grid; place-items: center; flex: 1; min-height: 44px; border: 1px solid var(--traco); cursor: pointer; }
+.recebimento input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.recebimento label[data-escolhido] { border-color: var(--letreiro); color: var(--letreiro); }
+.recebimento label:focus-within { outline: 2px solid var(--osso); outline-offset: 2px; }
+.conferir-itens summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; font-size: .875rem; }
+.conferir-itens summary::after { content: '+'; margin-left: auto; }
+.conferir-itens[open] summary::after { content: '−'; }
+.conferir-itens pre { white-space: pre-wrap; overflow-wrap: anywhere; font: .875rem/1.6 var(--fonte-corpo), sans-serif; padding: 12px; border: 1px solid var(--traco); }
+.confirmacao-recado { font-size: .8125rem; line-height: 1.5; opacity: .65; }
+.resumo-acoes > .botao-quente { width: 100%; }
+.pedido-descricao .item-observacao { opacity: 1; margin-top: 6px; overflow-wrap: anywhere; }
+@media (min-width: 900px) {
+  .confirmacao { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .confirmacao .conferir-itens, .confirmacao .campo:has(textarea), .confirmacao-recado { grid-column: 1 / -1; }
+}
+
+html[data-lt-aceso='1'] #lt-svg { --lt-acende: 1; --lt-letras: 1; }

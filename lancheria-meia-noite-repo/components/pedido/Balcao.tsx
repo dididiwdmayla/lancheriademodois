@@ -7,7 +7,7 @@ import { salto, type Origem } from '@/components/raio-x/salto'
 import type { Forma } from '@/components/raio-x/prensa'
 import { MAPA_CAMADAS, urlCamada } from '@/data/camadas'
 import { FIXOS, type Extra, type Fixo } from '@/data/fixos'
-import { comBacon, ganchoDoPedido, itemExtra, itemFixo, itemLanche, totalPedido, type Item, type ItemPedido } from '@/lib/pedido'
+import { CONFIRMACAO_INICIAL, comBacon, ganchoDoPedido, itemExtra, itemFixo, itemLanche, totalPedido, type Item, type ItemPedido } from '@/lib/pedido'
 import Cardapio from '@/components/cardapio/Cardapio'
 import TrilhoLanches from '@/components/cardapio/TrilhoLanches'
 import Extras from '@/components/cardapio/Extras'
@@ -16,7 +16,7 @@ import BarraPedido, { type ChegadaBarra } from './BarraPedido'
 import Carrinho from './Carrinho'
 import Modal from './Modal'
 
-type Editor = { nome: string; forma: Forma; camadas: string[]; id?: string; voltarCarrinho: boolean }
+type Editor = { nome: string; forma: Forma; camadas: string[]; id?: string; fixoSlug?: string; observacao?: string; voltarCarrinho: boolean }
 const imagens = new Map<string, Promise<void>>()
 const preparar = (slugs: string[]) => Promise.all(slugs.map(s => {
   if (!imagens.has(s)) imagens.set(s, new Promise<void>(resolve => { const im = new Image(); im.onload = () => { im.decode().catch(() => {}).finally(resolve) }; im.onerror = () => resolve(); im.src = urlCamada(MAPA_CAMADAS[s]) }))
@@ -27,6 +27,7 @@ export default function Balcao() {
   const [pedido, setPedido] = useState<ItemPedido[]>([])
   const atual = useRef<ItemPedido[]>([])
   const [editor, setEditor] = useState<Editor | null>(null)
+  const [confirmacao, setConfirmacao] = useState(CONFIRMACAO_INICIAL)
   const [carrinho, setCarrinho] = useState(false)
   const [intro, setIntro] = useState(true)
   const [ultimo, setUltimo] = useState<string | null>(null)
@@ -97,7 +98,7 @@ export default function Balcao() {
   const modificar = (id: string, bacon = false) => {
     const p = atual.current.find(p => p.id === id)
     if (!p || p.grupo !== 'lanche') return
-    setEditor({ nome: p.nome, forma: p.forma, camadas: bacon ? comBacon(p.camadas) : p.camadas.slice(), id, voltarCarrinho: carrinho })
+    setEditor({ nome: p.nome, forma: p.forma, fixoSlug: p.fixoSlug, observacao: p.observacao, camadas: bacon ? comBacon(p.camadas) : p.camadas.slice(), id, voltarCarrinho: carrinho })
     setCarrinho(false)
   }
   const fecharEditor = () => { if (editor?.voltarCarrinho) setCarrinho(true); setEditor(null) }
@@ -126,13 +127,13 @@ export default function Balcao() {
     {!editor && <div inert={carrinho || intro}>
       <BarraPedido ref={barra} itens={pedido.reduce((s, p) => s + p.qtd, 0)} totalCent={totalPedido(pedido)} onAbrir={() => setCarrinho(true)} ultimo={carrinho ? undefined : ultimoItem} onModificar={modificar} />
     </div>}
-    {carrinho && <Carrinho pedido={pedido} gancho={gancho} onSair={() => setCarrinho(false)} onModificar={modificar}
+    {carrinho && <Carrinho dados={confirmacao} onDados={setConfirmacao} pedido={pedido} gancho={gancho} onSair={() => setCarrinho(false)} onModificar={modificar}
       onQuantidade={(id, d) => atualizar(atual.current.map(p => p.id === id ? { ...p, qtd: p.qtd + d } : p).filter(p => p.qtd > 0))}
       onRemover={id => atualizar(atual.current.filter(p => p.id !== id))}
       onGancho={() => { if (gancho?.extra) adicionarExtra(gancho.extra); else if (gancho?.pedidoId) modificar(gancho.pedidoId, true) }}
       onDispensar={() => { if (gancho) setGanchos(g => ({ ...g, dispensados: [...g.dispensados, gancho.id] })) }} />}
     {editor && <Modal className="rx-modal" titulo={`Raio-x do ${editor.nome}`} onSair={fecharEditor}>
-      <RaioX nome={editor.nome} forma={editor.forma} camadasIniciais={editor.camadas} onFechar={aoFechar} onSair={fecharEditor} editando={!!editor.id} />
+      <RaioX fixoSlug={editor.fixoSlug} observacaoInicial={editor.observacao} nome={editor.nome} forma={editor.forma} camadasIniciais={editor.camadas} onFechar={aoFechar} onSair={fecharEditor} editando={!!editor.id} />
     </Modal>}
   </>
 }

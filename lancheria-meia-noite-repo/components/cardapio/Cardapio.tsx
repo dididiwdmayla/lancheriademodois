@@ -32,7 +32,7 @@ export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }:
         {!!ingredientes.length && <button className="botao-texto" onClick={() => setIngredientes([])}>Limpar ingredientes</button>}
       </div>}
       <div className="cardapio-grade">{visiveis.map(f => {
-        const adicionado = pedido.find(p => p.grupo === 'lanche' && p.camadas.join('.') === f.camadas.join('.'))
+        const adicionado = pedido.find(p => p.grupo === 'lanche' && p.fixoSlug === f.slug)
         return <article key={f.slug} data-item-cardapio={f.slug} className="lanche-card">
           <img className="lanche-icone" data-foto={f.slug} src={`/fixos/${f.slug}.webp`} alt={f.nome} width={2000} height={2000} />
           <h3>{f.nome}</h3><p className="ingredientes-linha" title={resumoCamadas(f.camadas)}>{resumoCamadas(f.camadas)}</p>

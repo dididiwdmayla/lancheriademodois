@@ -223,7 +223,8 @@ export function Chamada({
   indice,
   g,
   rotuloTop,
-}: Pick<Props, 'camada' | 'n' | 'indice' | 'g'> & { rotuloTop: number }) {
+  fixa,
+}: Pick<Props, 'camada' | 'n' | 'indice' | 'g'> & { rotuloTop: number; fixa: boolean }) {
   const { topoObjeto } = medidas(camada, indice, g)
   const pontoX = g.x0 + caixaX0(camada.slug) * g.k
 
@@ -272,7 +273,7 @@ export function Chamada({
         id={`rx-chamada-${camada.slug}-${n}`}
         type="button"
         data-chamada={indice}
-        aria-label={`${camada.nome}. Setas para cima e para baixo movem, Delete tira.`}
+        aria-label={`${camada.nome}. ${fixa ? 'Camada fixa.' : 'Setas movem, Delete tira.'}`}
         style={{
           position: 'absolute',
           left: 0,
@@ -292,7 +293,7 @@ export function Chamada({
           transition: 'top 300ms linear',
         }}
       >
-        <span style={nomeDaChamada}>{camada.nome}</span>
+        <span style={nomeDaChamada}>{camada.nome}{fixa && <small className="camada-fixa">fixa</small>}</span>
       </button>
     </>
   )
@@ -311,7 +312,9 @@ export function ChamadaChip({
   g,
   alturaArea,
   onTirar,
+  fixa,
 }: Pick<Props, 'camada' | 'n' | 'indice' | 'g'> & {
+  fixa: boolean
   alturaArea: number
   onTirar: (indice: number) => void
 }) {
@@ -353,7 +356,7 @@ export function ChamadaChip({
           id={`rx-chamada-${camada.slug}-${n}`}
           type="button"
           data-chamada={indice}
-          aria-label={`${camada.nome}. Setas para cima e para baixo movem, Delete tira.`}
+          aria-label={`${camada.nome}. ${fixa ? 'Camada fixa.' : 'Setas movem, Delete tira.'}`}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -367,9 +370,9 @@ export function ChamadaChip({
             touchAction: 'none',
           }}
         >
-          <span style={nomeDaChamada}>{camada.nome}</span>
+          <span style={nomeDaChamada}>{camada.nome}{fixa && <small className="camada-fixa">fixa</small>}</span>
         </button>
-        {!camada.obrigatorio && (
+        {!fixa && (
           <button
             type="button"
             data-tirar={indice}

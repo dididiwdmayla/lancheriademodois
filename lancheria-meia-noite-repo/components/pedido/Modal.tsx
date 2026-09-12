@@ -22,7 +22,7 @@ export default function Modal({ children, className, titulo, onSair }: { childre
       }
       if (e.key !== 'Tab') return
       const escopo = painel.querySelector('#rx-trilho-folha, #rx-composicao') ?? painel
-      const focos = [...escopo.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], textarea, [tabindex="0"]')].filter(e => e.getClientRects().length)
+      const focos = [...escopo.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')].filter(e => e.getClientRects().length)
       const primeiro = focos[0], ultimo = focos[focos.length - 1]
       if (e.shiftKey && (document.activeElement === primeiro || !escopo.contains(document.activeElement))) { e.preventDefault(); ultimo?.focus() }
       else if (!e.shiftKey && (document.activeElement === ultimo || !escopo.contains(document.activeElement))) { e.preventDefault(); primeiro?.focus() }

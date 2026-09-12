@@ -215,9 +215,13 @@ não é preciso mexer no código.
 **Não existem `alturaCm` nem `pesoG`.** Foram removidos de propósito: nenhum dono de
 lancheria consegue preencher isso, e estimativa errada é pior que nada.
 
-`fixos.ts` — 6 lanches, campo `forma: 'prensado' | 'redondo'` e a lista `camadas`.
+`fixos.ts` — 6 lanches, `forma: 'prensado' | 'redondo'`, `camadas` e `essenciais`.
+No editor, os slugs essenciais não expõem remoção e ficam marcados como fixa.
+No montador, só os pães são obrigatórios.
 **Preço do fixo é calculado da composição**, base R$ 12,00 mais a soma dos `precoCent`.
-Nunca fixado à mão — senão editar o lanche não move o valor.
+No editor (Prompt 19), o preço é o fixo original mais os acréscimos por ocorrência além
+da composição original. Remover não baixa o piso. No montador, tudo conta.
+`fixoSlug` e a observação do item acompanham a linha mesmo depois de modificar.
 
 Camadas repetidas são permitidas: máximo 3 do mesmo, 16 na pilha. Pães únicos, obrigatórios
 e travados nas extremidades. IDs `#rx-camada-{slug}-{n}`, `n` a partir de 1.
@@ -256,6 +260,9 @@ Bebidas e acompanhamentos **não têm imagem** e entram como peça tipográfica.
 
 ## Navegação
 
+Prompt 19: ignição em 800ms, travessia em 420ms, sem espera extra. Segunda visita da
+sessão e movimento reduzido entram direto. O prazo começa antes da hidratação.
+
 Intro (letreiro) → hero em faixa de no máximo 35% da viewport → **cardápio em grade
 compacta**, visível na primeira tela sem rolagem.
 
@@ -271,6 +278,9 @@ Só o item central e os dois vizinhos ficam montados por camada; o resto usa íc
 
 Fechar pedido **não é checkout**: monta resumo para WhatsApp e lista as formas aceitas numa
 linha seca. Sem selo de segurança, sem bandeira de cartão.
+Prompt 19 acrescenta uma confirmação antes do WhatsApp: nome, entrega/retirada, endereço
+com complemento quando entrega, pagamento, troco quando dinheiro e observação geral.
+Observação por item no raio-x: até 120 caracteres. WhatsApp da casa: 5544984570105.
 
 ---
 

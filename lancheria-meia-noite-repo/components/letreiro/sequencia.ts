@@ -1,5 +1,4 @@
-// Tabela de tempos do letreiro. Números extraídos do export — não estimados, não altere
-// sem confirmar contra /export/lancheria-meia-noite.dc.html.
+// O tremor conserva os tempos do protótipo. A ignição foi encurtada no Prompt 19.
 
 export const CHAVE_SESSAO = 'lm:letreiro-aceso'
 
@@ -11,11 +10,21 @@ export const TREMOR_GRUPOS = [
   { id: 'lt-texto', duracaoS: 4.6, atrasoS: -3.1 },
 ] as const
 
-/** Duração da sequência de ignição (@keyframes lt-ignicao, em app/globals.css). */
-export const DURACAO_IGNICAO_MS = 1100
-/** Espera depois que a ignição termina, antes de marcar a sessão como acesa. */
-export const ATRASO_MARCA_MS = 620
-/** Sob prefers-reduced-motion: acende direto, sem sequência, e marca depois deste tempo. */
-export const ATRASO_REDUZIDO_MS = 1400
-/** Prazo máximo de espera pelas fontes antes de começar de qualquer jeito. */
-export const ESPERA_FONTES_MS = 2200
+/** Prompt 19: ignição compacta e travessia, sem espera por fontes ou pausa extra. */
+export const DURACAO_IGNICAO_MS = 800
+export const DURACAO_ENTRADA_MS = 420
+export const DURACAO_TOTAL_MS = DURACAO_IGNICAO_MS + DURACAO_ENTRADA_MS
+
+/** Executa antes do primeiro paint. O prazo não recomeça quando o React hidrata. */
+export const SCRIPT_ENTRADA = `(function(){
+  var raiz=document.documentElement, inicio=performance.now(), pronta=false;
+  raiz.setAttribute('data-lt-inicio',String(inicio));
+  try{pronta=sessionStorage.getItem('${CHAVE_SESSAO}')==='1'}catch(e){}
+  pronta=pronta||window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function concluir(){
+    raiz.setAttribute('data-lt-aceso','1');
+    try{sessionStorage.setItem('${CHAVE_SESSAO}','1')}catch(e){}
+  }
+  if(pronta) concluir();
+  else window.setTimeout(concluir,${DURACAO_TOTAL_MS});
+})();`
