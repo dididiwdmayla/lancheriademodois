@@ -1,12 +1,5 @@
 :root {
-  /* Os seis. Nenhum token novo, nem para hover/foco.
-     Frio (--letreiro) = sistema. Quente (--latao) = comida. Nunca no mesmo elemento. */
-  --borra: #120D0B;
-  --fumo: #1C1512;
-  --traco: #33251E;
-  --osso: #E9E0D3;
-  --latao: #A9762F;
-  --letreiro: #A8C6D4;
+  /* As seis cores são declaradas em /temas e aplicadas pelo layout no servidor. */
 
   /* Não é um token de cor — é a altura da barra do pedido: 46px de botão mais 11px de
      folga em cima e embaixo, mais o fio. Fica aqui porque CSS e componente precisam do
@@ -135,7 +128,7 @@ html[data-lt-aceso='1'] #lt-letras-acesas { opacity: 1; }
   gap: 6px;
   padding: 8px clamp(12px, 4vw, 20px);
   border-top: 1px solid var(--traco);
-  background: rgba(18, 13, 11, 0.92);
+  background: color-mix(in srgb, var(--borra) 92%, transparent);
 }
 /* A faixa: preço à esquerda, contagem à direita, barra ocupando a largura toda
    embaixo dos dois. Deitada ela é régua; em pé seria termômetro. */
@@ -159,7 +152,7 @@ html[data-lt-aceso='1'] #lt-letras-acesas { opacity: 1; }
 }
 #rx-flutua > * {
   padding: 7px clamp(12px, 4vw, 20px);
-  background: rgba(28, 21, 18, 0.94);
+  background: color-mix(in srgb, var(--fumo) 94%, transparent);
   border-top: 1px solid var(--traco);
 }
 #rx-recado:empty { display: none; }
@@ -178,7 +171,7 @@ html[data-lt-aceso='1'] #lt-letras-acesas { opacity: 1; }
   overflow-x: auto;
   overscroll-behavior-x: contain;
   border-top: 1px solid var(--traco);
-  background: rgba(28, 21, 18, 0.85);
+  background: color-mix(in srgb, var(--fumo) 85%, transparent);
   touch-action: pan-x;
   scrollbar-width: none;
 }
@@ -194,7 +187,7 @@ html[data-lt-aceso='1'] #lt-letras-acesas { opacity: 1; }
   top: 2px;
   right: 2px;
   padding: 1px 4px;
-  background: rgba(18, 13, 11, 0.86);
+  background: color-mix(in srgb, var(--borra) 86%, transparent);
   border-radius: 2px;
 }
 
@@ -254,7 +247,7 @@ html[data-lt-aceso='1'] #lt-letras-acesas { opacity: 1; }
   z-index: 35;
   display: flex;
   align-items: flex-end;
-  background: rgba(18, 13, 11, 0.6);
+  background: color-mix(in srgb, var(--borra) 60%, transparent);
 }
 #rx-trilho-folha {
   width: 100%;
@@ -347,8 +340,8 @@ h1, h2, h3 { font-family: var(--fonte-display), Georgia, serif; font-variation-s
 h2 { font-size: clamp(2rem, 3.5vw, 3.2rem); }
 h3 { font-size: 1.5rem; }
 img { max-width: 100%; }
-[data-preco] { font-family: var(--fonte-medida), monospace; font-weight: 500; font-size: 1.3rem; line-height: 1.3; color: var(--latao); white-space: nowrap; font-variant-numeric: tabular-nums; }
-[data-carimbo] { font-family: var(--fonte-medida), monospace; font-size: .75rem; color: var(--osso); }
+[data-preco] { font-family: var(--fonte-medida); font-weight: 500; font-size: 1.3rem; line-height: 1.3; color: var(--latao); white-space: nowrap; font-variant-numeric: var(--numerais); }
+[data-carimbo] { font-family: var(--fonte-medida); font-size: .75rem; color: var(--osso); }
 .moldura { width: min(100%, 1280px); margin-inline: auto; padding-inline: 16px; }
 .nota { color: var(--osso); opacity: .68; font-size: .875rem; }
 .botao-quente, .botao-texto, .setas-trilho button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 10px 14px; border-radius: 2px; border: 1px solid var(--traco); text-decoration: none; line-height: 1.25; }
@@ -457,7 +450,7 @@ img { max-width: 100%; }
 .extra-inicial { font-family: var(--fonte-display), serif; font-size: 2.5rem; text-align: center; border: 1px solid var(--traco); }
 .quantidade { display: flex; align-items: center; gap: 4px; grid-column: 2; grid-row: 2; }
 .quantidade button { min-height: 44px; min-width: 44px; border: 1px solid var(--traco); background: var(--fumo); color: var(--osso); font-size: 1.25rem; }
-.quantidade span { min-width: 32px; text-align: center; font-variant-numeric: tabular-nums; }
+.quantidade span { min-width: 32px; text-align: center; font-variant-numeric: var(--numerais); }
 .linha-preco { grid-column: 2; font-size: 1.25rem; }
 .linha-acoes { display: flex; grid-column: 2; gap: 8px; }
 .linha-acoes button { padding-inline: 4px; font-size: .875rem; }

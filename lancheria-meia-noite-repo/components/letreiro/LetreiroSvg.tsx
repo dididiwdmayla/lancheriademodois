@@ -44,7 +44,7 @@ export default function LetreiroSvg() {
   return (
     <svg
       id="lt-svg"
-      viewBox="0 0 1000 1170"
+      viewBox="0 0 1000 1210"
       role="img"
       aria-label="Letreiro da Lancheria Meia-Noite. Na tabuleta pintada: das 18h às 4h."
       style={{ width: '100%', height: 'auto', display: 'block' }}
@@ -118,9 +118,9 @@ export default function LetreiroSvg() {
           <path d="M120 720 L120 766 M880 720 L880 766" stroke="#33251E" strokeWidth="2" />
         </g>
         <g id="lt-tabuleta">
-          <rect x="60" y="764" width="880" height="386" rx="4" fill="var(--fumo)" stroke="var(--traco)" strokeWidth="2" />
-          <rect x="84" y="786" width="832" height="342" rx="2" fill="var(--borra)" stroke="var(--traco)" />
-          <DesenhoMascote transform="translate(96 780) scale(1.66)" />
+          <rect x="60" y="764" width="880" height="430" rx="4" fill="var(--fumo)" stroke="var(--traco)" strokeWidth="2" />
+          <rect x="84" y="786" width="832" height="386" rx="2" fill="var(--borra)" stroke="var(--traco)" />
+          <DesenhoMascote transform="translate(60 784) scale(2.04)" />
           <g
             fill="var(--osso)"
             textAnchor="middle"
@@ -130,8 +130,8 @@ export default function LetreiroSvg() {
               fontVariationSettings: "'opsz' 96, 'wght' 820, 'SOFT' 14, 'WONK' 1",
             }}
           >
-            <text x="706" y="944" textLength="376" lengthAdjust="spacingAndGlyphs">DAS 18H</text>
-            <text x="706" y="1046" textLength="268" lengthAdjust="spacingAndGlyphs">ÀS 4H</text>
+            <text x="752" y="944" textLength="300" lengthAdjust="spacingAndGlyphs">DAS 18H</text>
+            <text x="752" y="1046" textLength="234" lengthAdjust="spacingAndGlyphs">ÀS 4H</text>
           </g>
         </g>
         <g id="lt-tremor" style={animacaoTremor('lt-tremor')}>

@@ -117,7 +117,7 @@ export default function Trilho({
                 data-preco
                 style={{
                   fontSize: '0.75rem',
-                  fontVariantNumeric: 'tabular-nums',
+                  fontVariantNumeric: 'var(--numerais)',
                   color: 'var(--latao)',
                 }}
               >
@@ -133,7 +133,7 @@ export default function Trilho({
                 style={{
                   fontVariationSettings: "'wght' 500",
                   fontSize: '0.75rem',
-                  fontVariantNumeric: 'tabular-nums',
+                  fontVariantNumeric: 'var(--numerais)',
                   color: 'var(--letreiro)',
                 }}
               >

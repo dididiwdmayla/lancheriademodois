@@ -90,9 +90,10 @@ export function transicionar(nome: NomeTransicao, mutar: () => void, origem?: El
   if (prefersReducedMotion()) { mutar(); return }
   emCurso = true
   const retomar = pausarMovimento()
-  const { ms, sai } = TRANSICOES[nome]
+  const { ms: padraoMs, sai } = TRANSICOES[nome]
+  const ms = raiz.dataset.tema === 'pratico' ? 120 : padraoMs
   const doc = document as ComVT
-  const captura = nome.startsWith('rx-') && window.matchMedia('(min-width: 900px) and (pointer: fine)').matches
+  const captura = raiz.dataset.tema !== 'pratico' && nome.startsWith('rx-') && window.matchMedia('(min-width: 900px) and (pointer: fine)').matches
     && typeof doc.startViewTransition === 'function'
   escreverOrigem(raiz, origem instanceof Element ? origem.getBoundingClientRect() : origem ?? null)
   raiz.style.setProperty('--tr-ms', `${ms}ms`)

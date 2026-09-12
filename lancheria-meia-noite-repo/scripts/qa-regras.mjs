@@ -107,13 +107,34 @@ const fontes = ['components/cardapio', 'components/pedido', 'lib'].flatMap(dir =
 teste('código novo não introduz medida em gramas ou centímetros', () => {
   for (const p of fontes) assert.doesNotMatch(readFileSync(p, 'utf8'), /alturaCm|pesoG|\b\d+\s*(?:cm|gramas)\b/)
 })
-teste('CSS tem apenas os seis tokens de cor', () => {
-  const css = readFileSync(join(raiz, 'app/globals.css'), 'utf8')
-  const tokens = [...css.matchAll(/(--[\w-]+):\s*#[\dA-Fa-f]{6}/g)].map(m => m[1]).sort()
-  assert.deepEqual(tokens, ['--borra', '--fumo', '--traco', '--osso', '--latao', '--letreiro'].sort())
-  const cores = new Set([...css.matchAll(/#[\dA-Fa-f]{6}\b/g)].map(m => m[0].toUpperCase()))
-  assert.deepEqual([...cores].sort(), ['#120D0B', '#1C1512', '#33251E', '#E9E0D3', '#A9762F', '#A8C6D4'].sort())
+const { TEMAS, TEMA, selecionarTema, estiloTema } = carregar(resolve(raiz, 'temas/index.ts'))
+teste('os quatro temas declaram exatamente seis cores e o CSS não duplica paletas', () => {
+  assert.equal(TEMAS.length, 4)
+  const css = ['app/globals.css', 'app/temas.css'].map(p => readFileSync(join(raiz, p), 'utf8')).join('\n')
+  assert.doesNotMatch(css, /#[\dA-Fa-f]{6}\b|--accent\b/)
+  for (const tema of TEMAS) {
+    assert.deepEqual(Object.keys(tema.cores).sort(), ['base','superficie','traco','texto','quente','frio'].sort())
+    assert.notEqual(tema.cores.quente, tema.cores.frio)
+    assert.equal(estiloTema(tema)['--latao'], tema.cores.quente)
+    assert.equal(estiloTema(tema)['--letreiro'], tema.cores.frio)
+  }
+  assert.equal(TEMA.slug, 'meia-noite')
+  assert.equal(selecionarTema('inexistente').slug, 'meia-noite')
+  assert.equal(selecionarTema('__proto__').slug, 'meia-noite')
 })
+teste('Prático carrega só Inter e Cantina não registra fonte monoespaçada', () => {
+  for (const tema of TEMAS) {
+    const css = readFileSync(join(raiz, `public/fontes/${tema.slug}.css`), 'utf8')
+    const familias = [...new Set([...css.matchAll(/font-family: '([^']+)'/g)].map(m => m[1]))].sort()
+    assert.deepEqual(familias, [...new Set(Object.values(tema.fontes))].sort())
+    if (tema.slug === 'pratico') assert.deepEqual(familias, ['Inter'])
+    if (tema.slug === 'cantina') {
+      assert.deepEqual(familias, ['Lora', 'Playfair Display'])
+      assert.ok(!estiloTema(tema)['--fonte-medida'].includes('mono'))
+    }
+  }
+})
+
 
 for (const f of FIXOS) {
   teste(`${f.slug}: remover originais não desconta; acrescentar cobra por ocorrência`, () => {

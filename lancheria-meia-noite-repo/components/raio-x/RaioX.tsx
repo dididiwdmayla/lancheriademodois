@@ -1,5 +1,7 @@
 'use client'
 
+import { consumirAvisoOrdem, AVISO_ORDEM_MS } from '@/lib/avisoOrdem'
+
 // O raio-x: a pilha explodida, as chamadas, o medidor e o trilho.
 //
 // O layout é mobile-first e mora no CSS (app/globals.css, bloco "Raio-x"): em 390px a pilha
@@ -88,6 +90,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
   const [selado, setSelado] = useState(false)
   const [varrendo, setVarrendo] = useState(false)
   const [recado, setRecado] = useState('')
+  const [avisoOrdem, setAvisoOrdem] = useState(false)
   const [area, setArea] = useState({ w: 0, h: 0 })
   // Mobile-first também no JS: nasce estreito e só alarga se a media query disser. O
   // servidor não sabe a largura da tela, e chutar desktop no HTML seria o avesso do
@@ -304,9 +307,13 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
       }
       trocarPilha(arr)
       setRevelada((r) => (r === i ? j : r === j ? i : r))
+      if (consumirAvisoOrdem()) {
+        setAvisoOrdem(true)
+        agendar(() => setAvisoOrdem(false), AVISO_ORDEM_MS)
+      }
       return j
     },
-    [trocarPilha, valida],
+    [trocarPilha, valida, agendar],
   )
 
   // ---------- gestos ----------
@@ -782,7 +789,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
                   height: '46%',
                   pointerEvents: 'none',
                   background:
-                    'linear-gradient(to top, rgba(169,118,47,0) 0%, rgba(169,118,47,0.5) 46%, rgba(169,118,47,0) 100%)',
+                    'linear-gradient(to top, transparent 0%, color-mix(in srgb, var(--latao) 50%, transparent) 46%, transparent 100%)',
                   mixBlendMode: 'screen',
                   animation: 'rx-varredura 1200ms ease-out forwards',
                 }}
@@ -798,7 +805,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
                   height: '14%',
                   pointerEvents: 'none',
                   transformOrigin: 'bottom center',
-                  background: 'linear-gradient(to top, rgba(169,118,47,0.22), rgba(169,118,47,0))',
+                  background: 'linear-gradient(to top, color-mix(in srgb, var(--latao) 22%, transparent), transparent)',
                   animation: 'rx-ar 1200ms ease-in-out forwards',
                 }}
               />
@@ -823,6 +830,8 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
         pct={pct}
         aviso={aviso}
         recado={recado}
+        avisoOrdem={avisoOrdem}
+        onDispensarOrdem={() => setAvisoOrdem(false)}
         transicaoBarra={g.prensa ? `${PRENSA_MS}ms ${PRENSA_CURVA}` : '420ms cubic-bezier(.2,.7,.3,1)'}
         onVerComposicao={() => {
           setTrilhoAberto(modoMontador)

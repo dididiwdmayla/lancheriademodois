@@ -15,11 +15,12 @@
 import type { CSSProperties, Ref } from 'react'
 import { LIMIAR_AVISO_CAMADAS } from '@/data/casa'
 import { brl } from '@/lib/precos'
+import { TEXTO_AVISO_ORDEM } from '@/lib/avisoOrdem'
 
 const mono: CSSProperties = {
-  fontFamily: 'var(--fonte-medida), ui-monospace, monospace',
+  fontFamily: 'var(--fonte-medida)',
   fontWeight: 500,
-  fontVariantNumeric: 'tabular-nums',
+  fontVariantNumeric: 'var(--numerais)',
   lineHeight: 1,
 }
 
@@ -37,6 +38,8 @@ type Props = {
   pct: number
   aviso: boolean
   recado: string
+  avisoOrdem: boolean
+  onDispensarOrdem: () => void
   transicaoBarra: string
   onVerComposicao: () => void
   /** Mede a faixa de aviso/recado: no celular ela flutua sobre o painel e a altura
@@ -50,6 +53,8 @@ export default function Medidor({
   pct,
   aviso,
   recado,
+  avisoOrdem,
+  onDispensarOrdem,
   transicaoBarra,
   onVerComposicao,
   flutuaRef,
@@ -118,13 +123,17 @@ export default function Medidor({
             transform: `scaleX(${pct / 100})`,
             transformOrigin: 'left center',
             height: '100%',
-            background: aviso ? 'var(--latao)' : 'var(--letreiro)',
+            background: 'var(--letreiro)',
             transition: `transform ${transicaoBarra}`,
           }}
         />
       </div>
 
       <div id="rx-flutua" ref={flutuaRef}>
+        <div className="aviso-ordem-regiao" role="status" aria-live="polite">
+          {avisoOrdem && <button type="button" data-aviso-ordem onClick={onDispensarOrdem}
+            aria-label={`${TEXTO_AVISO_ORDEM} Toque para fechar.`}>{TEXTO_AVISO_ORDEM}</button>}
+        </div>
         <span
           id="rx-aviso"
           data-aviso={aviso ? '' : undefined}

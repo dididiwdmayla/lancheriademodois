@@ -15,7 +15,8 @@
 // desenho ali destrói o efeito que sustenta o projeto inteiro. Não é `display: none` —
 // com o raio-x aberto ele não existe no DOM.
 
-import { createContext, useContext, useEffect, useRef } from 'react'
+import { createContext, useContext, useEffect, useRef, type CSSProperties } from 'react'
+import { useTema } from '@/components/TemaAtivo'
 import { movimentoPausado, observarPausa } from '@/lib/motion'
 
 export const RaioXAberto = createContext(false)
@@ -315,11 +316,12 @@ const amendoa = (cx: number, cy: number, rx: number, ry: number) =>
 
 /** O mascote como peça de outro SVG (letreiro da intro, letreiro do rodapé). */
 export function DesenhoMascote({ transform, olharAtivo = true }: { transform?: string; olharAtivo?: boolean }) {
-  const aberto = useContext(RaioXAberto)
+  const tema = useTema()
+  const aberto = useContext(RaioXAberto) || !tema.mascote
   const reg = useOlhar(OLHOS.length, !aberto && olharAtivo)
   if (aberto) return null
   return (
-    <g data-mascote transform={transform} aria-hidden="true" style={{ pointerEvents: 'none' }}>
+    <g data-mascote transform={transform} aria-hidden="true" style={{ pointerEvents: 'none', ...(tema.fundo === 'claro' ? { '--osso': tema.cores.superficie, '--borra': tema.cores.texto } : {}) } as CSSProperties}>
       {/* Fora do esquadro de propósito: pintura à mão não sai reta. */}
       <g transform="rotate(-1.4 120 104)">
       {/* Duas tintas chapadas e o traço por cima — é assim que letreiro pintado resolve
@@ -339,7 +341,7 @@ export function DesenhoMascote({ transform, olharAtivo = true }: { transform?: s
         fill="var(--osso)"
       />
       {/* pão de cima: baixo e largo */}
-      <path d="M20 106 C22 56 64 22 120 21 C176 20 218 55 220 106 C178 112 62 113 20 106 Z" fill="var(--latao)" />
+      <path data-mascote-cabeca d="M20 106 C22 56 64 22 120 21 C176 20 218 55 220 106 C178 112 62 113 20 106 Z" fill="var(--latao)" />
       {/* gergelim: três pinceladas, nenhuma igual à outra */}
       <g stroke="var(--osso)" strokeWidth="5.5" strokeLinecap="round" fill="none">
         <path d="M70 50 l11 -7" />
@@ -379,7 +381,7 @@ export function DesenhoMascote({ transform, olharAtivo = true }: { transform?: s
  * no carrinho vazio ele continua sendo placa pintada, não personagem solto na tela.
  */
 export function Mascote({ largura = 168, className }: { largura?: number; className?: string }) {
-  const aberto = useContext(RaioXAberto)
+  const aberto = useContext(RaioXAberto) || !useTema().mascote
   if (aberto) return null
   return (
     <svg

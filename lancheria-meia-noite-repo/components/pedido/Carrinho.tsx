@@ -1,5 +1,7 @@
 'use client'
 
+import { useTema } from '@/components/TemaAtivo'
+
 import { useEffect, useRef, useState } from 'react'
 import { Mascote } from '@/components/letreiro/Mascote'
 import { CASA } from '@/data/casa'
@@ -11,6 +13,7 @@ import ConfirmacaoPedido from './ConfirmacaoPedido'
 
 type Props = { dados: Confirmacao; onDados: (dados: Confirmacao) => void; pedido: ItemPedido[]; gancho: Gancho | null; onSair: () => void; onQuantidade: (id: string, d: number) => void; onRemover: (id: string) => void; onModificar: (id: string, origem?: Element | null) => void; onGancho: (origem: Element | null) => void; onDispensar: () => void }
 export default function Carrinho({ dados, onDados, pedido, gancho, onSair, onQuantidade, onRemover, onModificar, onGancho, onDispensar }: Props) {
+  const pratico = useTema().slug === 'pratico'
   const [resumo, setResumo] = useState(false)
   const titulo = useRef<HTMLHeadingElement>(null)
   useEffect(() => { if (resumo) titulo.current?.focus({ preventScroll: true }) }, [resumo])
@@ -31,7 +34,7 @@ export default function Carrinho({ dados, onDados, pedido, gancho, onSair, onQua
             <div className="pedido-descricao"><h3>{p.nome}</h3><p>{p.resumo}</p>{p.observacao && <p className="item-observacao">obs: {p.observacao}</p>}</div>
             <div className="quantidade"><button data-qtd-menos={p.id} aria-label={`Menos um ${p.nome}`} onClick={() => onQuantidade(p.id, -1)}>−</button><span aria-label={`Quantidade: ${p.qtd}`}>{p.qtd}</span><button data-qtd-mais={p.id} aria-label={`Mais um ${p.nome}`} onClick={() => onQuantidade(p.id, 1)}>+</button></div>
             <span className="linha-preco" data-preco>{brl(p.cent * p.qtd)}</span>
-            <div className="linha-acoes">{p.grupo === 'lanche' && <button className="botao-texto" data-modificar={p.id} onClick={e => onModificar(p.id, e.currentTarget.closest('[data-linha-pedido]'))}>Modificar{p.qtd > 1 ? ` (${p.qtd})` : ''}</button>}<button className="botao-texto" data-remover={p.id} aria-label={`Remover ${p.nome}`} onClick={() => onRemover(p.id)}>Remover</button></div>
+            <div className="linha-acoes">{p.grupo === 'lanche' && <button className="botao-texto" data-modificar={p.id} onClick={e => onModificar(p.id, e.currentTarget.closest('[data-linha-pedido]'))}>{pratico ? 'Personalizar' : 'Modificar'}{p.qtd > 1 ? ` (${p.qtd})` : ''}</button>}<button className="botao-texto" data-remover={p.id} aria-label={`Remover ${p.nome}`} onClick={() => onRemover(p.id)}>Remover</button></div>
           </li>)}</ul>
           {gancho && <aside data-gancho={gancho.id} className="gancho"><h3>{gancho.texto}</h3>
             {gancho.extra && <p>{gancho.extra.nome} <span data-preco>{brl(gancho.extra.precoCent)}</span></p>}

@@ -26,3 +26,17 @@ Composição estreita (recheio bem mais estreito que o pão) bate no teto de 1.3
 visível entre os pães nas pontas. Documentado como aceitável em `AGENTS.md` — pilha estreita
 é pilha baixa, os dois pães ficam quase encostados. Se aparecer visível num lanche real do
 cardápio (hoje só o sintético de QA bate no teto), avisar antes de corrigir.
+
+---
+
+## Injeção de tema pelo Radar — após Prompt 24
+
+O parâmetro `?tema=` serve somente à revisão das quatro identidades. O padrão continua
+Meia-Noite. Na fase de portabilidade, Radar seleciona `Tema` no servidor e entrega o
+objeto ao mesmo `ProvedorTema`, com `estiloTema` no contêiner raiz e somente as fontes
+ativas. Não copiar balcão, prensa, dados ou fotos quatro vezes.
+
+O repositório creatingmk1 foi consultado nesta rodada. Sua `SkinDefinition`/`Theme`
+não substitui o contrato de temperatura deste motor: a adaptação deve preservar
+`quente` e `frio` como papéis distintos. A publicação das quatro skins no registro do
+Radar pertence à fase de integração, não ao seletor provisório pedido aqui.

@@ -3,6 +3,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { pausarMovimento, prefersReducedMotion } from '@/lib/motion'
 import { GRADE_TOTAL_MS } from '@/lib/transicoes'
+import { useTema } from '@/components/TemaAtivo'
 import { CAMADAS } from '@/data/camadas'
 import { FIXOS, type Fixo } from '@/data/fixos'
 import type { Forma } from '@/components/raio-x/prensa'
@@ -18,15 +19,16 @@ const reencaixe = (n: number): CSSProperties => ({ '--tr-itens': n } as CSSPrope
 const naFila = (i: number): CSSProperties => ({ '--tr-i': i } as CSSProperties)
 
 export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }: Props) {
+  const pratico = useTema().slug === 'pratico'
   const [forma, setForma] = useState<Forma | 'monte'>('prensado')
   const [ingredientes, setIngredientes] = useState<string[]>([])
   const [filtroAberto, setFiltroAberto] = useState(false)
   useEffect(() => {
-    if (prefersReducedMotion() || !window.matchMedia('(min-width: 900px)').matches) return
+    if (pratico || prefersReducedMotion() || !window.matchMedia('(min-width: 900px)').matches) return
     const retomar = pausarMovimento()
     const timer = window.setTimeout(retomar, GRADE_TOTAL_MS)
     return () => { clearTimeout(timer); retomar() }
-  }, [forma, ingredientes])
+  }, [forma, ingredientes, pratico])
   const visiveis = FIXOS.filter(f => f.forma === forma && ingredientes.every(s => f.camadas.includes(s)))
   return <section id="cardapio" data-cardapio className="cardapio moldura">
     <div className="cabecalho-secao"><h2>Cardápio</h2><span className="nota">Direto da chapa.</span></div>
@@ -51,8 +53,8 @@ export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }:
           <img className="lanche-icone" data-foto={f.slug} src={`/fixos/${f.slug}.webp`} alt={f.nome} width={2000} height={2000} />
           <h3>{f.nome}</h3><p className="ingredientes-linha" title={resumoCamadas(f.camadas)}>{resumoCamadas(f.camadas)}</p>
           <span data-preco>{brl(precoDoFixo(f))}</span>
-          <button className="botao-quente" data-add={f.slug} onClick={e => onAdicionar(f, e.currentTarget.closest('article')!)}>Adicionar</button>
-          {adicionado && <button className="modificar-card botao-texto" data-modificar={adicionado.id} onClick={e => onModificar(adicionado.id, e.currentTarget.closest('article'))}>Modificar lanche</button>}
+          <button className="botao-quente" data-add={f.slug} onClick={e => onAdicionar(f, e.currentTarget.closest('article')!)} aria-label={`Adicionar ${f.nome}`}><span className="adicionar-label">Adicionar</span>{pratico && <span className="adicionar-mais" aria-hidden="true">+</span>}</button>
+          {adicionado && <button className="modificar-card botao-texto" data-modificar={adicionado.id} onClick={e => onModificar(adicionado.id, e.currentTarget.closest('article'))}>{pratico ? 'Personalizar' : 'Modificar lanche'}</button>}
         </article>
       })}</div>
       {!visiveis.length && <div className="vazio"><p>Nenhum lanche com essa combinação.</p><button className="botao-texto" onClick={() => setIngredientes([])}>Limpar ingredientes</button></div>}

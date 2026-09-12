@@ -1,0 +1,7 @@
+
+> qa:motion
+> node scripts/qa-movimento-estatico.mjs
+
+Arquivos: 36; @keyframes: 20; declarações transition: 14
+Propriedades em @keyframes: opacity, transform
+ok: somente transform/opacity em @keyframes e transition; nenhuma interpolação desconhecida.
