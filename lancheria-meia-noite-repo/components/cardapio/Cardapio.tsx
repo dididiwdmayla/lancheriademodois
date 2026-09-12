@@ -1,13 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { CAMADAS } from '@/data/camadas'
 import { FIXOS, type Fixo } from '@/data/fixos'
 import type { Forma } from '@/components/raio-x/prensa'
 import { brl, precoDoFixo } from '@/lib/precos'
 import { resumoCamadas, type ItemPedido } from '@/lib/pedido'
 
-type Props = { onAdicionar: (f: Fixo, el: HTMLElement) => void; onMontar: (f: Forma) => void; onModificar: (id: string) => void; pedido: ItemPedido[] }
+type Props = { onAdicionar: (f: Fixo, el: HTMLElement) => void; onMontar: (f: Forma, origem: Element | null) => void; onModificar: (id: string, origem?: Element | null) => void; pedido: ItemPedido[] }
+
+/** A grade reencaixa na troca de filtro: 20ms entre um item e o seguinte, 200ms do
+ * primeiro ao último. Quanto mais itens, mais curto o passo de cada um — o total é que
+ * é fixo. A `key` é o que refaz a animação: filtro novo, grade nova. */
+const reencaixe = (n: number): CSSProperties => ({ '--tr-itens': n } as CSSProperties)
+const naFila = (i: number): CSSProperties => ({ '--tr-i': i } as CSSProperties)
 
 export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }: Props) {
   const [forma, setForma] = useState<Forma | 'monte'>('prensado')
@@ -31,23 +37,23 @@ export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }:
         </button>)}</div>
         {!!ingredientes.length && <button className="botao-texto" onClick={() => setIngredientes([])}>Limpar ingredientes</button>}
       </div>}
-      <div className="cardapio-grade">{visiveis.map(f => {
+      <div className="cardapio-grade" data-troca key={`${forma}|${ingredientes.join(',')}`} style={reencaixe(visiveis.length)}>{visiveis.map((f, i) => {
         const adicionado = pedido.find(p => p.grupo === 'lanche' && p.fixoSlug === f.slug)
-        return <article key={f.slug} data-item-cardapio={f.slug} className="lanche-card">
+        return <article key={f.slug} data-item-cardapio={f.slug} className="lanche-card" style={naFila(i)}>
           <img className="lanche-icone" data-foto={f.slug} src={`/fixos/${f.slug}.webp`} alt={f.nome} width={2000} height={2000} />
           <h3>{f.nome}</h3><p className="ingredientes-linha" title={resumoCamadas(f.camadas)}>{resumoCamadas(f.camadas)}</p>
           <span data-preco>{brl(precoDoFixo(f))}</span>
           <button className="botao-quente" data-add={f.slug} onClick={e => onAdicionar(f, e.currentTarget.closest('article')!)}>Adicionar</button>
-          {adicionado && <button className="modificar-card botao-texto" data-modificar={adicionado.id} onClick={() => onModificar(adicionado.id)}>Modificar lanche</button>}
+          {adicionado && <button className="modificar-card botao-texto" data-modificar={adicionado.id} onClick={e => onModificar(adicionado.id, e.currentTarget.closest('article'))}>Modificar lanche</button>}
         </article>
       })}</div>
       {!visiveis.length && <div className="vazio"><p>Nenhum lanche com essa combinação.</p><button className="botao-texto" onClick={() => setIngredientes([])}>Limpar ingredientes</button></div>}
     </>}
-    {forma === 'monte' && <div className="cardapio-grade monte-grade">
-      {(['prensado', 'redondo'] as const).map(f => <article key={f} className="lanche-card">
+    {forma === 'monte' && <div className="cardapio-grade monte-grade" data-troca key="monte" style={reencaixe(2)}>
+      {(['prensado', 'redondo'] as const).map((f, i) => <article key={f} className="lanche-card" style={naFila(i)}>
         <img className="lanche-icone" src={`/camadas/${f === 'prensado' ? 'pao-prensado-topo' : 'pao-topo'}.webp`} alt="" width={2000} height={1200} />
         <h3>{f === 'prensado' ? 'Prensado' : 'Redondo'} do seu jeito</h3><p>Escolha o recheio. O pão já entra junto.</p>
-        <button id={`abrir-livre-${f}`} className="botao-quente" onClick={() => onMontar(f)}>Começar a montar</button>
+        <button id={`abrir-livre-${f}`} className="botao-quente" onClick={e => onMontar(f, e.currentTarget.closest('article'))}>Começar a montar</button>
       </article>)}
     </div>}
   </section>

@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Letreiro from '@/components/letreiro/Letreiro'
+import { RaioXAberto } from '@/components/letreiro/Mascote'
 import RaioX, { type LancheFechado } from '@/components/raio-x/RaioX'
 import { salto, type Origem } from '@/components/raio-x/salto'
 import type { Forma } from '@/components/raio-x/prensa'
 import { MAPA_CAMADAS, urlCamada } from '@/data/camadas'
 import { FIXOS, type Extra, type Fixo } from '@/data/fixos'
 import { CONFIRMACAO_INICIAL, comBacon, ganchoDoPedido, itemExtra, itemFixo, itemLanche, totalPedido, type Item, type ItemPedido } from '@/lib/pedido'
+import { lembrarOrigem, origemAtual, transicionar } from '@/lib/transicoes'
 import Cardapio from '@/components/cardapio/Cardapio'
 import TrilhoLanches from '@/components/cardapio/TrilhoLanches'
 import Extras from '@/components/cardapio/Extras'
@@ -95,13 +97,32 @@ export default function Balcao() {
     lancar(itemFixo(f), origem)
   }
   const adicionarExtra = (e: Extra) => somar(itemExtra(e))
-  const modificar = (id: string, bacon = false) => {
+  // `origem` é o retângulo de onde o raio-x cresce: o cartão que a pessoa tocou, a linha
+  // do carrinho, a barra. Nunca o centro da tela — é o toque que explica a tela nova.
+  const modificar = (id: string, origem?: Element | null, bacon = false) => {
     const p = atual.current.find(p => p.id === id)
     if (!p || p.grupo !== 'lanche') return
-    setEditor({ nome: p.nome, forma: p.forma, fixoSlug: p.fixoSlug, observacao: p.observacao, camadas: bacon ? comBacon(p.camadas) : p.camadas.slice(), id, voltarCarrinho: carrinho })
-    setCarrinho(false)
+    lembrarOrigem(origem ?? null)
+    transicionar('rx-entra', () => {
+      setEditor({ nome: p.nome, forma: p.forma, fixoSlug: p.fixoSlug, observacao: p.observacao, camadas: bacon ? comBacon(p.camadas) : p.camadas.slice(), id, voltarCarrinho: carrinho })
+      setCarrinho(false)
+    }, origemAtual())
   }
-  const fecharEditor = () => { if (editor?.voltarCarrinho) setCarrinho(true); setEditor(null) }
+  const montar = (forma: Forma, origem: Element | null) => {
+    lembrarOrigem(origem)
+    transicionar('rx-entra', () => {
+      setEditor({ nome: forma === 'prensado' ? 'Seu prensado' : 'Seu redondo', forma, camadas: [], voltarCarrinho: false })
+    }, origemAtual())
+  }
+  // A volta é o inverso da ida: o takeover encolhe de volta para o cartão de origem.
+  const fecharEditor = () => transicionar('rx-sai', () => {
+    if (editor?.voltarCarrinho) setCarrinho(true)
+    setEditor(null)
+  }, origemAtual())
+  const abrirCarrinho = () => transicionar('carrinho-entra', () => setCarrinho(true))
+  const fecharCarrinho = () => transicionar('carrinho-sai', () => setCarrinho(false))
+  // Selar não entra na tabela de transições: o SALTO já é a transição desse caminho, e
+  // ele desenha clones no documento — congelá-los numa view transition mataria o efeito.
   const aoFechar = (lanche: LancheFechado, origem: Origem | null) => {
     setEditor(null)
     lancar(itemLanche(lanche), origem, editor?.id, editor?.voltarCarrinho)
@@ -113,11 +134,11 @@ export default function Balcao() {
   }, [ganchoId])
   const ultimoItem = pedido.find(p => p.id === ultimo)
 
-  return <>
+  return <RaioXAberto.Provider value={!!editor}>
     <Letreiro onConcluir={() => setIntro(false)} />
     <main id="conteudo" inert={!!editor || carrinho || intro} className={ultimoItem ? 'tem-modificar' : undefined}>
       <Hero />
-      <Cardapio pedido={pedido} onAdicionar={adicionarFixo} onModificar={modificar} onMontar={forma => setEditor({ nome: forma === 'prensado' ? 'Seu prensado' : 'Seu redondo', forma, camadas: [], voltarCarrinho: false })} />
+      <Cardapio pedido={pedido} onAdicionar={adicionarFixo} onModificar={modificar} onMontar={montar} />
       <TrilhoLanches onAdicionar={adicionarFixo} />
       <Extras grupo="bebida" onAdicionar={adicionarExtra} />
       <Extras grupo="acompanhamento" onAdicionar={adicionarExtra} />
@@ -125,15 +146,15 @@ export default function Balcao() {
     </main>
     <p className="sr-only" role="status">{aviso}</p>
     {!editor && <div inert={carrinho || intro}>
-      <BarraPedido ref={barra} itens={pedido.reduce((s, p) => s + p.qtd, 0)} totalCent={totalPedido(pedido)} onAbrir={() => setCarrinho(true)} ultimo={carrinho ? undefined : ultimoItem} onModificar={modificar} />
+      <BarraPedido ref={barra} itens={pedido.reduce((s, p) => s + p.qtd, 0)} totalCent={totalPedido(pedido)} onAbrir={abrirCarrinho} ultimo={carrinho ? undefined : ultimoItem} onModificar={modificar} />
     </div>}
-    {carrinho && <Carrinho dados={confirmacao} onDados={setConfirmacao} pedido={pedido} gancho={gancho} onSair={() => setCarrinho(false)} onModificar={modificar}
+    {carrinho && <Carrinho dados={confirmacao} onDados={setConfirmacao} pedido={pedido} gancho={gancho} onSair={fecharCarrinho} onModificar={modificar}
       onQuantidade={(id, d) => atualizar(atual.current.map(p => p.id === id ? { ...p, qtd: p.qtd + d } : p).filter(p => p.qtd > 0))}
       onRemover={id => atualizar(atual.current.filter(p => p.id !== id))}
-      onGancho={() => { if (gancho?.extra) adicionarExtra(gancho.extra); else if (gancho?.pedidoId) modificar(gancho.pedidoId, true) }}
+      onGancho={e => { if (gancho?.extra) adicionarExtra(gancho.extra); else if (gancho?.pedidoId) modificar(gancho.pedidoId, e, true) }}
       onDispensar={() => { if (gancho) setGanchos(g => ({ ...g, dispensados: [...g.dispensados, gancho.id] })) }} />}
     {editor && <Modal className="rx-modal" titulo={`Raio-x do ${editor.nome}`} onSair={fecharEditor}>
       <RaioX fixoSlug={editor.fixoSlug} observacaoInicial={editor.observacao} nome={editor.nome} forma={editor.forma} camadasIniciais={editor.camadas} onFechar={aoFechar} onSair={fecharEditor} editando={!!editor.id} />
     </Modal>}
-  </>
+  </RaioXAberto.Provider>
 }

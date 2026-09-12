@@ -20,6 +20,7 @@
 
 import { chromium } from 'playwright'
 import { verificarPrompt19 } from './qa-prompt19.mjs'
+import { verificarPrompt21 } from './qa-prompt21.mjs'
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs'
 
 /** Caixa de cada silhueta, a mesma que a sombra de contato usa. Nenhuma imagem é lida. */
@@ -97,6 +98,12 @@ const linhas = []
 const recortes = []
 const diz = (ok, txt) => linhas.push(`${ok ? 'ok  ' : 'FALHA'} ${txt}`)
 const pula = (txt, fase) => linhas.push(`pula  ${txt} — chega na fase: ${fase}`)
+
+/** Guarda uma captura já tirada — a transição congelada é a página inteira, não um
+ * elemento, e `recorte` só sabe fotografar elemento. */
+function guardarFoto(nome, buffer) {
+  recortes.push({ nome, b64: buffer.toString('base64') })
+}
 
 async function recorte(nome, seletor, pagina = pg) {
   const el = await pagina.$(seletor)
@@ -661,6 +668,9 @@ diz(
 )
 
 await pg.click('[data-abrir-carrinho]')
+// A folha do carrinho sobe da base numa view transition: o React só comita no quadro
+// seguinte ao clique, e `recorte` não espera por seletor.
+await pg.waitForSelector('[data-carrinho]', { timeout: 5000 })
 await recorte('carrinho aberto com gancho em 390px', '[data-carrinho]')
 await pg.click('#carrinho-fechar')
 
@@ -871,6 +881,9 @@ await pg.click('#carrinho-fechar')
 await pg.click('[data-abrir-carrinho]')
 diz(await pg.locator('[data-gancho]').count() === 0, 'dois dispensados não voltam ao reabrir na sessão')
 await pg.click('[data-carrinho] [data-modificar]')
+// A troca de tela passa pela View Transitions API: a mudança do React acontece no quadro
+// seguinte ao clique, não dentro dele. Esperar o takeover é esperar a troca, não folga.
+await pg.waitForSelector('#rx-takeover', { timeout: 5000 })
 diz(await pg.locator('[data-barra-pedido]').count() === 0, 'barra some apenas com o raio-x aberto')
 await pg.click('#rx-abrir-trilho')
 await pg.click('#rx-trilho [data-slug="bacon"]')
@@ -921,6 +934,7 @@ diz((await estorvosHorizontais(pgDesktop)).length === 0, 'desktop 1280px sem rol
 await ctxDesktop.close()
 
 await verificarPrompt19(navegador, URL, diz, recorte)
+await verificarPrompt21(navegador, URL, diz, recorte, guardarFoto)
 
 // ---------- resumo do espalhamento ----------
 //
