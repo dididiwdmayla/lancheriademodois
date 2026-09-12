@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { DesenhoMascote } from './Mascote'
 import { TREMOR_GRUPOS } from './sequencia'
 
 const tremorPorId = Object.fromEntries(TREMOR_GRUPOS.map((g) => [g.id, g]))
@@ -32,14 +33,20 @@ const fonteLetreiro: CSSProperties = {
  * não neon: as letras não emitem, transmitem a luz do painel atrás delas.
  * Os seis IDs contratados: lt-caixa, lt-tubo-a, lt-tubo-b, lt-texto, lt-halo, lt-tremor.
  * Os difusores (lt-luz, lt-luz-face, lt-tubo-luz) são gradientes, não filtros SVG.
+ *
+ * Abaixo da caixa, pendurada nos mesmos dois postes, a TABULETA PINTADA: o mascote e o
+ * horário, em tinta. Nenhuma coordenada da caixa mudou — o viewBox cresceu para baixo
+ * (800 → 1170), então a caixa continua sendo desenhada exatamente onde era. A tabuleta
+ * fica fora de `#lt-tremor` de propósito: ela é pintura, não acrílico aceso, e não pisca
+ * junto com o reator.
  */
 export default function LetreiroSvg() {
   return (
     <svg
       id="lt-svg"
-      viewBox="0 0 1000 800"
+      viewBox="0 0 1000 1170"
       role="img"
-      aria-label="Letreiro da Lancheria Meia-Noite"
+      aria-label="Letreiro da Lancheria Meia-Noite. Na tabuleta pintada: das 18h às 4h."
       style={{ width: '100%', height: 'auto', display: 'block' }}
     >
       <defs>
@@ -108,7 +115,24 @@ export default function LetreiroSvg() {
           <rect x="60" y="40" width="880" height="680" rx="4" fill="#1C1512" stroke="#33251E" strokeWidth="2" />
           <path d="M938 42 L938 718" stroke="#33251E" strokeWidth="5" />
           <rect x="86" y="66" width="828" height="628" rx="3" fill="#120D0B" stroke="#33251E" strokeWidth="1" />
-          <path d="M120 720 L120 764 M880 720 L880 764" stroke="#33251E" strokeWidth="2" />
+          <path d="M120 720 L120 766 M880 720 L880 766" stroke="#33251E" strokeWidth="2" />
+        </g>
+        <g id="lt-tabuleta">
+          <rect x="60" y="764" width="880" height="386" rx="4" fill="var(--fumo)" stroke="var(--traco)" strokeWidth="2" />
+          <rect x="84" y="786" width="832" height="342" rx="2" fill="var(--borra)" stroke="var(--traco)" />
+          <DesenhoMascote transform="translate(96 780) scale(1.66)" />
+          <g
+            fill="var(--osso)"
+            textAnchor="middle"
+            style={{
+              fontFamily: 'var(--fonte-display), Georgia, serif',
+              fontSize: '96px',
+              fontVariationSettings: "'opsz' 96, 'wght' 820, 'SOFT' 14, 'WONK' 1",
+            }}
+          >
+            <text x="706" y="944" textLength="376" lengthAdjust="spacingAndGlyphs">DAS 18H</text>
+            <text x="706" y="1046" textLength="268" lengthAdjust="spacingAndGlyphs">ÀS 4H</text>
+          </g>
         </g>
         <g id="lt-tremor" style={animacaoTremor('lt-tremor')}>
           <g

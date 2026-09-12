@@ -18,6 +18,7 @@ import { CAMADAS, MAPA_CAMADAS, urlCamada } from '@/data/camadas'
 import { LIMIAR_AVISO_CAMADAS, MAX_CAMADAS, MAX_REPETICOES } from '@/data/casa'
 import { precoDoLanche, camadaFixa } from '@/lib/precos'
 import { prefersReducedMotion } from '@/lib/motion'
+import { transicionar } from '@/lib/transicoes'
 import { Camada, Chamada, ChamadaChip, medidas, TOQUE_MIN, TiraDeToque } from './Camada'
 import Composicao from './Composicao'
 import Medidor, { BotaoSelar } from './Medidor'
@@ -178,7 +179,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
   useEffect(() => {
     if (modoMontador || !trilhoAberto) return
     const aoTeclarFora = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setTrilhoAberto(false)
+      if (e.key === 'Escape') transicionar('folha-sai', () => setTrilhoAberto(false))
     }
     window.addEventListener('keydown', aoTeclarFora)
     return () => window.removeEventListener('keydown', aoTeclarFora)
@@ -253,7 +254,11 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
 
   /** O mesmo `adicionar`, fechando a folha do trilho por cima — "escolher" é um dos dois
    * jeitos de fechá-la (o outro é tocar fora). No modo montador o trilho não tem folha;
-   * fechar `trilhoAberto` ali não muda nada em tela. */
+   * fechar `trilhoAberto` ali não muda nada em tela.
+   *
+   * Este caminho é o único fechamento de folha SEM transição de tela, de propósito: uma
+   * view transition congela a página, e o que precisa se mover aqui é a camada entrando
+   * na pilha. A resposta ao toque é a pilha, não a folha; a folha só sai da frente. */
   const aoEscolherDoTrilho = useCallback(
     (slug: string) => {
       adicionar(slug)
@@ -846,8 +851,9 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
           type="button"
           disabled={selando || selado}
           onClick={() => {
+            // A folha sobe da base, por cima do raio-x.
             setComposicao(false)
-            setTrilhoAberto(true)
+            transicionar('folha-entra', () => setTrilhoAberto(true))
           }}
         >
           Acrescentar ingrediente
@@ -859,7 +865,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
           id="rx-trilho-cortina"
           role="presentation"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setTrilhoAberto(false)
+            if (e.target === e.currentTarget) transicionar('folha-sai', () => setTrilhoAberto(false))
           }}
         >
           <div id="rx-trilho-folha" role="group" aria-label="Ingredientes disponíveis">
@@ -870,7 +876,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
               <button
                 id="rx-fechar-trilho"
                 type="button"
-                onClick={() => setTrilhoAberto(false)}
+                onClick={() => transicionar('folha-sai', () => setTrilhoAberto(false))}
                 aria-label="Fechar ingredientes"
                 style={{
                   width: TOQUE_MIN,

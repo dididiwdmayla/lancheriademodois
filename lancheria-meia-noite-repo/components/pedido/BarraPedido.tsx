@@ -21,7 +21,7 @@ type Props = {
   ref?: Ref<ChegadaBarra>
   onAbrir: () => void
   ultimo?: ItemPedido
-  onModificar: (id: string) => void
+  onModificar: (id: string, origem?: Element | null) => void
 }
 
 const CONTAGEM_MS = 320
@@ -99,7 +99,7 @@ export default function BarraPedido({ itens, totalCent, ref, onAbrir, ultimo, on
         borderTop: '1px solid var(--traco)',
       }}
     >
-      {ultimo && <div className="barra-modificar"><span>{ultimo.nome}</span><button className="botao-texto" onClick={() => onModificar(ultimo.id)}>Modificar lanche</button></div>}
+      {ultimo && <div className="barra-modificar"><span>{ultimo.nome}</span><button className="botao-texto" onClick={e => onModificar(ultimo.id, e.currentTarget.closest('.barra-modificar'))}>Modificar lanche</button></div>}
       <div
         className="barra-conteudo"
         style={{

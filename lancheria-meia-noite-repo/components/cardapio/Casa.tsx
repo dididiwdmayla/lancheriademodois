@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { DesenhoMascote } from '@/components/letreiro/Mascote'
 import { CASA } from '@/data/casa'
 import { horarioDaCasa } from '@/lib/horario'
 
@@ -39,12 +40,15 @@ export function HistoriaERodape() {
     <section id="horarios" className="horarios-secao moldura"><Horario /><a className="botao-texto" href="#cardapio">Voltar ao cardápio</a></section>
     <footer id="rodape" className="rodape moldura">
       <div className="rodape-dados"><p>{CASA.nome}</p><address>{CASA.endereco}<br />{CASA.cidade}</address><a href={`tel:+${CASA.whatsapp}`}>{CASA.telefone}</a><p className="pagamentos">{CASA.pagamento.join(' / ')}</p></div>
-      <svg className="letreiro-pequeno" viewBox="0 0 340 200" role="img" aria-label="Meia-Noite, letreiro aceso">
-        <rect x="8" y="8" width="324" height="184" rx="3" fill="var(--fumo)" stroke="var(--traco)" strokeWidth="2" />
-        <rect x="18" y="18" width="304" height="164" rx="2" fill="var(--borra)" stroke="var(--traco)" />
+      {/* A placa cresceu para a direita para caber o mascote pintado ao lado do nome. As
+          letras não saíram do lugar: continuam centradas em x=170, como antes. */}
+      <svg className="letreiro-pequeno" viewBox="0 0 470 200" role="img" aria-label="Meia-Noite, letreiro aceso com o mascote pintado ao lado">
+        <rect x="8" y="8" width="454" height="184" rx="3" fill="var(--fumo)" stroke="var(--traco)" strokeWidth="2" />
+        <rect x="18" y="18" width="434" height="164" rx="2" fill="var(--borra)" stroke="var(--traco)" />
         <g id="lt-rod-tremor" fill="var(--letreiro)" textAnchor="middle" style={{ fontFamily: 'var(--fonte-display), serif', fontWeight: 800 }}>
           <text x="170" y="93" fontSize="72" textLength="248" lengthAdjust="spacingAndGlyphs">MEIA</text><text x="170" y="158" fontSize="72" textLength="248" lengthAdjust="spacingAndGlyphs">NOITE</text>
         </g>
+        <DesenhoMascote transform="translate(302 40) scale(.62)" />
       </svg>
       <p className="rodape-fim nota">Chapa acesa das 18h às 4h.</p>
     </footer>

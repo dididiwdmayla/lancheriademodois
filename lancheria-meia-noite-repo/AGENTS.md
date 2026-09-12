@@ -97,6 +97,77 @@ nome de lanche     piso 1.25rem
 Um momento orquestrado por rota — a intro do letreiro. Todo o resto responde a uma ação do
 usuário. `prefers-reduced-motion` tratado em tudo que se move, sem exceção.
 
+### Transições entre telas
+
+Cada troca de tela tem uma transição curta. Ela não enfeita: ela diz **de onde a tela
+veio**. Fade sozinho não diz nada, então **nenhuma transição é só opacidade** — todas
+carregam corte, deslocamento ou crescimento, e a opacidade, quando entra, só acompanha.
+
+A tabela mora em `lib/transicoes.ts` (`TRANSICOES`) e é a única cópia dos números. O CSS
+lê a duração de `--tr-ms`, escrito pelo JS; `app/globals.css` não tem duração à mão.
+
+| troca | movimento | duração |
+|---|---|---|
+| cardápio → raio-x | o takeover cresce a partir do retângulo do cartão tocado | 240ms |
+| raio-x → cardápio | o inverso, voltando para o cartão de origem | 200ms |
+| abrir carrinho | folha sobe da base | 220ms |
+| fechar carrinho | desce | 180ms |
+| folha de ingredientes | sobe da base, sobre o raio-x | 200ms |
+| fechar folha de ingredientes | desce | 180ms |
+| confirmação do pedido | entra pela direita, como passo seguinte | 220ms |
+| voltar da confirmação | sai pela direita | 180ms |
+| troca de filtro | os itens da grade reencaixam com escalonamento de 20ms | 200ms no total |
+
+**Teto de 240ms, sem exceção.** Acima disso quem está com fome acha que o site travou.
+Curva de saída rápida (`--tr-sai`), chegada suave (`--tr-entra`).
+
+A do cardápio para o raio-x é a mais importante: ela sai **do cartão que a pessoa tocou**,
+nunca do centro da tela — é isso que faz a tela nova parecer consequência do toque. O
+retângulo é medido no instante do toque e escrito em `--tr-origem-*`; o caminho de volta
+reconsulta o elemento, porque a página pode ter rolado no meio.
+
+Onde existe View Transitions API, é ela quem anima, e as telas de trás ficam firmes
+(`tr-segura`) para o navegador não aplicar o cross-fade dele. Onde não existe, as mesmas
+keyframes rodam nos elementos reais sob `html:not([data-vt])`: entrada depois da mudança,
+saída antes dela.
+
+Duas trocas ficam **de fora** da tabela, de propósito:
+- **Selar na chapa** — o salto de 640ms já é a transição daquele caminho, e ele desenha
+  clones no documento; congelá-los numa view transition mataria o efeito.
+- **Escolher um ingrediente na folha** — a resposta ao toque é a camada entrando na pilha.
+  A folha só sai da frente; congelar a página ali esconderia justamente o que importa.
+
+## O mascote
+
+Um hambúrguer com olhos que acompanham o cursor, os toques e os deslizes.
+
+**Ele é pintado no letreiro, não é um personagem flutuando pela tela.** Lancheria de
+esquina tem mascote pintado na fachada — ele é parte do mundo, não um enfeite por cima
+dele. Desenho de pintura de letreiro: traço chapado, poucas cores, imperfeito como pincel.
+Proibido sombra 3D, brilho, contorno de adesivo e qualquer filtro SVG.
+
+**Temperatura:** ele é comida. `--latao`, `--osso` e `--traco`, mais `--borra` na pupila.
+Nenhum `--letreiro` encosta nele — a luz fria é da placa, o mascote é pigmento sobre a
+placa.
+
+**Onde ele aparece:** na tabuleta pintada sob o letreiro da intro, no letreiro pequeno do
+rodapé, e no carrinho vazio.
+
+**Onde ele nunca aparece: no raio-x.** Aquilo é o instrumento do site, e um rosto de
+desenho ali destrói o efeito que sustenta o projeto inteiro. Não é `display: none` — com o
+raio-x aberto ele **não existe no DOM** (contexto `RaioXAberto`, em `Mascote.tsx`).
+
+**Olhar:** um só relógio para todos os mascotes da tela. No desktop os olhos seguem o
+cursor com atraso; no celular olham o toque e vão à frente do deslize; em repouso fixam
+coisas plausíveis (o que se toca, o que custa, a saída) e de vez em quando voltam para
+quem está olhando. Piscam em intervalo irregular. **O que se move é a pupila dentro do
+olho, nunca a cabeça.** O único erro possível é ele parecer nervoso: olho que se mexe
+demais cansa e chama atenção para si em vez de dar vida ao letreiro. Daí perseguição com
+peso, fixação de 1,5s a 3,3s e piscada de 2,7s a 7,3s.
+
+Com `prefers-reduced-motion` os olhos ficam parados, olhando para frente. Ele continua lá,
+só não se mexe.
+
 ---
 
 ## Números calibrados — não altere sem me perguntar
@@ -322,7 +393,8 @@ Os seletores usados pelo QA são contrato: `[data-cardapio]`, `[data-item-cardap
 `[data-filtro-ingrediente]`, `[data-barra-pedido]`, `[data-abrir-carrinho]`,
 `[data-carrinho]`, `[data-medida]`, `[data-preco]`, `[data-carimbo]`, `[data-prensado]`,
 `[data-estourou]`, `[data-escala]`, `[data-escala-natural]`, `[data-folga]`,
-`[data-chamada]`, `[data-toque]`, `[data-tirar]`, `[data-folha]`, mais os IDs
+`[data-chamada]`, `[data-toque]`, `[data-tirar]`, `[data-folha]`, `[data-mascote]`,
+`[data-pupila]`, `[data-passo-pedido]`, `[data-troca]`, mais os IDs
 `#rx-takeover`, `#rx-painel`, `#rx-desenho`, `#rx-medidor`, `#rx-selar`, `#rx-trilho`,
 `#rx-abrir-trilho`, `#rx-trilho-cortina`, `#rx-trilho-folha`, `#rx-fechar-trilho`,
 `#rx-toques`, `#rx-composicao`, `#rx-ver-composicao` e os `#lt-*`.
