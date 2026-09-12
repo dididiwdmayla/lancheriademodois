@@ -327,13 +327,12 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
         if (!fantasma && Math.hypot(dx, dy) > 10) {
           fantasma = document.createElement('div')
           fantasma.style.cssText =
-            'position:fixed;z-index:40;width:180px;height:108px;pointer-events:none;opacity:.85;background:center/contain no-repeat;'
+            'position:fixed;left:0;top:0;z-index:40;width:180px;height:108px;pointer-events:none;opacity:.85;background:center/contain no-repeat;'
           fantasma.style.backgroundImage = `url("${urlCamada(c)}")`
           document.body.appendChild(fantasma)
         }
         if (fantasma) {
-          fantasma.style.left = `${ev.clientX - 90}px`
-          fantasma.style.top = `${ev.clientY - 54}px`
+          fantasma.style.transform = `translate(${ev.clientX - 90}px, ${ev.clientY - 54}px)`
         }
       }
       const soltar = (ev: PointerEvent) => {
@@ -413,7 +412,7 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
           if (el) {
             const dir = ev.clientX < x0 ? -1 : 1
             el.style.transition = 'transform 220ms cubic-bezier(.4,0,1,1), opacity 220ms linear'
-            el.style.transform = `translateX(${dir * 340}px)`
+            el.style.transform = `${el.style.transform} translateX(${dir * 340}px)`
             el.style.opacity = '0'
           }
           agendar(() => remover(idx), el ? 200 : 0)
@@ -559,10 +558,10 @@ export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, 
   const pronto = area.w > 0 && area.h > 0
 
   const transicao = g.prensa
-    ? `top ${PRENSA_MS}ms ${PRENSA_CURVA}, transform ${PRENSA_MS}ms ${PRENSA_CURVA}`
+    ? `transform ${PRENSA_MS}ms ${PRENSA_CURVA}`
     : selando || comprimido
-      ? `top 320ms ${CURVA_ASSENTA}, transform 320ms ${CURVA_ASSENTA}`
-      : `top 420ms ${CURVA_EXPLODE}, transform 300ms linear`
+      ? `transform 320ms ${CURVA_ASSENTA}`
+      : `transform 420ms ${CURVA_EXPLODE}`
 
   const n = pilha.length
   const aviso = n > LIMIAR_AVISO_CAMADAS

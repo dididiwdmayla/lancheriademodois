@@ -7,6 +7,27 @@ Site vitrine da WillDev. Vira template do nicho lancheria no Radar depois.
 
 ---
 
+## Atualização vigente — Prompt 23
+
+Estas decisões, autorizadas pelo usuário, substituem as orientações anteriores de movimento
+que exigiam clip-path, captura em todo navegador e nomes separados nas folhas:
+
+- Só `transform` e `opacity` em `transition` e `@keyframes`, inclusive estilos inline.
+- Raio-x: deslocamento a partir da posição do cartão com scale leve (0,96 → 1), sem recorte animado.
+- View Transitions apenas no takeover em desktop (900px+, ponteiro fino). Um nome, nenhum filho;
+  captura automática da raiz e animação geométrica automática do navegador desativadas.
+- Folhas e confirmação usam os elementos reais também no desktop; no celular nenhuma troca usa captura.
+- Grade sem escalonamento nem animação por item no celular. Desktop conserva 200ms totais.
+- Olhos e tremor pausam durante as transições; `will-change` temporário, limpo ao terminar.
+- Hero recebe o MESMO mascote invertido e recortado pela borda superior, só pão/olhos e dois braços.
+  Caixa absoluta fora do título, inclusive durante o alcance. Sem rosto no DOM no raio-x.
+- Olhos e braços param fora da tela, com aba oculta e durante transições; movimento reduzido
+  centraliza olhos e relaxa braços. Braços tentam por 900ms e repousam por 5,5–9,5s.
+- Verificação desta rodada: TypeScript, build, varredura estática. Não declarar fluidez,
+  limite de 32ms, capturas ou validação visual sem realmente executar no navegador/aparelho.
+
+---
+
 ## A marca
 
 Lancheria de esquina em Maringá, aberta das 18h às 4h. Vende **prensado** — o lanche que

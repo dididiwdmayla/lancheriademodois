@@ -14,8 +14,6 @@
   --barra-altura: 70px;
 }
 
-@property --lt-acende { syntax: '<number>'; inherits: true; initial-value: 0; }
-@property --lt-letras { syntax: '<number>'; inherits: true; initial-value: 0; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: var(--borra); }
@@ -29,21 +27,24 @@ body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-seri
   }
 }
 
-/* Letreiro — números extraídos do export, não altere sem checar contra
-   /export/lancheria-meia-noite.dc.html. O clock único: uma animação escrevendo em
-   --lt-acende e --lt-letras. O tremor: quatro grupos rodando fora de fase. */
+/* Mesma sequência da ignição, aplicada diretamente à opacidade de dois grupos. */
 @keyframes lt-ignicao {
-  0%    { --lt-acende: 0;    --lt-letras: 0; }
-  4.9%  { --lt-acende: 0;    --lt-letras: 0; }
-  5%    { --lt-acende: 0.40; --lt-letras: 0; }
-  10.9% { --lt-acende: 0.40; --lt-letras: 0; }
-  11%   { --lt-acende: 0;    --lt-letras: 0; }
-  36%   { --lt-acende: 0;    --lt-letras: 0; }
-  41%   { --lt-acende: 0.90; --lt-letras: 0.30; }
-  48%   { --lt-acende: 0.44; --lt-letras: 0.16; }
-  60%   { --lt-acende: 0.97; --lt-letras: 0.86; }
-  71%   { --lt-acende: 0.78; --lt-letras: 0.70; }
-  100%  { --lt-acende: 1;    --lt-letras: 1; }
+  0%, 4.9% { opacity: 0; }
+  5%, 10.9% { opacity: .40; }
+  11%, 36% { opacity: 0; }
+  41% { opacity: .90; }
+  48% { opacity: .44; }
+  60% { opacity: .97; }
+  71% { opacity: .78; }
+  100% { opacity: 1; }
+}
+@keyframes lt-ignicao-letras {
+  0%, 36% { opacity: 0; }
+  41% { opacity: .30; }
+  48% { opacity: .16; }
+  60% { opacity: .86; }
+  71% { opacity: .70; }
+  100% { opacity: 1; }
 }
 @keyframes lt-tremor {
   0%, 100% { opacity: 1; }
@@ -80,17 +81,10 @@ body { color: var(--osso); font-family: var(--fonte-corpo), system-ui, sans-seri
 body { padding-bottom: calc(var(--barra-altura) + 8px); }
 #rx-trilho, #rx-painel { scroll-margin-bottom: calc(var(--barra-altura) + 8px); }
 
-/* Flag escrita antes do primeiro paint (script inline em Letreiro.tsx), não em
-   useEffect: cobre o intervalo entre o HTML bruto do servidor e a hidratação.
-   A flag mora no <html> porque é lá que o script chega antes da hidratação; as duas
-   propriedades, não — elas são escritas no #lt-svg, que é de quem elas são. */
-html[data-lt-aceso='1'] #lt-svg {
-  --lt-acende: 1;
-  --lt-letras: 1;
-}
-
+html[data-lt-aceso='1'] #lt-halo,
+html[data-lt-aceso='1'] #lt-letras-acesas { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  #lt-svg { --lt-acende: 1 !important; --lt-letras: 1 !important; animation: none !important; }
+  #lt-halo, #lt-letras-acesas { opacity: 1 !important; animation: none !important; }
   #lt-tremor, #lt-tubo-a, #lt-tubo-b, #lt-texto { animation: none !important; }
 }
 
@@ -577,129 +571,74 @@ textarea { padding: 12px; font-size: 1rem; line-height: 1.4; }
 
 html[data-lt-aceso='1'] #lt-svg { --lt-acende: 1; --lt-letras: 1; }
 
-/* ---------------------------------------------------------------------------
-   Transições entre telas (lib/transicoes.ts é quem dispara).
-
-   Cada troca diz de onde a tela veio. Nenhuma é só opacidade: sempre há corte,
-   deslocamento ou crescimento, e a opacidade só acompanha. As durações vêm de
-   `--tr-ms`, escrito pelo JS a partir da tabela de `transicoes.ts` — aqui não
-   existe número de duração escrito à mão, para as duas cópias não divergirem.
-
-   Curva de saída rápida, chegada suave. Nenhuma passa de 240ms.
-
-   Onde a View Transitions API existe, o JS marca `data-vt` no <html> e quem anima
-   são os pseudos `::view-transition-*`. Onde não existe, as mesmas keyframes rodam
-   nos elementos reais, sob `html:not([data-vt])`.
-   --------------------------------------------------------------------------- */
+/* Transições: somente transform/opacity; lib/transicoes.ts fornece o relógio. */
 :root {
   --tr-ms: 200ms;
   --tr-entra: cubic-bezier(.17, .84, .36, 1);
   --tr-sai: cubic-bezier(.5, 0, .86, .3);
-  /* O retângulo de onde o raio-x cresce. O JS escreve o do cartão tocado antes de
-     começar; estes valores só existem para a folha ser válida sem ninguém tocar. */
-  --tr-origem-topo: 0px;
-  --tr-origem-direita: 0px;
-  --tr-origem-base: 0px;
-  --tr-origem-esquerda: 0px;
+  --tr-dx: 0px;
+  --tr-dy: 24px;
 }
-
-/* Só o corte cresce — sem opacidade. Misturar fade aqui deixa o cardápio aparecendo
-   através do raio-x no meio do caminho, e as duas telas viram uma sopa. O que explica a
-   tela nova é ela nascer do retângulo do cartão, e isso o corte já diz sozinho. */
 @keyframes tr-cresce-do-cartao {
-  from { clip-path: inset(var(--tr-origem-topo) var(--tr-origem-direita) var(--tr-origem-base) var(--tr-origem-esquerda) round 3px); }
-  to   { clip-path: inset(0 0 0 0 round 0); }
+  from { transform: translate(var(--tr-dx), var(--tr-dy)) scale(.96); }
+  to { transform: translate(0, 0) scale(1); }
 }
 @keyframes tr-encolhe-no-cartao {
-  from { clip-path: inset(0 0 0 0 round 0); }
-  to   { clip-path: inset(var(--tr-origem-topo) var(--tr-origem-direita) var(--tr-origem-base) var(--tr-origem-esquerda) round 3px); }
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(var(--tr-dx), var(--tr-dy)) scale(.96); }
 }
 @keyframes tr-sobe-da-base { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes tr-desce-pra-base { from { transform: translateY(0); } to { transform: translateY(100%); } }
 @keyframes tr-vem-da-direita { from { transform: translateX(100%); opacity: .4; } to { transform: translateX(0); opacity: 1; } }
 @keyframes tr-vai-pra-direita { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: .4; } }
-@keyframes tr-vem-da-esquerda { from { transform: translateX(-26%); opacity: .4; } to { transform: translateX(0); opacity: 1; } }
-@keyframes tr-vai-pra-esquerda { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-26%); opacity: .4; } }
 @keyframes tr-escurece { from { opacity: 0; } to { opacity: 1; } }
 @keyframes tr-clareia { from { opacity: 1; } to { opacity: 0; } }
-/* A tela de trás não pisca: fica firme enquanto a de cima cresce ou desliza por cima.
-   Sem isto o navegador aplica o cross-fade dele — 250ms de fade puro, os dois erros. */
-@keyframes tr-segura { from { opacity: 1; } to { opacity: 1; } }
-
-/* A grade do cardápio reencaixa na troca de filtro: 20ms de escalonamento entre itens,
-   200ms do primeiro ao último. Quanto mais itens, mais curto o passo de cada um. */
 @keyframes tr-reencaixa {
   from { transform: translateY(9px) scale(.985); opacity: 0; }
-  to   { transform: none; opacity: 1; }
+  to { transform: none; opacity: 1; }
 }
-.cardapio-grade[data-troca] > * {
-  animation: tr-reencaixa calc((200 - 20 * (var(--tr-itens, 1) - 1)) * 1ms) var(--tr-entra) calc(var(--tr-i, 0) * 20ms) both;
+/* No celular o filtro troca de uma vez, sem animação por item. */
+@media (min-width: 900px) {
+  .cardapio-grade[data-troca] > * {
+    animation: tr-reencaixa calc((200 - 20 * (var(--tr-itens, 1) - 1)) * 1ms) var(--tr-entra) calc(var(--tr-i, 0) * 20ms) both;
+  }
 }
-
-/* --- nomes de transição, ligados só enquanto a troca que precisa deles acontece ---
-   Nome solto é nome que aparece em transição errada. Cada um vive uma troca só. */
-html[data-transicao^='rx-'] .rx-modal { view-transition-name: tr-raiox; }
-html[data-transicao^='rx-'] #barra-pedido { view-transition-name: tr-barra; }
-html[data-transicao^='carrinho-'] .carrinho-modal { view-transition-name: tr-cortina; }
-html[data-transicao^='carrinho-'] .carrinho-folha,
-html[data-transicao^='confirma-'] .carrinho-folha { view-transition-name: tr-folha-pedido; }
-html[data-transicao^='confirma-'] [data-passo-pedido] { view-transition-name: tr-passo-pedido; }
-html[data-transicao^='folha-'] #rx-trilho-cortina { view-transition-name: tr-cortina; }
-html[data-transicao^='folha-'] #rx-trilho-folha { view-transition-name: tr-folha-ingredientes; }
-
-/* --- o relógio dos pseudos: nenhum herda os 250ms do navegador --- */
-html[data-transicao]::view-transition-group(*) { animation-duration: var(--tr-ms); animation-timing-function: var(--tr-entra); }
-html[data-transicao]::view-transition-old(*) { animation-duration: var(--tr-ms); }
-html[data-transicao]::view-transition-new(*) { animation-duration: var(--tr-ms); }
-html[data-transicao]::view-transition-old(root),
-html[data-transicao]::view-transition-new(root) { animation: tr-segura var(--tr-ms) linear both; }
-
-/* --- cardápio → raio-x: o takeover cresce do retângulo do cartão tocado --- */
+/* Uma captura nomeada: takeover inteiro. Nem root, barra, cortina ou filhos. */
+html[data-vt] { view-transition-name: none; }
+html[data-vt][data-transicao^='rx-'] .rx-modal { view-transition-name: tr-raiox; }
+/* Desliga também a animação geométrica automática (width/height) do UA. */
+html[data-vt]::view-transition-group(*),
+html[data-vt]::view-transition-old(*),
+html[data-vt]::view-transition-new(*) { animation: none; mix-blend-mode: normal; }
+html[data-vt]::view-transition-image-pair(*) { isolation: isolate; }
 html[data-transicao='rx-entra']::view-transition-new(tr-raiox) { animation: tr-cresce-do-cartao var(--tr-ms) var(--tr-entra) both; }
-html[data-transicao='rx-entra']::view-transition-old(tr-barra) { animation: tr-desce-pra-base var(--tr-ms) var(--tr-sai) both; }
-html:not([data-vt])[data-transicao='rx-entra'] .rx-modal { animation: tr-cresce-do-cartao var(--tr-ms) var(--tr-entra) both; }
-
-/* --- raio-x → cardápio: o inverso, de volta para o cartão de origem --- */
 html[data-transicao='rx-sai']::view-transition-old(tr-raiox) { animation: tr-encolhe-no-cartao var(--tr-ms) var(--tr-sai) both; }
-html[data-transicao='rx-sai']::view-transition-new(tr-barra) { animation: tr-sobe-da-base var(--tr-ms) var(--tr-entra) both; }
+html:not([data-vt])[data-transicao='rx-entra'] .rx-modal { animation: tr-cresce-do-cartao var(--tr-ms) var(--tr-entra) both; }
 html:not([data-vt])[data-transicao='rx-sai'] .rx-modal { animation: tr-encolhe-no-cartao var(--tr-ms) var(--tr-sai) both; }
-
-/* --- carrinho: folha sobe da base, e desce --- */
-html[data-transicao='carrinho-entra']::view-transition-new(tr-folha-pedido) { animation: tr-sobe-da-base var(--tr-ms) var(--tr-entra) both; }
-html[data-transicao='carrinho-entra']::view-transition-new(tr-cortina) { animation: tr-escurece var(--tr-ms) linear both; }
-html[data-transicao='carrinho-sai']::view-transition-old(tr-folha-pedido) { animation: tr-desce-pra-base var(--tr-ms) var(--tr-sai) both; }
-html[data-transicao='carrinho-sai']::view-transition-old(tr-cortina) { animation: tr-clareia var(--tr-ms) linear both; }
-html:not([data-vt])[data-transicao='carrinho-entra'] .carrinho-folha { animation: tr-sobe-da-base var(--tr-ms) var(--tr-entra) both; }
-html:not([data-vt])[data-transicao='carrinho-entra'] .carrinho-modal { animation: tr-escurece var(--tr-ms) linear both; }
-html:not([data-vt])[data-transicao='carrinho-sai'] .carrinho-folha { animation: tr-desce-pra-base var(--tr-ms) var(--tr-sai) both; }
-html:not([data-vt])[data-transicao='carrinho-sai'] .carrinho-modal { animation: tr-clareia var(--tr-ms) linear both; }
-
-/* --- folha de ingredientes: sobe da base, por cima do raio-x --- */
-html[data-transicao='folha-entra']::view-transition-new(tr-folha-ingredientes) { animation: tr-sobe-da-base var(--tr-ms) var(--tr-entra) both; }
-html[data-transicao='folha-entra']::view-transition-new(tr-cortina) { animation: tr-escurece var(--tr-ms) linear both; }
-html[data-transicao='folha-sai']::view-transition-old(tr-folha-ingredientes) { animation: tr-desce-pra-base var(--tr-ms) var(--tr-sai) both; }
-html[data-transicao='folha-sai']::view-transition-old(tr-cortina) { animation: tr-clareia var(--tr-ms) linear both; }
-html:not([data-vt])[data-transicao='folha-entra'] #rx-trilho-folha { animation: tr-sobe-da-base var(--tr-ms) var(--tr-entra) both; }
-html:not([data-vt])[data-transicao='folha-entra'] #rx-trilho-cortina { animation: tr-escurece var(--tr-ms) linear both; }
-html:not([data-vt])[data-transicao='folha-sai'] #rx-trilho-folha { animation: tr-desce-pra-base var(--tr-ms) var(--tr-sai) both; }
-html:not([data-vt])[data-transicao='folha-sai'] #rx-trilho-cortina { animation: tr-clareia var(--tr-ms) linear both; }
-
-/* --- confirmação do pedido: entra pela direita, como passo seguinte; volta pela direita --- */
-html[data-transicao='confirma-entra']::view-transition-new(tr-passo-pedido) { animation: tr-vem-da-direita var(--tr-ms) var(--tr-entra) both; }
-html[data-transicao='confirma-entra']::view-transition-old(tr-passo-pedido) { animation: tr-vai-pra-esquerda var(--tr-ms) var(--tr-sai) both; }
-html[data-transicao='confirma-sai']::view-transition-old(tr-passo-pedido) { animation: tr-vai-pra-direita var(--tr-ms) var(--tr-sai) both; }
-html[data-transicao='confirma-sai']::view-transition-new(tr-passo-pedido) { animation: tr-vem-da-esquerda var(--tr-ms) var(--tr-entra) both; }
-html[data-transicao^='confirma-']::view-transition-old(tr-folha-pedido),
-html[data-transicao^='confirma-']::view-transition-new(tr-folha-pedido) { animation: tr-segura var(--tr-ms) linear both; }
-html:not([data-vt])[data-transicao='confirma-entra'] [data-passo-pedido] { animation: tr-vem-da-direita var(--tr-ms) var(--tr-entra) both; }
-html:not([data-vt])[data-transicao='confirma-sai'] [data-passo-pedido] { animation: tr-vai-pra-direita var(--tr-ms) var(--tr-sai) both; }
-
-/* A folha do passo não pode vazar pela lateral enquanto entra ou sai. */
+html[data-transicao='carrinho-entra'] .carrinho-folha { animation: tr-sobe-da-base var(--tr-ms) var(--tr-entra) both; }
+html[data-transicao='carrinho-sai'] .carrinho-folha { animation: tr-desce-pra-base var(--tr-ms) var(--tr-sai) both; }
+html[data-transicao='carrinho-entra'] .carrinho-modal { animation: tr-escurece var(--tr-ms) linear both; }
+html[data-transicao='carrinho-sai'] .carrinho-modal { animation: tr-clareia var(--tr-ms) linear both; }
+html[data-transicao='folha-entra'] #rx-trilho-folha { animation: tr-sobe-da-base var(--tr-ms) var(--tr-entra) both; }
+html[data-transicao='folha-sai'] #rx-trilho-folha { animation: tr-desce-pra-base var(--tr-ms) var(--tr-sai) both; }
+html[data-transicao='folha-entra'] #rx-trilho-cortina { animation: tr-escurece var(--tr-ms) linear both; }
+html[data-transicao='folha-sai'] #rx-trilho-cortina { animation: tr-clareia var(--tr-ms) linear both; }
+html[data-transicao='confirma-entra'] [data-passo-pedido] { animation: tr-vem-da-direita var(--tr-ms) var(--tr-entra) both; }
+html[data-transicao='confirma-sai'] [data-passo-pedido] { animation: tr-vai-pra-direita var(--tr-ms) var(--tr-sai) both; }
 .carrinho-miolo { overflow-x: clip; }
-
+/* A remoção de data-transicao retira a promoção de camada. */
+html[data-transicao^='rx-'] .rx-modal,
+html[data-transicao^='carrinho-'] .carrinho-folha,
+html[data-transicao^='folha-'] #rx-trilho-folha,
+html[data-transicao^='confirma-'] [data-passo-pedido] { will-change: transform; }
+html[data-movimento-pausado] :is(#lt-tremor, #lt-tubo-a, #lt-tubo-b, #lt-texto, #lt-rod-tremor),
+html[data-transicao] #rx-pilha [data-inst] > .camada-visual { animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce) {
-  /* O JS nem chega a abrir uma view transition com movimento reduzido; isto é o cinto. */
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
   .cardapio-grade[data-troca] > * { animation: none !important; }
 }
+
+/* Peça absoluta: não altera a altura da faixa. O viewport do SVG recorta corpo e boca
+   acima da borda; os braços também ficam dentro da caixa protegida contra o título. */
+.hero-espreita { position: absolute; top: 0; right: 12px; width: 84px; height: auto; aspect-ratio: 3 / 2; overflow: hidden; pointer-events: none; visibility: hidden; }
+.hero-espreita[data-cabe='true'][data-em-tela='true'] { visibility: visible; }

@@ -4,7 +4,7 @@
 // por isso nenhuma transição daqui é só opacidade: todas carregam deslocamento, corte
 // ou crescimento, e a opacidade só acompanha.
 //
-// Onde o navegador tem a View Transitions API, ela é quem anima: o estado muda dentro
+// No desktop, o takeover usa a View Transitions API: o estado muda dentro
 // de `startViewTransition` e o desenho sai das regras `::view-transition-*` em
 // app/globals.css. Onde não tem, a queda anima os elementos reais com as mesmas
 // durações e curvas — entrada por animação CSS depois da mudança, saída animada antes
@@ -13,7 +13,7 @@
 // `prefers-reduced-motion`: nenhuma das duas. A troca é direta.
 
 import { flushSync } from 'react-dom'
-import { prefersReducedMotion } from './motion'
+import { pausarMovimento, prefersReducedMotion } from './motion'
 
 export type NomeTransicao =
   | 'rx-entra'
@@ -70,62 +70,74 @@ export function origemAtual(): DOMRect | null {
   return origemRect
 }
 
-/** Escreve o retângulo como recuos de `inset()` — é assim que o corte cresce e encolhe. */
-function escreverOrigem(raiz: HTMLElement, r: DOMRect) {
-  const lim = (n: number) => `${Math.max(0, Math.round(n))}px`
-  raiz.style.setProperty('--tr-origem-topo', lim(r.top))
-  raiz.style.setProperty('--tr-origem-direita', lim(window.innerWidth - r.right))
-  raiz.style.setProperty('--tr-origem-base', lim(window.innerHeight - r.bottom))
-  raiz.style.setProperty('--tr-origem-esquerda', lim(r.left))
-  raiz.style.setProperty('--tr-origem-x', `${Math.round(r.left + r.width / 2)}px`)
-  raiz.style.setProperty('--tr-origem-y', `${Math.round(r.top + r.height / 2)}px`)
+/** Origem do gesto, com escala leve: evita comprimir o texto até o tamanho do cartão. */
+function escreverOrigem(raiz: HTMLElement, r: DOMRect | null) {
+  const x = r ? r.left + r.width / 2 : innerWidth / 2
+  const y = r ? r.top + r.height / 2 : innerHeight
+  raiz.style.setProperty('--tr-dx', `${Math.round((x - innerWidth / 2) * .08)}px`)
+  raiz.style.setProperty('--tr-dy', `${Math.round((y - innerHeight / 2) * .08)}px`)
+  raiz.style.setProperty('--tr-origem-x', `${Math.round(x)}px`)
+  raiz.style.setProperty('--tr-origem-y', `${Math.round(y)}px`)
 }
 
-/**
- * Troca de tela. `mutar` é a mudança de estado do React; ela roda dentro do
- * `startViewTransition` (com `flushSync`, senão o React ainda não pintou quando o
- * navegador tira a foto do estado novo).
- *
- * `origem` é opcional e só interessa a quem cresce de um lugar: o raio-x sai do cartão
- * que a pessoa tocou, não do centro da tela.
- */
-export function transicionar(nome: NomeTransicao, mutar: () => void, origem?: Element | DOMRect | null) {
-  const raiz = document.documentElement
-  if (origem) escreverOrigem(raiz, origem instanceof Element ? origem.getBoundingClientRect() : origem)
-  if (prefersReducedMotion()) {
-    mutar()
-    return
-  }
+let emCurso = false
 
+/** No desktop só o takeover usa captura. Folhas e passos animam elementos reais.
+ * Um gesto por vez; finalizar por evento, com prazo de segurança e limpeza em todos os caminhos. */
+export function transicionar(nome: NomeTransicao, mutar: () => void, origem?: Element | DOMRect | null) {
+  if (emCurso) return
+  const raiz = document.documentElement
+  if (prefersReducedMotion()) { mutar(); return }
+  emCurso = true
+  const retomar = pausarMovimento()
   const { ms, sai } = TRANSICOES[nome]
   const doc = document as ComVT
-  const suporta = typeof doc.startViewTransition === 'function'
+  const captura = nome.startsWith('rx-') && window.matchMedia('(min-width: 900px) and (pointer: fine)').matches
+    && typeof doc.startViewTransition === 'function'
+  escreverOrigem(raiz, origem instanceof Element ? origem.getBoundingClientRect() : origem ?? null)
   raiz.style.setProperty('--tr-ms', `${ms}ms`)
   raiz.dataset.transicao = nome
+  if (captura) raiz.dataset.vt = '1'
+  else delete raiz.dataset.vt
+  let terminou = false
+  let mutado = false
+  let timer = 0
+  const reduzir = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const mudar = () => { if (!mutado) { mutado = true; flushSync(mutar) } }
   const limpar = () => {
-    if (raiz.dataset.transicao !== nome) return
+    if (terminou) return
+    terminou = true
+    clearTimeout(timer)
+    raiz.removeEventListener('animationend', aoFim)
+    reduzir.removeEventListener('change', aoReduzir)
+    window.removeEventListener('pagehide', finalizar)
     delete raiz.dataset.transicao
+    delete raiz.dataset.vt
     raiz.style.removeProperty('--tr-ms')
+    retomar()
+    emCurso = false
   }
-
-  if (suporta) {
-    raiz.dataset.vt = '1'
-    doc.startViewTransition!(() => flushSync(mutar)).finished.finally(limpar)
+  const finalizar = () => { try { mudar() } finally { limpar() } }
+  const aoReduzir = () => { if (reduzir.matches) finalizar() }
+  const alvo = nome.startsWith('rx-') ? '.rx-modal' : nome.startsWith('carrinho-') ? '.carrinho-folha'
+    : nome.startsWith('folha-') ? '#rx-trilho-folha' : '[data-passo-pedido]'
+  const aoFim = (e: AnimationEvent) => {
+    if (e.animationName.startsWith('tr-') && e.target instanceof Element && e.target.matches(alvo)) finalizar()
+  }
+  reduzir.addEventListener('change', aoReduzir)
+  window.addEventListener('pagehide', finalizar)
+  if (captura) {
+    // Rejeição/skip da API não pode deixar a aplicação nem os mascotes presos.
+    try {
+      const vt = doc.startViewTransition!(mudar)
+      void vt.finished.then(finalizar, finalizar)
+    } catch { finalizar() }
     return
   }
-
-  // Queda: mesmas durações, mesmas curvas, elementos reais.
-  const saindo = sai ? document.querySelector<HTMLElement>(sai) : null
-  if (!saindo) {
-    flushSync(mutar)
-    window.setTimeout(limpar, ms + 40)
-    return
+  raiz.addEventListener('animationend', aoFim)
+  // O timer é só contingência (aba suspensa, elemento retirado, animationend perdido).
+  timer = window.setTimeout(finalizar, ms + 80)
+  if (!sai || !document.querySelector(sai)) {
+    try { mudar() } catch (erro) { limpar(); throw erro }
   }
-  // A saída tem de terminar antes da mudança, senão o elemento já não está lá para sair.
-  // `data-transicao` sai junto com ela: quem chega no lugar não herda animação de entrada.
-  void saindo.offsetHeight
-  window.setTimeout(() => {
-    limpar()
-    mutar()
-  }, ms)
 }

@@ -137,7 +137,6 @@ export default function LetreiroSvg() {
         <g id="lt-tremor" style={animacaoTremor('lt-tremor')}>
           <g
             id="lt-halo"
-            style={{ opacity: 'calc(var(--lt-acende))' }}
             clipPath="url(#lt-recorte-painel)"
             aria-hidden="true"
           >
@@ -175,7 +174,7 @@ export default function LetreiroSvg() {
             </text>
           </g>
           <g id="lt-texto" style={animacaoTremor('lt-texto')}>
-            <g style={{ opacity: 'calc(var(--lt-letras))' }}>
+            <g id="lt-letras-acesas">
               <rect
                 x="60"
                 y="40"

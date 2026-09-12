@@ -16,7 +16,7 @@
 // com o raio-x aberto ele não existe no DOM.
 
 import { createContext, useContext, useEffect, useRef } from 'react'
-import { prefersReducedMotion } from '@/lib/motion'
+import { movimentoPausado, observarPausa } from '@/lib/motion'
 
 export const RaioXAberto = createContext(false)
 
@@ -74,6 +74,7 @@ type Registro = {
   soquetes: (SVGGraphicsElement | null)[]
   pupilas: (SVGGraphicsElement | null)[]
   internos: (SVGGraphicsElement | null)[]
+  angulos: number[]
   centros: Ponto[]
   atuais: Ponto[]
 }
@@ -94,8 +95,10 @@ const sorte = (a: number, b: number) => a + Math.random() * (b - a)
 
 function medirTudo() {
   for (const r of inscritos) {
-    r.centros = r.soquetes.map((s) => {
+    r.centros = r.soquetes.map((s, i) => {
       if (!s) return { x: 0, y: 0 }
+      const matriz = s.getScreenCTM()
+      r.angulos[i] = matriz ? Math.atan2(matriz.b, matriz.a) : 0
       const c = s.getBoundingClientRect()
       return { x: c.left + c.width / 2, y: c.top + c.height / 2 }
     })
@@ -184,7 +187,9 @@ function quadro(t: number) {
 
   for (const r of inscritos) {
     for (let i = 0; i < r.centros.length; i++) {
-      const querido = desvioDesejado(r.centros[i])
+      const mundo = desvioDesejado(r.centros[i])
+      const a = r.angulos[i]
+      const querido = { x: Math.cos(a) * mundo.x + Math.sin(a) * mundo.y, y: -Math.sin(a) * mundo.x + Math.cos(a) * mundo.y }
       const atual = r.atuais[i]
       atual.x += (querido.x - atual.x) * f
       atual.y += (querido.y - atual.y) * f
@@ -226,6 +231,10 @@ function ligar() {
   const remedir = () => { medidoEm = -Infinity }
   window.addEventListener('scroll', remedir, { passive: true, capture: true })
   window.addEventListener('resize', remedir, { passive: true })
+  ultimoQuadro = 0
+  medidoEm = -Infinity
+  proximaPisca = performance.now() + sorte(PISCA_MIN, PISCA_MAX)
+  piscaInicio = -1
   laco = requestAnimationFrame(quadro)
   return () => {
     window.removeEventListener('pointermove', aoPonteiro)
@@ -244,22 +253,41 @@ function useOlhar(qtd: number, ativo: boolean) {
     soquetes: Array(qtd).fill(null),
     pupilas: Array(qtd).fill(null),
     internos: Array(qtd).fill(null),
+    angulos: Array(qtd).fill(0),
     centros: Array.from({ length: qtd }, () => ({ x: 0, y: 0 })),
     atuais: Array.from({ length: qtd }, () => ({ x: 0, y: 0 })),
   })
   useEffect(() => {
-    // Movimento reduzido: ele continua lá, só não se mexe. Olhos parados, olhando pra frente.
-    // Sem mascote em tela (raio-x aberto), ninguém se inscreve e o laço para de rodar.
-    if (!ativo || prefersReducedMotion()) return
     const r = reg.current
-    inscritos.add(r)
-    if (!desligar) desligar = ligar()
-    return () => {
+    const soquete = r.soquetes.find(Boolean)
+    if (!ativo || !soquete) return
+    let emTela = false
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const retirar = () => {
       inscritos.delete(r)
-      if (!inscritos.size && desligar) {
-        desligar()
-        desligar = null
+      if (!inscritos.size && desligar) { desligar(); desligar = null }
+    }
+    const sincronizar = () => {
+      if (reduzido.matches) {
+        r.pupilas.forEach(p => p?.removeAttribute('transform'))
+        r.internos.forEach(p => p?.removeAttribute('transform'))
+        r.atuais.forEach(p => { p.x = 0; p.y = 0 })
       }
+      if (!emTela || document.hidden || reduzido.matches || movimentoPausado()) { retirar(); return }
+      inscritos.add(r)
+      if (!desligar) desligar = ligar()
+    }
+    const io = new IntersectionObserver(([entrada]) => { emTela = entrada.isIntersecting; sincronizar() })
+    io.observe(soquete)
+    const pararObservacao = observarPausa(sincronizar)
+    reduzido.addEventListener('change', sincronizar)
+    document.addEventListener('visibilitychange', sincronizar)
+    return () => {
+      io.disconnect()
+      pararObservacao()
+      reduzido.removeEventListener('change', sincronizar)
+      document.removeEventListener('visibilitychange', sincronizar)
+      retirar()
     }
   }, [ativo])
   return reg
@@ -286,9 +314,9 @@ const amendoa = (cx: number, cy: number, rx: number, ry: number) =>
   ` C${cx + rx - 5} ${cy + ry} ${cx - rx + 5} ${cy + ry} ${cx - rx} ${cy} Z`
 
 /** O mascote como peça de outro SVG (letreiro da intro, letreiro do rodapé). */
-export function DesenhoMascote({ transform }: { transform?: string }) {
+export function DesenhoMascote({ transform, olharAtivo = true }: { transform?: string; olharAtivo?: boolean }) {
   const aberto = useContext(RaioXAberto)
-  const reg = useOlhar(OLHOS.length, !aberto)
+  const reg = useOlhar(OLHOS.length, !aberto && olharAtivo)
   if (aberto) return null
   return (
     <g data-mascote transform={transform} aria-hidden="true" style={{ pointerEvents: 'none' }}>

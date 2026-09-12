@@ -5,7 +5,7 @@
 // cima denuncia a montagem. Só `transform` e `opacity` são animados.
 
 import { MAPA_CAMADAS, urlCamada } from '@/data/camadas'
-import { prefersReducedMotion } from '@/lib/motion'
+import { pausarMovimento, prefersReducedMotion } from '@/lib/motion'
 import { fatorFechado, visivelPx, type Forma } from './prensa'
 
 /** De onde o lanche sai: centro e base da pilha na tela, e a escala em que ela foi desenhada. */
@@ -65,6 +65,7 @@ export function salto(item: Item, origem: Origem | null, aoChegar: () => void): 
     return () => {}
   }
 
+  const retomar = pausarMovimento()
   const kk = origem.kk
   const largura = 2000 * kk
   const fator = fatorFechado(item.forma)
@@ -108,7 +109,7 @@ export function salto(item: Item, origem: Origem | null, aoChegar: () => void): 
   const queda = window.innerHeight - origem.baseY + subida + 1200 * kk + 80
   pecas.forEach((el, i) => {
     const p = par.itens[i]
-    el.animate(
+    const animacao = el.animate(
       [
         { transform: 'translate(0px, 0px) rotate(0deg)' },
         { transform: `translate(${p.deriva.toFixed(1)}px, ${queda.toFixed(0)}px) rotate(${p.rot.toFixed(1)}deg)` },
@@ -121,15 +122,17 @@ export function salto(item: Item, origem: Origem | null, aoChegar: () => void): 
         fill: 'forwards',
       },
     )
+    void animacao.finished.then(() => el.style.removeProperty('will-change'), () => el.style.removeProperty('will-change'))
   })
 
   const timers = [
     window.setTimeout(aoChegar, CHEGADA_MS),
-    window.setTimeout(() => cont.remove(), IMPULSO_MS + pecas.length * ESCADA_MS + QUEDA_MS + 100),
+    window.setTimeout(() => { cont.remove(); retomar() }, IMPULSO_MS + pecas.length * ESCADA_MS + QUEDA_MS + 100),
   ]
 
   return () => {
     timers.forEach(window.clearTimeout)
     cont.remove()
+    retomar()
   }
 }
