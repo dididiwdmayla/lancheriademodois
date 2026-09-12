@@ -102,3 +102,16 @@ Veja [o relatório e as decisões de desenho](design/RELATORIO-PROMPT-24.md),
 
 QA dos quatro temas: `npm run qa:temas -- --serve`. Para testar produção, rode antes
 `npm run build` e use `QA_PRODUCTION=1 npm run qa:temas -- --serve`.
+
+## Densidade e estruturas — Prompt 25
+
+Primeira tela de 390 × 844: Meia-Noite **4**, Diner **6**, Prático **4**, Cantina **4**
+itens completos, acima da barra de pedido. Diner usa painel de três/cinco colunas;
+Cantina usa folha pautada de uma/duas colunas. Prático mantém a geometria da rodada 24.
+
+Veja o [relatório, limites e decisões](design/RELATORIO-PROMPT-25.md),
+os [quatro cardápios lado a lado](qa/prompt-25/folha-cardapios.jpg) e a
+[comparação da primeira tela](qa/prompt-25/folha-de-contato.jpg).
+
+Depois de `npm run build`, execute `QA_PRODUCTION=1 npm run qa:densidade -- --serve`.
+`npm run qa:temas` também acompanha as metas atuais, preservando as evidências antigas.

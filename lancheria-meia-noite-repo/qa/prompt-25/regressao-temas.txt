@@ -1,0 +1,107 @@
+ok motor/dados intactos: components/raio-x/prensa.ts sha256=7d090189baebfe28
+ok motor/dados intactos: components/raio-x/sombra.ts sha256=c34833916202ae5c
+ok motor/dados intactos: components/raio-x/salto.ts sha256=4ed2d768efc68316
+ok motor/dados intactos: data/baselines.json sha256=90fdfbcf4fa7df1c
+ok motor/dados intactos: data/camadas.ts sha256=ac9b61d31b779f27
+ok motor/dados intactos: data/fixos.ts sha256=4e21acae229309fc
+ok motor/dados intactos: data/casa.ts sha256=f40edef0efeda602
+ok 54 fotografias originais idênticas byte a byte; nenhuma nova
+ok meia-noite: renderiza o cardápio inicial
+ok meia-noite/inicial: sem overflow horizontal
+ok meia-noite/inicial: alvos >= 44px
+ok meia-noite/inicial: preços quentes (17), medições frias (0)
+ok meia-noite: cabeça 128.1px, visível e fora do título
+ok meia-noite/raio-x: sem overflow horizontal
+ok meia-noite/raio-x: alvos >= 44px
+ok meia-noite/raio-x: preços quentes (1), medições frias (2)
+ok meia-noite: nenhum mascote no DOM com raio-x aberto
+ok meia-noite: mesma composição de dez camadas
+ok meia-noite: fontes carregadas = Archivo, Fraunces, IBM Plex Mono
+ok meia-noite: primeiro movimento mostra aviso
+ok meia-noite: aviso some sozinho após sete segundos
+ok meia-noite: segundo movimento não repete aviso
+ok meia-noite: arrasto real reordena sem repetir o aviso
+ok meia-noite: recarregar na mesma sessão não repete aviso
+ok meia-noite: sem erros de página
+ok diner: renderiza o cardápio inicial
+ok diner/inicial: sem overflow horizontal
+ok diner/inicial: alvos >= 44px
+ok diner/inicial: preços quentes (19), medições frias (0)
+ok diner: cabeça 128.1px, visível e fora do título
+ok diner/raio-x: sem overflow horizontal
+ok diner/raio-x: alvos >= 44px
+ok diner/raio-x: preços quentes (1), medições frias (2)
+ok diner: nenhum mascote no DOM com raio-x aberto
+ok diner: mesma composição de dez camadas
+ok diner: fontes carregadas = Alfa Slab One, Space Mono, Work Sans
+ok diner: primeiro movimento mostra aviso
+ok diner: segundo movimento não repete aviso
+ok diner: arrasto real reordena sem repetir o aviso
+ok diner: recarregar na mesma sessão não repete aviso
+ok diner: sem erros de página
+ok pratico: renderiza o cardápio inicial
+ok pratico/inicial: sem overflow horizontal
+ok pratico/inicial: alvos >= 44px
+ok pratico/inicial: preços quentes (17), medições frias (0)
+ok pratico: mascote ausente do DOM
+ok pratico: entrada direta no cardápio, sem intro nem hero
+ok pratico: fotografia com 88px
+ok pratico: transição real do raio-x em 120ms
+ok pratico/raio-x: sem overflow horizontal
+ok pratico/raio-x: alvos >= 44px
+ok pratico/raio-x: preços quentes (1), medições frias (2)
+ok pratico: nenhum mascote no DOM com raio-x aberto
+ok pratico: mesma composição de dez camadas
+ok pratico: fontes carregadas = Inter
+ok pratico: primeiro movimento mostra aviso
+ok pratico: segundo movimento não repete aviso
+ok pratico: arrasto real reordena sem repetir o aviso
+ok pratico: recarregar na mesma sessão não repete aviso
+ok pratico: sem erros de página
+ok cantina: renderiza o cardápio inicial
+ok cantina/inicial: sem overflow horizontal
+ok cantina/inicial: alvos >= 44px
+ok cantina/inicial: preços quentes (17), medições frias (0)
+ok cantina: mascote ausente do DOM
+ok cantina/raio-x: sem overflow horizontal
+ok cantina/raio-x: alvos >= 44px
+ok cantina/raio-x: preços quentes (1), medições frias (2)
+ok cantina: nenhum mascote no DOM com raio-x aberto
+ok cantina: mesma composição de dez camadas
+ok cantina: fontes carregadas = Lora, Playfair Display
+ok cantina: preço e medidor com algarismos antiquários
+ok cantina: primeiro movimento mostra aviso
+ok cantina: segundo movimento não repete aviso
+ok cantina: arrasto real reordena sem repetir o aviso
+ok cantina: recarregar na mesma sessão não repete aviso
+ok cantina: sem erros de página
+ok densidade Prompt 25: meia-noite=4 completos na entrada; diner=6 completos na entrada; pratico=4 completos na entrada; cantina=4 completos na entrada
+ok diner 17:59: placa FECHADO
+ok diner 18:00: placa e horário viram ABERTO juntos
+ok diner após 04:00: placa fecha conforme contrato atual
+ok diner: movimento reduzido mantém estado sem rotação
+ok cantina: movimento reduzido abre toldo sem animação
+ok meia-noite/desktop: sem overflow horizontal
+ok meia-noite/desktop: alvos >= 44px
+ok meia-noite/desktop: preços quentes (17), medições frias (0)
+ok meia-noite/320px: sem overflow horizontal
+ok meia-noite/320px: alvos >= 44px
+ok meia-noite/320px: preços quentes (17), medições frias (0)
+ok diner/desktop: sem overflow horizontal
+ok diner/desktop: alvos >= 44px
+ok diner/desktop: preços quentes (19), medições frias (0)
+ok diner/320px: sem overflow horizontal
+ok diner/320px: alvos >= 44px
+ok diner/320px: preços quentes (19), medições frias (0)
+ok pratico/desktop: sem overflow horizontal
+ok pratico/desktop: alvos >= 44px
+ok pratico/desktop: preços quentes (17), medições frias (0)
+ok pratico/320px: sem overflow horizontal
+ok pratico/320px: alvos >= 44px
+ok pratico/320px: preços quentes (17), medições frias (0)
+ok cantina/desktop: sem overflow horizontal
+ok cantina/desktop: alvos >= 44px
+ok cantina/desktop: preços quentes (17), medições frias (0)
+ok cantina/320px: sem overflow horizontal
+ok cantina/320px: alvos >= 44px
+ok cantina/320px: preços quentes (17), medições frias (0)

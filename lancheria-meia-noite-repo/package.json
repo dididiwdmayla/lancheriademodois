@@ -9,7 +9,8 @@
     "qa": "node scripts/qa-visual.mjs",
     "test": "node scripts/qa-regras.mjs",
     "qa:motion": "node scripts/qa-movimento-estatico.mjs",
-    "qa:temas": "node scripts/qa-temas.mjs"
+    "qa:temas": "node scripts/qa-temas.mjs",
+    "qa:densidade": "node scripts/qa-densidade.mjs"
   },
   "dependencies": {
     "next": "^15.1.0",

@@ -19,8 +19,12 @@ const reencaixe = (n: number): CSSProperties => ({ '--tr-itens': n } as CSSPrope
 const naFila = (i: number): CSSProperties => ({ '--tr-i': i } as CSSProperties)
 
 export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }: Props) {
-  const pratico = useTema().slug === 'pratico'
-  const [forma, setForma] = useState<Forma | 'monte'>('prensado')
+  const { slug } = useTema()
+  const pratico = slug === 'pratico'
+  const diner = slug === 'diner'
+  const cantina = slug === 'cantina'
+  // O painel abre com as seis receitas da casa, sem duplicar os dados.
+  const [forma, setForma] = useState<Forma | 'monte' | 'todos'>(diner ? 'todos' : 'prensado')
   const [ingredientes, setIngredientes] = useState<string[]>([])
   const [filtroAberto, setFiltroAberto] = useState(false)
   useEffect(() => {
@@ -29,10 +33,11 @@ export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }:
     const timer = window.setTimeout(retomar, GRADE_TOTAL_MS)
     return () => { clearTimeout(timer); retomar() }
   }, [forma, ingredientes, pratico])
-  const visiveis = FIXOS.filter(f => f.forma === forma && ingredientes.every(s => f.camadas.includes(s)))
+  const visiveis = FIXOS.filter(f => (forma === 'todos' || f.forma === forma) && ingredientes.every(s => f.camadas.includes(s)))
   return <section id="cardapio" data-cardapio className="cardapio moldura">
     <div className="cabecalho-secao"><h2>Cardápio</h2><span className="nota">Direto da chapa.</span></div>
     <div className="filtros-forma" role="group" aria-label="Forma do lanche">
+      {diner && <button data-filtro-forma="todos" aria-pressed={forma === 'todos'} onClick={() => setForma('todos')}>Todos</button>}
       {(['prensado', 'redondo', 'monte'] as const).map((f, i) => <button key={f} data-filtro-forma={f} aria-pressed={forma === f} onClick={() => setForma(f)}>{['Prensados', 'Redondos', 'Monte o seu'][i]}</button>)}
     </div>
     {forma !== 'monte' && <>
@@ -49,11 +54,14 @@ export default function Cardapio({ onAdicionar, onMontar, onModificar, pedido }:
       </div>}
       <div className="cardapio-grade" data-troca key={`${forma}|${ingredientes.join(',')}`} style={reencaixe(visiveis.length)}>{visiveis.map((f, i) => {
         const adicionado = pedido.find(p => p.grupo === 'lanche' && p.fixoSlug === f.slug)
+        const foto = <img className="lanche-icone" data-foto={f.slug} src={`/fixos/${f.slug}.webp`} alt={f.nome} width={2000} height={2000} />
         return <article key={f.slug} data-item-cardapio={f.slug} className="lanche-card" style={naFila(i)}>
-          <img className="lanche-icone" data-foto={f.slug} src={`/fixos/${f.slug}.webp`} alt={f.nome} width={2000} height={2000} />
-          <h3>{f.nome}</h3><p className="ingredientes-linha" title={resumoCamadas(f.camadas)}>{resumoCamadas(f.camadas)}</p>
-          <span data-preco>{brl(precoDoFixo(f))}</span>
-          <button className="botao-quente" data-add={f.slug} onClick={e => onAdicionar(f, e.currentTarget.closest('article')!)} aria-label={`Adicionar ${f.nome}`}><span className="adicionar-label">Adicionar</span>{pratico && <span className="adicionar-mais" aria-hidden="true">+</span>}</button>
+          {cantina && <div className="menu-nome-preco"><h3>{f.nome}</h3><span className="menu-pontilhado" aria-hidden="true" /><span data-preco>{brl(precoDoFixo(f))}</span></div>}
+          {diner ? <details className="diner-recheio"><summary aria-label={`Ver ingredientes de ${f.nome}`}>{foto}<span aria-hidden="true">Recheio +</span></summary><p>{resumoCamadas(f.camadas)}</p></details> : foto}
+          {!cantina && <h3>{f.nome}</h3>}
+          {!diner && <p className="ingredientes-linha" title={resumoCamadas(f.camadas)}>{resumoCamadas(f.camadas)}</p>}
+          {!cantina && <span data-preco>{brl(precoDoFixo(f))}</span>}
+          <button className="botao-quente" data-add={f.slug} onClick={e => onAdicionar(f, e.currentTarget.closest('article')!)} aria-label={`Adicionar ${f.nome}`}><span className="adicionar-label">Adicionar</span>{!diner && <span className="adicionar-mais" aria-hidden="true">+</span>}</button>
           {adicionado && <button className="modificar-card botao-texto" data-modificar={adicionado.id} onClick={e => onModificar(adicionado.id, e.currentTarget.closest('article'))}>{pratico ? 'Personalizar' : 'Modificar lanche'}</button>}
         </article>
       })}</div>

@@ -1,4 +1,4 @@
-// Contratos do Prompt 24 em navegador real. --serve mantém servidor e browser juntos.
+// Contratos dos temas (Prompts 24 e 25) em navegador real. --serve mantém servidor e browser juntos.
 // PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/caminho/chromium npm run qa:temas -- --serve
 import { chromium } from 'playwright'
 import { spawn, execFileSync } from 'node:child_process'
@@ -6,17 +6,17 @@ import { readFileSync, writeFileSync, mkdirSync, openSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 
 const URL = process.env.QA_URL ?? 'http://127.0.0.1:3000'
-mkdirSync('qa/prompt-24', { recursive: true })
+mkdirSync('qa/regressao-temas', { recursive: true })
 let servidor
 if (process.argv.includes('--serve')) {
-  const log = openSync('qa/prompt-24/servidor.log', 'w')
+  const log = openSync('qa/regressao-temas/servidor.log', 'w')
   servidor = spawn(process.execPath, ['node_modules/next/dist/bin/next', process.env.QA_PRODUCTION ? 'start' : 'dev', '--hostname', '127.0.0.1', '--port', '3000'], { stdio: ['ignore', log, log] })
   let pronto = false
   for (let i = 0; i < 120; i++) {
     try { if ((await fetch(URL)).ok) { pronto = true; break } } catch {}
     await new Promise(r => setTimeout(r, 500))
   }
-  if (!pronto) { servidor.kill(); throw new Error('Servidor não respondeu; ver qa/prompt-24/servidor.log') }
+  if (!pronto) { servidor.kill(); throw new Error('Servidor não respondeu; ver qa/regressao-temas/servidor.log') }
 }
 
 const temas = ['meia-noite', 'diner', 'pratico', 'cantina']
@@ -34,7 +34,7 @@ const pronto = async page => {
   })
 }
 async function tela(page, nome, seletor) {
-  const path = `qa/prompt-24/${nome}.jpg`
+  const path = `qa/regressao-temas/${nome}.jpg`
   if (seletor) await page.locator(seletor).screenshot({ path, type: 'jpeg', quality: 82 })
   else await page.screenshot({ path, type: 'jpeg', quality: 82 })
   capturas.push(path)
@@ -81,7 +81,7 @@ try {
     page.on('request', req => { if (/\.woff2(?:\?|$)/.test(req.url())) fontes.add(new globalThis.URL(req.url()).pathname) })
     await page.goto(`${URL}/?tema=${tema}`, { waitUntil: 'networkidle' })
     await pronto(page)
-    diz(await page.locator('[data-item-cardapio]').count() === 4 && await page.locator('html').getAttribute('data-tema') === tema, `${tema}: renderiza os quatro prensados`)
+    diz(await page.locator('[data-item-cardapio]').count() === (tema === 'diner' ? 6 : 4) && await page.locator('html').getAttribute('data-tema') === tema, `${tema}: renderiza o cardápio inicial`)
     await verificarUI(page, tema, 'inicial')
     detalhes[tema] = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('[data-item-cardapio]')].map(el => { const r = el.getBoundingClientRect(); return { top:r.top, bottom:r.bottom, height:r.height } })
@@ -90,7 +90,7 @@ try {
       if(titulo) range.selectNodeContents(titulo)
       const h = svg?.getBoundingClientRect(), t = titulo ? range.getBoundingClientRect() : null
       const visH = Number(svg?.dataset.alturaVisivel)
-      return { cards, completosNaEntrada:cards.filter(c=>c.top>=0 && c.bottom <= innerHeight - 70).length,
+      return { cards, completosNaEntrada:cards.filter(c=>c.top>=0 && c.bottom <= document.querySelector('#barra-pedido').getBoundingClientRect().top).length,
         densidade: (844 - 70) / cards[0].height * (getComputedStyle(document.querySelector('.cardapio-grade')).display === 'flex' ? 1 : getComputedStyle(document.querySelector('.cardapio-grade')).gridTemplateColumns.split(' ').length),
         cabeca: head?.getBoundingClientRect().width ?? 0, mascoteVisivel: !!svg && getComputedStyle(svg).visibility === 'visible',
         sobrepoeTitulo: h && t ? !(h.right <= t.left || h.left >= t.right || h.top + visH <= t.top || h.top >= t.bottom) : false }
@@ -163,8 +163,8 @@ try {
     diz(!erros.length, `${tema}: sem erros de página${erros.length ? ' '+JSON.stringify(erros) : ''}`)
     await ctx.close()
   }
-  diz(temas.filter(t=>t!=='pratico').every(t=>detalhes.pratico.completosNaEntrada > detalhes[t].completosNaEntrada && detalhes.pratico.densidade > detalhes[t].densidade),
-    `densidade: ${temas.map(t=>`${t}=${detalhes[t].completosNaEntrada} completos na entrada / ${detalhes[t].densidade.toFixed(1)} itens por tela de lista`).join('; ')}`)
+  diz(temas.every(t=>detalhes[t].completosNaEntrada >= {'meia-noite':3,diner:6,pratico:4,cantina:4}[t]),
+    `densidade Prompt 25: ${temas.map(t=>`${t}=${detalhes[t].completosNaEntrada} completos na entrada`).join('; ')}`)
 
   // Horário real: o relógio do browser cruza as fronteiras de Maringá.
   const ctx = await browser.newContext({viewport:{width:390,height:844}}), page = await ctx.newPage()
@@ -192,16 +192,16 @@ try {
 } catch (erro) {
   diz(false, `QA interrompido: ${erro.stack}`)
 } finally {
-  writeFileSync('qa/prompt-24/resultados.json', JSON.stringify({falhas,linhas,detalhes},null,2))
-  writeFileSync('qa/prompt-24/resultados.txt', linhas.join('\n')+'\n')
-  if (temas.every(t=>capturas.includes(`qa/prompt-24/${t}-raio-x.jpg`))) {
+  writeFileSync('qa/regressao-temas/resultados.json', JSON.stringify({falhas,linhas,detalhes},null,2))
+  writeFileSync('qa/regressao-temas/resultados.txt', linhas.join('\n')+'\n')
+  if (temas.every(t=>capturas.includes(`qa/regressao-temas/${t}-raio-x.jpg`))) {
     const page = await browser.newPage({viewport:{width:1280,height:1600},deviceScaleFactor:1})
-    const img = nome => `<img src="data:image/jpeg;base64,${readFileSync(`qa/prompt-24/${nome}.jpg`).toString('base64')}" />`
+    const img = nome => `<img src="data:image/jpeg;base64,${readFileSync(`qa/regressao-temas/${nome}.jpg`).toString('base64')}" />`
     await page.setContent(`<style>body{margin:0;padding:12px;background:#dedbd5;font:15px Arial}main{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}h2{font-size:18px;margin:4px 0 8px}img{width:100%;display:block;margin-bottom:12px}p{margin:8px 0}</style><main>${temas.map(t=>`<section><h2>${t}</h2><p>Entrada · 390×844</p>${img(`${t}-entrada`)}<p>Raio-x · 390×844</p>${img(`${t}-raio-x`)}</section>`).join('')}</main>`)
-    await page.screenshot({path:'qa/prompt-24/folha-de-contato.jpg',type:'jpeg',quality:76,fullPage:true})
+    await page.screenshot({path:'qa/regressao-temas/folha-de-contato.jpg',type:'jpeg',quality:76,fullPage:true})
   }
   await browser.close()
   servidor?.kill('SIGTERM')
 }
-console.log(`${linhas.length} asserções; ${falhas} falhas. Recortes: qa/prompt-24/`)
+console.log(`${linhas.length} asserções; ${falhas} falhas. Recortes: qa/regressao-temas/`)
 process.exitCode = falhas ? 1 : 0
