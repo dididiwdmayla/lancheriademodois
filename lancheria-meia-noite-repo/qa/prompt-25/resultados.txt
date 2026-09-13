@@ -1,0 +1,128 @@
+ok 53 arquivos de motor, pedido, contratos, temas e fontes idênticos byte a byte à base bb259e4
+ok 54 fotos compartilhadas idênticas; nenhuma nova
+ok CSS global da mecânica preservado
+ok meia-noite: cardápio inicial renderizado
+ok meia-noite/390×844: 4 itens completos >= 3; barra começa em 769px
+ok meia-noite/390×844: sem overflow horizontal
+ok meia-noite/390×844: alvos >= 44px
+ok meia-noite/390×844: preços quentes (17), medições frias (0)
+ok meia-noite: mascote de 128.1px legível, fora do título
+ok meia-noite: hero limitado a 30% da viewport
+ok meia-noite/320×740: sem overflow horizontal
+ok meia-noite/320×740: alvos >= 44px
+ok meia-noite/320×740: preços quentes (17), medições frias (0)
+ok meia-noite: Monte o seu preserva as duas formas
+ok meia-noite/320×740/montar: sem overflow horizontal
+ok meia-noite/320×740/montar: alvos >= 44px
+ok meia-noite/320×740/montar: preços quentes (13), medições frias (0)
+ok meia-noite/320×740/adicionado: sem overflow horizontal
+ok meia-noite/320×740/adicionado: alvos >= 44px
+ok meia-noite/320×740/adicionado: preços quentes (17), medições frias (0)
+ok meia-noite/320×740/raio-x: sem overflow horizontal
+ok meia-noite/320×740/raio-x: alvos >= 44px
+ok meia-noite/320×740/raio-x: preços quentes (1), medições frias (2)
+ok meia-noite: raio-x mantém dez camadas e nenhum mascote
+ok meia-noite: famílias carregadas = Archivo, Fraunces, IBM Plex Mono
+ok meia-noite/390×844/raio-x: sem overflow horizontal
+ok meia-noite/390×844/raio-x: alvos >= 44px
+ok meia-noite/390×844/raio-x: preços quentes (1), medições frias (2)
+ok meia-noite: sem erros de página ou recursos
+ok meia-noite/1280×900: sem overflow horizontal
+ok meia-noite/1280×900: alvos >= 44px
+ok meia-noite/1280×900: preços quentes (17), medições frias (0)
+ok diner: cardápio inicial renderizado
+ok diner/390×844: 6 itens completos >= 6; barra começa em 769px
+ok diner/390×844: sem overflow horizontal
+ok diner/390×844: alvos >= 44px
+ok diner/390×844: preços quentes (19), medições frias (0)
+ok diner: mascote de 128.1px legível, fora do título
+ok diner/390px: seis nomes completos, sem reticência ou recorte
+ok diner: seis fotos quadradas
+ok diner: foto revela ingredientes completos por teclado
+ok diner: filtro redondos preservado
+ok diner: Todos respeita também o filtro por ingrediente
+ok diner/320×740: sem overflow horizontal
+ok diner/320×740: alvos >= 44px
+ok diner/320×740: preços quentes (19), medições frias (0)
+ok diner/320px: nomes completos, sem reticência ou recorte
+ok diner: Monte o seu preserva as duas formas
+ok diner/320×740/montar: sem overflow horizontal
+ok diner/320×740/montar: alvos >= 44px
+ok diner/320×740/montar: preços quentes (13), medições frias (0)
+ok diner/320×740/adicionado: sem overflow horizontal
+ok diner/320×740/adicionado: alvos >= 44px
+ok diner/320×740/adicionado: preços quentes (17), medições frias (0)
+ok diner/320×740/raio-x: sem overflow horizontal
+ok diner/320×740/raio-x: alvos >= 44px
+ok diner/320×740/raio-x: preços quentes (1), medições frias (2)
+ok diner: raio-x mantém dez camadas e nenhum mascote
+ok diner: famílias carregadas = Alfa Slab One, Space Mono, Work Sans
+ok diner/390×844/raio-x: sem overflow horizontal
+ok diner/390×844/raio-x: alvos >= 44px
+ok diner/390×844/raio-x: preços quentes (1), medições frias (2)
+ok diner: sem erros de página ou recursos
+ok diner/1280×900: sem overflow horizontal
+ok diner/1280×900: alvos >= 44px
+ok diner/1280×900: preços quentes (19), medições frias (0)
+ok diner: 5 colunas no desktop
+ok pratico: cardápio inicial renderizado
+ok pratico/390×844: 4 itens completos >= 4; barra começa em 769px
+ok pratico/390×844: sem overflow horizontal
+ok pratico/390×844: alvos >= 44px
+ok pratico/390×844: preços quentes (17), medições frias (0)
+ok pratico: geometria de todas as linhas exatamente igual à rodada 24
+ok pratico: sem intro/hero, foto 88px mantida
+ok pratico/320×740: sem overflow horizontal
+ok pratico/320×740: alvos >= 44px
+ok pratico/320×740: preços quentes (17), medições frias (0)
+ok pratico: Monte o seu preserva as duas formas
+ok pratico/320×740/montar: sem overflow horizontal
+ok pratico/320×740/montar: alvos >= 44px
+ok pratico/320×740/montar: preços quentes (13), medições frias (0)
+ok pratico/320×740/adicionado: sem overflow horizontal
+ok pratico/320×740/adicionado: alvos >= 44px
+ok pratico/320×740/adicionado: preços quentes (17), medições frias (0)
+ok pratico/320×740/raio-x: sem overflow horizontal
+ok pratico/320×740/raio-x: alvos >= 44px
+ok pratico/320×740/raio-x: preços quentes (1), medições frias (2)
+ok pratico: raio-x mantém dez camadas e nenhum mascote
+ok pratico: famílias carregadas = Inter
+ok pratico/390×844/raio-x: sem overflow horizontal
+ok pratico/390×844/raio-x: alvos >= 44px
+ok pratico/390×844/raio-x: preços quentes (1), medições frias (2)
+ok pratico: sem erros de página ou recursos
+ok pratico/1280×900: sem overflow horizontal
+ok pratico/1280×900: alvos >= 44px
+ok pratico/1280×900: preços quentes (17), medições frias (0)
+ok cantina: cardápio inicial renderizado
+ok cantina/390×844: 4 itens completos >= 4; barra começa em 769px
+ok cantina/390×844: sem overflow horizontal
+ok cantina/390×844: alvos >= 44px
+ok cantina/390×844: preços quentes (17), medições frias (0)
+ok cantina: fotos de 64×64px
+ok cantina: ingredientes por extenso, sem truncar
+ok cantina/390px: nome longo em 3 linhas; pontilhado 12.0px sem colisão com preço
+ok cantina/320×740: sem overflow horizontal
+ok cantina/320×740: alvos >= 44px
+ok cantina/320×740: preços quentes (17), medições frias (0)
+ok cantina/320px: nome longo em 4 linhas; pontilhado 12.0px sem colisão com preço
+ok cantina: Monte o seu preserva as duas formas
+ok cantina/320×740/montar: sem overflow horizontal
+ok cantina/320×740/montar: alvos >= 44px
+ok cantina/320×740/montar: preços quentes (13), medições frias (0)
+ok cantina/320×740/adicionado: sem overflow horizontal
+ok cantina/320×740/adicionado: alvos >= 44px
+ok cantina/320×740/adicionado: preços quentes (17), medições frias (0)
+ok cantina/320×740/raio-x: sem overflow horizontal
+ok cantina/320×740/raio-x: alvos >= 44px
+ok cantina/320×740/raio-x: preços quentes (1), medições frias (2)
+ok cantina: raio-x mantém dez camadas e nenhum mascote
+ok cantina: famílias carregadas = Lora, Playfair Display
+ok cantina/390×844/raio-x: sem overflow horizontal
+ok cantina/390×844/raio-x: alvos >= 44px
+ok cantina/390×844/raio-x: preços quentes (1), medições frias (2)
+ok cantina: sem erros de página ou recursos
+ok cantina/1280×900: sem overflow horizontal
+ok cantina/1280×900: alvos >= 44px
+ok cantina/1280×900: preços quentes (17), medições frias (0)
+ok cantina: 2 colunas no desktop

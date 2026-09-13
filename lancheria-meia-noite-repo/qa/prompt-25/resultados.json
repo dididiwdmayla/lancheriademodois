@@ -1,0 +1,753 @@
+{
+  "base": "bb259e46ff0a1145bdab8bbd2023880e55bd144d",
+  "falhas": 0,
+  "linhas": [
+    "ok 53 arquivos de motor, pedido, contratos, temas e fontes idênticos byte a byte à base bb259e4",
+    "ok 54 fotos compartilhadas idênticas; nenhuma nova",
+    "ok CSS global da mecânica preservado",
+    "ok meia-noite: cardápio inicial renderizado",
+    "ok meia-noite/390×844: 4 itens completos >= 3; barra começa em 769px",
+    "ok meia-noite/390×844: sem overflow horizontal",
+    "ok meia-noite/390×844: alvos >= 44px",
+    "ok meia-noite/390×844: preços quentes (17), medições frias (0)",
+    "ok meia-noite: mascote de 128.1px legível, fora do título",
+    "ok meia-noite: hero limitado a 30% da viewport",
+    "ok meia-noite/320×740: sem overflow horizontal",
+    "ok meia-noite/320×740: alvos >= 44px",
+    "ok meia-noite/320×740: preços quentes (17), medições frias (0)",
+    "ok meia-noite: Monte o seu preserva as duas formas",
+    "ok meia-noite/320×740/montar: sem overflow horizontal",
+    "ok meia-noite/320×740/montar: alvos >= 44px",
+    "ok meia-noite/320×740/montar: preços quentes (13), medições frias (0)",
+    "ok meia-noite/320×740/adicionado: sem overflow horizontal",
+    "ok meia-noite/320×740/adicionado: alvos >= 44px",
+    "ok meia-noite/320×740/adicionado: preços quentes (17), medições frias (0)",
+    "ok meia-noite/320×740/raio-x: sem overflow horizontal",
+    "ok meia-noite/320×740/raio-x: alvos >= 44px",
+    "ok meia-noite/320×740/raio-x: preços quentes (1), medições frias (2)",
+    "ok meia-noite: raio-x mantém dez camadas e nenhum mascote",
+    "ok meia-noite: famílias carregadas = Archivo, Fraunces, IBM Plex Mono",
+    "ok meia-noite/390×844/raio-x: sem overflow horizontal",
+    "ok meia-noite/390×844/raio-x: alvos >= 44px",
+    "ok meia-noite/390×844/raio-x: preços quentes (1), medições frias (2)",
+    "ok meia-noite: sem erros de página ou recursos",
+    "ok meia-noite/1280×900: sem overflow horizontal",
+    "ok meia-noite/1280×900: alvos >= 44px",
+    "ok meia-noite/1280×900: preços quentes (17), medições frias (0)",
+    "ok diner: cardápio inicial renderizado",
+    "ok diner/390×844: 6 itens completos >= 6; barra começa em 769px",
+    "ok diner/390×844: sem overflow horizontal",
+    "ok diner/390×844: alvos >= 44px",
+    "ok diner/390×844: preços quentes (19), medições frias (0)",
+    "ok diner: mascote de 128.1px legível, fora do título",
+    "ok diner/390px: seis nomes completos, sem reticência ou recorte",
+    "ok diner: seis fotos quadradas",
+    "ok diner: foto revela ingredientes completos por teclado",
+    "ok diner: filtro redondos preservado",
+    "ok diner: Todos respeita também o filtro por ingrediente",
+    "ok diner/320×740: sem overflow horizontal",
+    "ok diner/320×740: alvos >= 44px",
+    "ok diner/320×740: preços quentes (19), medições frias (0)",
+    "ok diner/320px: nomes completos, sem reticência ou recorte",
+    "ok diner: Monte o seu preserva as duas formas",
+    "ok diner/320×740/montar: sem overflow horizontal",
+    "ok diner/320×740/montar: alvos >= 44px",
+    "ok diner/320×740/montar: preços quentes (13), medições frias (0)",
+    "ok diner/320×740/adicionado: sem overflow horizontal",
+    "ok diner/320×740/adicionado: alvos >= 44px",
+    "ok diner/320×740/adicionado: preços quentes (17), medições frias (0)",
+    "ok diner/320×740/raio-x: sem overflow horizontal",
+    "ok diner/320×740/raio-x: alvos >= 44px",
+    "ok diner/320×740/raio-x: preços quentes (1), medições frias (2)",
+    "ok diner: raio-x mantém dez camadas e nenhum mascote",
+    "ok diner: famílias carregadas = Alfa Slab One, Space Mono, Work Sans",
+    "ok diner/390×844/raio-x: sem overflow horizontal",
+    "ok diner/390×844/raio-x: alvos >= 44px",
+    "ok diner/390×844/raio-x: preços quentes (1), medições frias (2)",
+    "ok diner: sem erros de página ou recursos",
+    "ok diner/1280×900: sem overflow horizontal",
+    "ok diner/1280×900: alvos >= 44px",
+    "ok diner/1280×900: preços quentes (19), medições frias (0)",
+    "ok diner: 5 colunas no desktop",
+    "ok pratico: cardápio inicial renderizado",
+    "ok pratico/390×844: 4 itens completos >= 4; barra começa em 769px",
+    "ok pratico/390×844: sem overflow horizontal",
+    "ok pratico/390×844: alvos >= 44px",
+    "ok pratico/390×844: preços quentes (17), medições frias (0)",
+    "ok pratico: geometria de todas as linhas exatamente igual à rodada 24",
+    "ok pratico: sem intro/hero, foto 88px mantida",
+    "ok pratico/320×740: sem overflow horizontal",
+    "ok pratico/320×740: alvos >= 44px",
+    "ok pratico/320×740: preços quentes (17), medições frias (0)",
+    "ok pratico: Monte o seu preserva as duas formas",
+    "ok pratico/320×740/montar: sem overflow horizontal",
+    "ok pratico/320×740/montar: alvos >= 44px",
+    "ok pratico/320×740/montar: preços quentes (13), medições frias (0)",
+    "ok pratico/320×740/adicionado: sem overflow horizontal",
+    "ok pratico/320×740/adicionado: alvos >= 44px",
+    "ok pratico/320×740/adicionado: preços quentes (17), medições frias (0)",
+    "ok pratico/320×740/raio-x: sem overflow horizontal",
+    "ok pratico/320×740/raio-x: alvos >= 44px",
+    "ok pratico/320×740/raio-x: preços quentes (1), medições frias (2)",
+    "ok pratico: raio-x mantém dez camadas e nenhum mascote",
+    "ok pratico: famílias carregadas = Inter",
+    "ok pratico/390×844/raio-x: sem overflow horizontal",
+    "ok pratico/390×844/raio-x: alvos >= 44px",
+    "ok pratico/390×844/raio-x: preços quentes (1), medições frias (2)",
+    "ok pratico: sem erros de página ou recursos",
+    "ok pratico/1280×900: sem overflow horizontal",
+    "ok pratico/1280×900: alvos >= 44px",
+    "ok pratico/1280×900: preços quentes (17), medições frias (0)",
+    "ok cantina: cardápio inicial renderizado",
+    "ok cantina/390×844: 4 itens completos >= 4; barra começa em 769px",
+    "ok cantina/390×844: sem overflow horizontal",
+    "ok cantina/390×844: alvos >= 44px",
+    "ok cantina/390×844: preços quentes (17), medições frias (0)",
+    "ok cantina: fotos de 64×64px",
+    "ok cantina: ingredientes por extenso, sem truncar",
+    "ok cantina/390px: nome longo em 3 linhas; pontilhado 12.0px sem colisão com preço",
+    "ok cantina/320×740: sem overflow horizontal",
+    "ok cantina/320×740: alvos >= 44px",
+    "ok cantina/320×740: preços quentes (17), medições frias (0)",
+    "ok cantina/320px: nome longo em 4 linhas; pontilhado 12.0px sem colisão com preço",
+    "ok cantina: Monte o seu preserva as duas formas",
+    "ok cantina/320×740/montar: sem overflow horizontal",
+    "ok cantina/320×740/montar: alvos >= 44px",
+    "ok cantina/320×740/montar: preços quentes (13), medições frias (0)",
+    "ok cantina/320×740/adicionado: sem overflow horizontal",
+    "ok cantina/320×740/adicionado: alvos >= 44px",
+    "ok cantina/320×740/adicionado: preços quentes (17), medições frias (0)",
+    "ok cantina/320×740/raio-x: sem overflow horizontal",
+    "ok cantina/320×740/raio-x: alvos >= 44px",
+    "ok cantina/320×740/raio-x: preços quentes (1), medições frias (2)",
+    "ok cantina: raio-x mantém dez camadas e nenhum mascote",
+    "ok cantina: famílias carregadas = Lora, Playfair Display",
+    "ok cantina/390×844/raio-x: sem overflow horizontal",
+    "ok cantina/390×844/raio-x: alvos >= 44px",
+    "ok cantina/390×844/raio-x: preços quentes (1), medições frias (2)",
+    "ok cantina: sem erros de página ou recursos",
+    "ok cantina/1280×900: sem overflow horizontal",
+    "ok cantina/1280×900: alvos >= 44px",
+    "ok cantina/1280×900: preços quentes (17), medições frias (0)",
+    "ok cantina: 2 colunas no desktop"
+  ],
+  "detalhes": {
+    "integridade": [
+      {
+        "arquivo": "components/pedido/Balcao.tsx",
+        "identico": true,
+        "sha256": "51ffa9c0572fa6acba1d7320bed3839cd24cc3b33392ce8408b0bcf826497fda"
+      },
+      {
+        "arquivo": "components/pedido/BarraPedido.tsx",
+        "identico": true,
+        "sha256": "c6a3ba3b07daeb6ed543fd4de4fe96e87209b73bbf4f955382c6688704c2c31c"
+      },
+      {
+        "arquivo": "components/pedido/Carrinho.tsx",
+        "identico": true,
+        "sha256": "22c3ea90847dec5881119cde8b7cbcbe291bf07fddfe7ef31e0ca5d977748298"
+      },
+      {
+        "arquivo": "components/pedido/ConfirmacaoPedido.tsx",
+        "identico": true,
+        "sha256": "e972cf0524172cdd80568f52d48b140dd7c5874d924b9c65ac2c4ebb2bba38b2"
+      },
+      {
+        "arquivo": "components/pedido/Modal.tsx",
+        "identico": true,
+        "sha256": "d5435792f9ef329710651f575dc27556ab19a71b76b8b45f3822cdec37e4c3e1"
+      },
+      {
+        "arquivo": "components/raio-x/Camada.tsx",
+        "identico": true,
+        "sha256": "cc952fde2d233cb6ac220195e4b2f1692241f66e2519627e4d282c77b465addb"
+      },
+      {
+        "arquivo": "components/raio-x/Composicao.tsx",
+        "identico": true,
+        "sha256": "21d48297e9d52bb53c66ad50e0a71c55516bcdf6809612bba54884169b970570"
+      },
+      {
+        "arquivo": "components/raio-x/Medidor.tsx",
+        "identico": true,
+        "sha256": "d8b83dd18f0a8781c96a8cdf14434eb43b6e1ff4a043621e1b436d3445022124"
+      },
+      {
+        "arquivo": "components/raio-x/RaioX.tsx",
+        "identico": true,
+        "sha256": "8e0f82a1c1d9bc6ada3dcc86bf38a01ac432b31341de5b9cecff8df2ca40e6ba"
+      },
+      {
+        "arquivo": "components/raio-x/Trilho.tsx",
+        "identico": true,
+        "sha256": "236d9f25c32261f137eb8c440a8aa932414a3ae1c8f150b731a8b9635d6999ce"
+      },
+      {
+        "arquivo": "components/raio-x/prensa.ts",
+        "identico": true,
+        "sha256": "7d090189baebfe282d8574963e9a07156514e0686c884ce65efbf6d944cc73df"
+      },
+      {
+        "arquivo": "components/raio-x/rotulos.ts",
+        "identico": true,
+        "sha256": "e0c85a5a48ffa01365b4c6c0e71be0c5e8feb6c5befac1c26c37247afe4e2d7b"
+      },
+      {
+        "arquivo": "components/raio-x/salto.ts",
+        "identico": true,
+        "sha256": "4ed2d768efc68316954486a0723276c9b5a85561134ab149c09d5882adfce526"
+      },
+      {
+        "arquivo": "components/raio-x/sombra.ts",
+        "identico": true,
+        "sha256": "c34833916202ae5c8f2b656860e5a569a5270778e2413bc98bc4a94993193d9f"
+      },
+      {
+        "arquivo": "data/baselines.json",
+        "identico": true,
+        "sha256": "90fdfbcf4fa7df1c361da607634b7f2149846e088be09152a53557d99d8916f3"
+      },
+      {
+        "arquivo": "data/camadas.ts",
+        "identico": true,
+        "sha256": "ac9b61d31b779f27418464439ef52fac62f73bf8dc6d52736349a768361ff54c"
+      },
+      {
+        "arquivo": "data/casa.ts",
+        "identico": true,
+        "sha256": "f40edef0efeda6028f91b715fe0a6201375f01dd8c4d036d2773a1590275a1a2"
+      },
+      {
+        "arquivo": "data/fixos.ts",
+        "identico": true,
+        "sha256": "4e21acae229309fc98860faac8ca9e06a81c5e5cfaa1d51863b6784ad3d4c2fe"
+      },
+      {
+        "arquivo": "lib/avisoOrdem.ts",
+        "identico": true,
+        "sha256": "3522ca4f9add361fa2fefa178e189a8b1347b00b5c608094d41b658cf323de68"
+      },
+      {
+        "arquivo": "lib/horario.ts",
+        "identico": true,
+        "sha256": "ae0b9481e5a23104c650dd7e186770a23ea338ccdac806c89848c23c0f86ba4d"
+      },
+      {
+        "arquivo": "lib/motion.ts",
+        "identico": true,
+        "sha256": "edb328a0a9e619220bc8f317b9f4b36d39768da4ef3b06ca7175fb895d94c11e"
+      },
+      {
+        "arquivo": "lib/pedido.ts",
+        "identico": true,
+        "sha256": "694c1eb029099be21b3f8fa0c1d17eef86f97dddfb841f6df0821b8ac4ffbaf8"
+      },
+      {
+        "arquivo": "lib/precos.ts",
+        "identico": true,
+        "sha256": "235fc3281511f2a45f81229b46bd52b4dfc72ac96b3ae086d462571397e50618"
+      },
+      {
+        "arquivo": "lib/transicoes.ts",
+        "identico": true,
+        "sha256": "2e20ebcbc9e8fcd9a7591560056606864ab58197eab29579e31e257e2f93d94a"
+      },
+      {
+        "arquivo": "lib/useHorario.ts",
+        "identico": true,
+        "sha256": "c69f500978abad2390a6c024bbad3ff124106691069b3d7fcb7e7af5b585a688"
+      },
+      {
+        "arquivo": "public/fontes/README.md",
+        "identico": true,
+        "sha256": "fcd18103d8edfacff7d1f20f523bcb4877c39fc7af21089917bd39ece921c09a"
+      },
+      {
+        "arquivo": "public/fontes/alfa-slab-one-LICENSE.txt",
+        "identico": true,
+        "sha256": "6cb8a5e3f60a5b23d1e5fff9b6fa860f0e5d4055a67bb262497c1e8d8fc13b05"
+      },
+      {
+        "arquivo": "public/fontes/alfa-slab-one-latin-400-normal.woff2",
+        "identico": true,
+        "sha256": "48a110c7fda81f9921a6437e1a813dcea56df5a9f52f778c7b2f2151e36e4f2c"
+      },
+      {
+        "arquivo": "public/fontes/archivo-LICENSE.txt",
+        "identico": true,
+        "sha256": "c3c8402eec0e31dc9a76851235b1c02a0bb821488b2db8e35bcc2ab60ca8fc2b"
+      },
+      {
+        "arquivo": "public/fontes/archivo-latin-standard-normal.woff2",
+        "identico": true,
+        "sha256": "e3a28eade21a900c7155a247757f4b2834c07bb7ef07ad7efa55cebaac1e8f5e"
+      },
+      {
+        "arquivo": "public/fontes/cantina.css",
+        "identico": true,
+        "sha256": "60510c17b276f641309aa87de01d1e8d00fa3a2dbdb642447a8797c4242f6765"
+      },
+      {
+        "arquivo": "public/fontes/diner.css",
+        "identico": true,
+        "sha256": "de8138bfeff8085fd2b082fbeff468fbcae747064173f071e65bb472cc4b7b82"
+      },
+      {
+        "arquivo": "public/fontes/fraunces-LICENSE.txt",
+        "identico": true,
+        "sha256": "cd3384cafac6f2bddc3955273958a2e029f97027c8037ac539ef5744a77b579e"
+      },
+      {
+        "arquivo": "public/fontes/fraunces-latin-full-normal.woff2",
+        "identico": true,
+        "sha256": "7e744849028e2219e2aa1bc467dc4032980dc4487c9c3da3010081cd72d3b103"
+      },
+      {
+        "arquivo": "public/fontes/ibm-plex-mono-LICENSE.txt",
+        "identico": true,
+        "sha256": "23b0a9d0c6d3f140a0b77e483c5cfa6bba574325ef5cb189ed9f2fec4884533f"
+      },
+      {
+        "arquivo": "public/fontes/ibm-plex-mono-latin-500-normal.woff2",
+        "identico": true,
+        "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22"
+      },
+      {
+        "arquivo": "public/fontes/inter-LICENSE.txt",
+        "identico": true,
+        "sha256": "3b0a5fca3d17942cde889069889dedbbbd075e9b599968c82a95f4d944e9b345"
+      },
+      {
+        "arquivo": "public/fontes/inter-latin-wght-normal.woff2",
+        "identico": true,
+        "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+      },
+      {
+        "arquivo": "public/fontes/lora-LICENSE.txt",
+        "identico": true,
+        "sha256": "948aed765160f7b974105606c21994715a171f89fca48e57bf1e0a23aca0bef1"
+      },
+      {
+        "arquivo": "public/fontes/lora-latin-wght-normal.woff2",
+        "identico": true,
+        "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
+      },
+      {
+        "arquivo": "public/fontes/meia-noite.css",
+        "identico": true,
+        "sha256": "b388775c0cdb4ea4c5d259a8b9bd639e92bc0867565543b0d5f9eedc02c119c7"
+      },
+      {
+        "arquivo": "public/fontes/playfair-display-LICENSE.txt",
+        "identico": true,
+        "sha256": "c052aafd2a71e90bcee6e69f475029d430a10d548c08ffcae350171f0e9668b1"
+      },
+      {
+        "arquivo": "public/fontes/playfair-display-latin-wght-normal.woff2",
+        "identico": true,
+        "sha256": "e0c764a8e9e1cce92163c55bac4b2ad6cd4cf8c696ce2289ab5c41565e65b7e2"
+      },
+      {
+        "arquivo": "public/fontes/pratico.css",
+        "identico": true,
+        "sha256": "7b4c724c90b0deb90c0289d580ad0812125b6a23545dbc2526326ad8cc3b1504"
+      },
+      {
+        "arquivo": "public/fontes/space-mono-LICENSE.txt",
+        "identico": true,
+        "sha256": "761663b7fb7667764f42243f9b1b2bcfccf41b158a7ab508bed4961dcf377eab"
+      },
+      {
+        "arquivo": "public/fontes/space-mono-latin-400-normal.woff2",
+        "identico": true,
+        "sha256": "fb4a81a2d0a893e5c38c394a7e716a1cef0b24610a0af49c96f6d529bd66bf2b"
+      },
+      {
+        "arquivo": "public/fontes/work-sans-LICENSE.txt",
+        "identico": true,
+        "sha256": "e7c426573d51f3d2e5e92254878c862344ffa0b9272f79a880f9f99010f002c7"
+      },
+      {
+        "arquivo": "public/fontes/work-sans-latin-wght-normal.woff2",
+        "identico": true,
+        "sha256": "1dd49afc07fb2231b2ff686cbf007725fb2742271bb1f28ebd98f22a0d817343"
+      },
+      {
+        "arquivo": "temas/cantina.ts",
+        "identico": true,
+        "sha256": "f9755c5110effd6004e5159a8c711bde8706846e9cd39525c1866cb30952c355"
+      },
+      {
+        "arquivo": "temas/diner.ts",
+        "identico": true,
+        "sha256": "48e4a1f30d96f20ab9d3858f296e96da565b3140c35e2487ee898133a7570c6a"
+      },
+      {
+        "arquivo": "temas/index.ts",
+        "identico": true,
+        "sha256": "06b3d0a0c62c81018d4788e7e423d52bb3acd60051a0c0ae9e7b9aba56567c5a"
+      },
+      {
+        "arquivo": "temas/meia-noite.ts",
+        "identico": true,
+        "sha256": "ef349f5612627778e2621e931f13a95cdbc0a70d0f3b67d876b1e7b1f5a760af"
+      },
+      {
+        "arquivo": "temas/pratico.ts",
+        "identico": true,
+        "sha256": "807df50f5fb84679f716a28b910b7142cdf4689035b8ec107cbab192f6527f04"
+      }
+    ],
+    "meia-noite": {
+      "cards": [
+        {
+          "nome": "Prensado Completo",
+          "top": 391.09375,
+          "bottom": 568.96875,
+          "width": 175,
+          "height": 177.875
+        },
+        {
+          "nome": "Prensado de Frango",
+          "top": 391.09375,
+          "bottom": 568.96875,
+          "width": 175,
+          "height": 177.875
+        },
+        {
+          "nome": "Prensado de Calabresa",
+          "top": 576.96875,
+          "bottom": 754.84375,
+          "width": 175,
+          "height": 177.875
+        },
+        {
+          "nome": "Prensado Meia-Noite",
+          "top": 576.96875,
+          "bottom": 754.84375,
+          "width": 175,
+          "height": 177.875
+        }
+      ],
+      "limite": 769,
+      "completosNaEntrada": 4,
+      "hero": {
+        "top": 52,
+        "bottom": 220,
+        "width": 390,
+        "height": 168
+      },
+      "mascote": {
+        "cabeca": 128.0923614501953,
+        "visivel": true,
+        "colisao": false
+      },
+      "nomes": [
+        {
+          "texto": "Prensado Completo",
+          "top": 457.09375,
+          "bottom": 495.96875,
+          "width": 157,
+          "height": 38.875,
+          "fonte": "18px"
+        },
+        {
+          "texto": "Prensado de Frango",
+          "top": 457.09375,
+          "bottom": 495.96875,
+          "width": 157,
+          "height": 38.875,
+          "fonte": "18px"
+        },
+        {
+          "texto": "Prensado de Calabresa",
+          "top": 642.96875,
+          "bottom": 681.84375,
+          "width": 157,
+          "height": 38.875,
+          "fonte": "18px"
+        },
+        {
+          "texto": "Prensado Meia-Noite",
+          "top": 642.96875,
+          "bottom": 681.84375,
+          "width": 157,
+          "height": 38.875,
+          "fonte": "18px"
+        }
+      ],
+      "fontes": [
+        "/fontes/fraunces-latin-full-normal.woff2",
+        "/fontes/archivo-latin-standard-normal.woff2",
+        "/fontes/ibm-plex-mono-latin-500-normal.woff2"
+      ]
+    },
+    "diner": {
+      "cards": [
+        {
+          "nome": "Prensado Completo",
+          "top": 299.6875,
+          "bottom": 525.15625,
+          "width": 112.65625,
+          "height": 225.46875
+        },
+        {
+          "nome": "Prensado de Frango",
+          "top": 299.6875,
+          "bottom": 525.15625,
+          "width": 112.671875,
+          "height": 225.46875
+        },
+        {
+          "nome": "Prensado de Calabresa",
+          "top": 299.6875,
+          "bottom": 525.15625,
+          "width": 112.65625,
+          "height": 225.46875
+        },
+        {
+          "nome": "Prensado Meia-Noite",
+          "top": 535.15625,
+          "bottom": 760.625,
+          "width": 112.65625,
+          "height": 225.46875
+        },
+        {
+          "nome": "X-Salada",
+          "top": 535.15625,
+          "bottom": 760.625,
+          "width": 112.671875,
+          "height": 225.46875
+        },
+        {
+          "nome": "X-Tudo",
+          "top": 535.15625,
+          "bottom": 760.625,
+          "width": 112.65625,
+          "height": 225.46875
+        }
+      ],
+      "limite": 769,
+      "completosNaEntrada": 6,
+      "hero": {
+        "top": 44,
+        "bottom": 140,
+        "width": 390,
+        "height": 96
+      },
+      "mascote": {
+        "cabeca": 128.0923614501953,
+        "visivel": true,
+        "colisao": false
+      },
+      "nomes": [
+        {
+          "texto": "Prensado Completo",
+          "top": 417.34375,
+          "bottom": 452.34375,
+          "width": 108.65625,
+          "height": 35,
+          "fonte": "14px"
+        },
+        {
+          "texto": "Prensado de Frango",
+          "top": 417.359375,
+          "bottom": 452.359375,
+          "width": 108.671875,
+          "height": 35,
+          "fonte": "14px"
+        },
+        {
+          "texto": "Prensado de Calabresa",
+          "top": 417.34375,
+          "bottom": 452.34375,
+          "width": 108.65625,
+          "height": 35,
+          "fonte": "14px"
+        },
+        {
+          "texto": "Prensado Meia-Noite",
+          "top": 652.8125,
+          "bottom": 687.8125,
+          "width": 108.65625,
+          "height": 35,
+          "fonte": "14px"
+        },
+        {
+          "texto": "X-Salada",
+          "top": 652.828125,
+          "bottom": 687.828125,
+          "width": 108.671875,
+          "height": 35,
+          "fonte": "14px"
+        },
+        {
+          "texto": "X-Tudo",
+          "top": 652.8125,
+          "bottom": 687.8125,
+          "width": 108.65625,
+          "height": 35,
+          "fonte": "14px"
+        }
+      ],
+      "fontes": [
+        "/fontes/work-sans-latin-wght-normal.woff2",
+        "/fontes/alfa-slab-one-latin-400-normal.woff2",
+        "/fontes/space-mono-latin-400-normal.woff2"
+      ]
+    },
+    "pratico": {
+      "cards": [
+        {
+          "nome": "Prensado Completo",
+          "top": 217.515625,
+          "bottom": 330.515625,
+          "width": 358,
+          "height": 113
+        },
+        {
+          "nome": "Prensado de Frango",
+          "top": 330.515625,
+          "bottom": 443.515625,
+          "width": 358,
+          "height": 113
+        },
+        {
+          "nome": "Prensado de Calabresa",
+          "top": 443.515625,
+          "bottom": 556.515625,
+          "width": 358,
+          "height": 113
+        },
+        {
+          "nome": "Prensado Meia-Noite",
+          "top": 556.515625,
+          "bottom": 669.515625,
+          "width": 358,
+          "height": 113
+        }
+      ],
+      "limite": 769,
+      "completosNaEntrada": 4,
+      "hero": null,
+      "mascote": null,
+      "nomes": [
+        {
+          "texto": "Prensado Completo",
+          "top": 232.828125,
+          "bottom": 250.828125,
+          "width": 206,
+          "height": 18,
+          "fonte": "15px"
+        },
+        {
+          "texto": "Prensado de Frango",
+          "top": 345.828125,
+          "bottom": 363.828125,
+          "width": 206,
+          "height": 18,
+          "fonte": "15px"
+        },
+        {
+          "texto": "Prensado de Calabresa",
+          "top": 458.828125,
+          "bottom": 476.828125,
+          "width": 206,
+          "height": 18,
+          "fonte": "15px"
+        },
+        {
+          "texto": "Prensado Meia-Noite",
+          "top": 571.828125,
+          "bottom": 589.828125,
+          "width": 206,
+          "height": 18,
+          "fonte": "15px"
+        }
+      ],
+      "fontes": [
+        "/fontes/inter-latin-wght-normal.woff2"
+      ]
+    },
+    "cantina": {
+      "cards": [
+        {
+          "nome": "Prensado Completo",
+          "top": 311,
+          "bottom": 422.25,
+          "width": 338,
+          "height": 111.25
+        },
+        {
+          "nome": "Prensado de Frango",
+          "top": 422.25,
+          "bottom": 533.5,
+          "width": 338,
+          "height": 111.25
+        },
+        {
+          "nome": "Prensado de Calabresa",
+          "top": 533.5,
+          "bottom": 644.75,
+          "width": 338,
+          "height": 111.25
+        },
+        {
+          "nome": "Prensado Meia-Noite",
+          "top": 644.75,
+          "bottom": 756,
+          "width": 338,
+          "height": 111.25
+        }
+      ],
+      "limite": 769,
+      "completosNaEntrada": 4,
+      "hero": {
+        "top": 48,
+        "bottom": 134,
+        "width": 362,
+        "height": 86
+      },
+      "mascote": null,
+      "nomes": [
+        {
+          "texto": "Prensado Completo",
+          "top": 321,
+          "bottom": 342.25,
+          "width": 148.78125,
+          "height": 21.25,
+          "fonte": "17px"
+        },
+        {
+          "texto": "Prensado de Frango",
+          "top": 432.25,
+          "bottom": 453.5,
+          "width": 150.359375,
+          "height": 21.25,
+          "fonte": "17px"
+        },
+        {
+          "texto": "Prensado de Calabresa",
+          "top": 543.5,
+          "bottom": 564.75,
+          "width": 172.078125,
+          "height": 21.25,
+          "fonte": "17px"
+        },
+        {
+          "texto": "Prensado Meia-Noite",
+          "top": 654.75,
+          "bottom": 676,
+          "width": 158.9375,
+          "height": 21.25,
+          "fonte": "17px"
+        }
+      ],
+      "fontes": [
+        "/fontes/playfair-display-latin-wght-normal.woff2",
+        "/fontes/lora-latin-wght-normal.woff2"
+      ]
+    }
+  }
+}

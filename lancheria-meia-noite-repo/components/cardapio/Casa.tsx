@@ -30,7 +30,7 @@ export function Hero() {
         alt={diner || cantina ? 'Prensado Meia-Noite' : 'Prensado fechando na chapa'}
         width={diner || cantina ? 2000 : 2400} height={diner || cantina ? 2000 : 1600} fetchPriority="high" />
       {tema.mascote && <HeroMascote />}
-      <div className="hero-texto moldura"><h1 id="titulo-casa">{diner ? <>Da esquina.<br />Da chapa.</> : cantina ? <>Pão, recheio.<br />E boa mesa.</> : <>A noite pede<br />um prensado.</>}</h1><p>{cantina ? 'O prensado da casa. Desde o primeiro pão.' : 'Pão na chapa. Recheio no lugar.'}</p></div>
+      <div className="hero-texto moldura"><h1 id="titulo-casa">{diner ? 'Da esquina. Da chapa.' : cantina ? 'Pão, recheio e boa mesa.' : <>A noite pede<br />um prensado.</>}</h1><p>{cantina ? 'O prensado da casa. Desde o primeiro pão.' : 'Pão na chapa. Recheio no lugar.'}</p></div>
     </section>}
     <div className="moldura"><Horario compacto /></div>
   </>

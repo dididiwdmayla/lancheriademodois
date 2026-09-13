@@ -20,28 +20,66 @@
   border-left: 3px solid var(--latao); border-radius: var(--raio); }
 #rx-medidor:has([data-aviso-ordem]) { z-index: 7; }
 
+/* MEIA-NOITE — o mesmo cartão editorial, com menos altura. */
+[data-tema='meia-noite'] .hero-faixa { height: min(168px, 30dvh); min-height: 0; max-height: 30dvh; }
+[data-tema='meia-noite'] .hero-texto { padding-bottom: 10px; gap: 4px; }
+[data-tema='meia-noite'] .hero-texto h1 { font-size: clamp(2.25rem, 5vw, 4.5rem); }
+[data-tema='meia-noite'] .horario-compacto { padding-block: 7px; }
+[data-tema='meia-noite'] .cardapio { padding-top: 6px; }
+[data-tema='meia-noite'] .cardapio .cabecalho-secao { margin-bottom: 6px; }
+[data-tema='meia-noite'] .filtro-resumo { min-height: 44px; }
+[data-tema='meia-noite'] .cardapio-grade:not(.monte-grade) { gap: 8px; }
+[data-tema='meia-noite'] [data-item-cardapio] { display: grid; grid-template-columns: minmax(0,1fr) 44px; padding: 6px 8px; }
+[data-tema='meia-noite'] [data-item-cardapio] .lanche-icone { grid-column: 1 / -1; justify-self: center;
+  width: min(100%, 112px); height: 56px; object-fit: cover; margin-bottom: 3px; }
+[data-tema='meia-noite'] [data-item-cardapio] h3 { grid-column: 1 / -1; font-size: 1.125rem; min-height: 2.16em; }
+[data-tema='meia-noite'] [data-item-cardapio] .ingredientes-linha { grid-column: 1 / -1; margin: 2px 0; font-size: .75rem; }
+[data-tema='meia-noite'] [data-item-cardapio] > [data-preco] { grid-column: 1; align-self: center;
+  font-size: clamp(.9375rem, 4.6vw, 1.125rem); margin: 0; }
+[data-tema='meia-noite'] [data-item-cardapio] > [data-add] { grid-column: 2; width: 44px; height: 44px; padding: 0; }
+[data-tema='meia-noite'] [data-item-cardapio] .adicionar-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+[data-tema='meia-noite'] [data-item-cardapio] .modificar-card { grid-column: 1 / -1; }
+
 /* DINER — fórmica, faixa cromada, placa física; tipografia slab sem falso negrito. */
 [data-tema='diner'] h1, [data-tema='diner'] h2, [data-tema='diner'] h3,
 [data-tema='diner'] .marca-texto { font-weight: 400; }
-[data-tema='diner'] .cabecalho-casa { height: 60px; border-bottom: 4px double var(--traco); }
+[data-tema='diner'] .cabecalho-casa { height: 44px; border-bottom: 4px double var(--traco); }
 [data-tema='diner'] .marca-texto { color: var(--osso); font-size: 1.3rem; line-height: 1.2; }
 .marca-registro { display: block; font: .6875rem/1.5 var(--fonte-corpo), sans-serif; }
-[data-tema='diner'] .cabecalho-casa > .nota { max-width: 9ch; text-align: right; font-size: .75rem; }
-[data-tema='diner'] .hero-faixa { height: 208px; max-height: 35dvh; background: var(--borra); border-bottom: 4px double var(--traco); }
+[data-tema='diner'] .cabecalho-casa > .nota { max-width: 16ch; text-align: right; font-size: .625rem; }
+[data-tema='diner'] .hero-faixa { height: 96px; min-height: 0; max-height: 30dvh; background: var(--borra); border-bottom: 4px double var(--traco); }
 [data-tema='diner'] .hero-faixa::after { display: none; }
-[data-tema='diner'] .hero-texto { position: relative; padding-bottom: 20px; z-index: 1; pointer-events: none; }
-[data-tema='diner'] .hero-texto h1 { font-size: clamp(2rem, 5vw, 4.5rem); line-height: 1.12; max-width: 9ch; }
-[data-tema='diner'] .hero-texto p { max-width: 27ch; font-size: .75rem; }
-[data-tema='diner'] .hero-faixa > img { inset: auto -24px -6px auto; width: 162px; height: 162px; object-fit: contain; z-index: 0; }
+[data-tema='diner'] .hero-texto { position: relative; padding-bottom: 6px; z-index: 1; pointer-events: none; }
+[data-tema='diner'] .hero-texto h1 { font-size: 1.125rem; line-height: 1.2; max-width: none; }
+[data-tema='diner'] .hero-texto p { display: none; }
+[data-tema='diner'] .hero-faixa > img { display: none; }
 [data-tema='diner'] .hero-espreita { z-index: 2; }
-[data-tema='diner'] .horario-compacto { font-size: .8125rem; }
+[data-tema='diner'] .horario-compacto { font-size: .8125rem; padding-block: 3px; }
 [data-tema='diner'] .cabecalho-secao h2 { font-size: 1.85rem; }
-[data-tema='diner'] .lanche-card { border: 3px double var(--traco); padding: 10px; }
-[data-tema='diner'] .lanche-card h3 { font-size: 1.15rem; line-height: 1.24; min-height: 2.5em; }
-[data-tema='diner'] .lanche-icone { height: 92px; object-fit: cover; }
-[data-tema='diner'] .lanche-card > [data-preco] { font-size: 1.3rem; }
-[data-tema='diner'] .filtros-forma { gap: 6px; border: 0; }
-[data-tema='diner'] .filtros-forma button { border: 1px solid var(--traco); border-radius: var(--raio); font-size: .875rem; }
+/* O fio duplo pertence ao painel. Cada foto é uma janela quadrada. */
+[data-tema='diner'] .cardapio { padding: 6px 12px 36px; }
+[data-tema='diner'] .cardapio .cabecalho-secao { margin-bottom: 6px; }
+[data-tema='diner'] .cabecalho-secao h2 { font-size: 1.5rem; }
+[data-tema='diner'] .filtro-resumo { min-height: 44px; }
+[data-tema='diner'] .cardapio-grade:not(.monte-grade) { grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 6px; padding: 4px; border: 4px double var(--traco); background: var(--fumo); }
+[data-tema='diner'] [data-item-cardapio] { padding: 0; border: 0; border-radius: 0; background: none; }
+[data-tema='diner'] [data-item-cardapio] h3 { font-size: .875rem; line-height: 1.25;
+  min-height: 2.5em; margin: 5px 2px 3px; overflow-wrap: anywhere; }
+[data-tema='diner'] .diner-recheio { margin: 0; }
+[data-tema='diner'] .diner-recheio summary { display: block; position: relative; cursor: pointer;
+  min-width: 44px; min-height: 44px; list-style: none; background: var(--borra); }
+[data-tema='diner'] .diner-recheio summary::-webkit-details-marker { display: none; }
+[data-tema='diner'] .diner-recheio summary > span { position: absolute; bottom: 3px; right: 3px;
+  padding: 2px 4px; font: .625rem/1.2 var(--fonte-corpo), sans-serif; color: var(--letreiro); background: var(--fumo); }
+[data-tema='diner'] .diner-recheio .lanche-icone { width: 100%; height: auto; aspect-ratio: 1;
+  margin: 0; object-fit: cover; }
+[data-tema='diner'] .diner-recheio p { font-size: .8125rem; line-height: 1.4; padding: 8px 2px; }
+[data-tema='diner'] [data-item-cardapio] > [data-preco] { font-family: var(--fonte-display), serif;
+  font-weight: 400; font-size: 1rem; margin: auto 2px 5px; }
+[data-tema='diner'] [data-item-cardapio] > [data-add] { padding: 6px 2px; font-size: .8125rem; }
+[data-tema='diner'] .filtros-forma { grid-template-columns: .7fr 1fr 1fr 1.1fr; gap: 4px; border: 0; }
+[data-tema='diner'] .filtros-forma button { border: 1px solid var(--traco); border-radius: var(--raio); font-size: .75rem; }
 [data-tema='diner'] .filtros-forma button[aria-pressed='true'] { border-color: var(--letreiro); background: var(--letreiro); color: var(--fumo); }
 [data-tema='diner'] #rx-takeover { background: var(--fumo); }
 [data-tema='diner'] #rx-cabeca { border-bottom: 4px double var(--traco); }
@@ -50,9 +88,9 @@
 [data-tema='diner'] #rx-painel > img { opacity: .035 !important; }
 [data-tema='diner'] #rx-medidor { border-top: 4px double var(--traco); background: var(--fumo); }
 [data-tema='diner'] .rodape-assinatura { display: flex; align-items: center; gap: 20px; }
-.placa-porta { position: absolute; left: 18px; top: 0; width: 158px; height: 82px; z-index: 3;
+.placa-porta { position: absolute; left: 18px; top: -8px; width: 132px; height: 68px; z-index: 3;
   color: var(--letreiro); perspective: 700px; }
-.placa-fio { position: absolute; width: 72px; height: 34px; left: 43px; top: -9px;
+.placa-fio { position: absolute; width: 72px; height: 34px; left: 30px; top: -9px;
   border: 1px solid var(--traco); transform: rotate(22deg) skew(-44deg); }
 .placa-balanco { position: absolute; inset: 26px 0 0; transform-origin: 50% -24px;
   animation: placa-assentar 900ms ease-out both; }
@@ -63,7 +101,7 @@
 .placa-porta[data-aberto='false'] { --placa-angulo: 180deg; }
 .placa-face { position: absolute; inset: 0; display: grid; place-items: center; backface-visibility: hidden;
   border: 4px double var(--traco); border-radius: var(--raio); background: var(--fumo);
-  font: 1.35rem/1 var(--fonte-display), serif; letter-spacing: .025em; }
+  font: 1.125rem/1 var(--fonte-display), serif; letter-spacing: .025em; }
 .placa-fechado { transform: rotateY(180deg); }
 @keyframes placa-chegar { from { transform: rotateY(calc(var(--placa-angulo) + 360deg)); } to { transform: rotateY(var(--placa-angulo)); } }
 @keyframes placa-assentar { 0% { transform: rotate(-7deg); } 45% { transform: rotate(3deg); } 75% { transform: rotate(-1deg); } 100% { transform: rotate(0); } }
@@ -114,39 +152,49 @@
 
 /* CANTINA — folha de menu, moldura de madeira e toldo. Nenhuma fonte de máquina. */
 [data-tema='cantina'] { font-variant-numeric: oldstyle-nums proportional-nums; }
-[data-tema='cantina'] .cabecalho-casa { height: 56px; justify-content: center; }
+[data-tema='cantina'] .cabecalho-casa { height: 48px; justify-content: center; }
 [data-tema='cantina'] .marca-texto { color: var(--osso); font-size: 1.65rem; font-weight: 650; letter-spacing: -.04em; }
 [data-tema='cantina'] .cabecalho-casa > .nota { display: none; }
-[data-tema='cantina'] .hero-faixa { height: 188px; max-height: 35dvh; margin: 0 14px;
+[data-tema='cantina'] .hero-faixa { height: 86px; min-height: 0; max-height: 30dvh; margin: 0 14px;
   background: var(--fumo); border: 1px solid var(--traco); border-bottom: 5px double var(--traco); }
 [data-tema='cantina'] .hero-faixa::after { display: none; }
-[data-tema='cantina'] .hero-texto { padding: 46px 18px 16px; position: relative; z-index: 1; }
-[data-tema='cantina'] .hero-texto h1 { font-size: clamp(2.2rem, 5vw, 4.8rem); line-height: 1.05; max-width: 10ch; font-weight: 650; letter-spacing: -.05em; }
-[data-tema='cantina'] .hero-texto p { max-width: 23ch; font-size: .8125rem; }
-[data-tema='cantina'] .hero-faixa > img { inset: auto -32px 14px auto; width: 160px; height: 160px; object-fit: contain; z-index: 0; }
-.toldo { position: absolute; inset: 0 0 auto; height: 42px; z-index: 3; overflow: hidden; }
+[data-tema='cantina'] .hero-texto { padding: 28px 10px 10px; position: relative; text-align: center; z-index: 1; }
+[data-tema='cantina'] .hero-texto h1 { font-size: clamp(1.375rem, 4.5vw, 4.8rem); line-height: 1.1; max-width: none; font-weight: 650; letter-spacing: -.05em; }
+[data-tema='cantina'] .hero-texto p { font-size: .625rem; }
+[data-tema='cantina'] .hero-faixa > img { display: none; }
+.toldo { position: absolute; inset: 0 0 auto; height: 20px; z-index: 3; overflow: hidden; }
 .toldo-tecido { height: 100%; transform-origin: center top;
   background: repeating-linear-gradient(90deg, var(--latao) 0 28px, var(--fumo) 28px 56px);
   border-bottom: 3px solid var(--latao); animation: toldo-desenrolar 650ms cubic-bezier(.2,.7,.3,1) both; }
 @keyframes toldo-desenrolar { from { transform: scaleY(.02); } to { transform: scaleY(1); } }
-[data-tema='cantina'] .horario-compacto { text-align: center; font-size: .8125rem; padding-block: 14px; }
-[data-tema='cantina'] .cardapio { padding-top: 16px; padding-inline: 20px; padding-bottom: 54px; }
-[data-tema='cantina'] .cabecalho-secao { align-items: baseline; border-bottom: 3px double var(--traco); padding-bottom: 12px; margin-bottom: 12px; }
-[data-tema='cantina'] .cabecalho-secao h2 { font-size: 2.25rem; font-weight: 600; letter-spacing: -.04em; }
+[data-tema='cantina'] .horario-compacto { text-align: center; font-size: .75rem; padding-block: 7px; }
+[data-tema='cantina'] .cardapio { padding: 10px 16px 36px; }
+[data-tema='cantina'] .cardapio .cabecalho-secao { align-items: baseline; border-bottom: 3px double var(--traco);
+  padding-bottom: 6px; margin-bottom: 4px; }
+[data-tema='cantina'] .cabecalho-secao h2 { font-size: 1.75rem; font-weight: 600; letter-spacing: -.04em; }
 [data-tema='cantina'] .cabecalho-secao > .nota { font-size: .75rem; }
 [data-tema='cantina'] .filtro-resumo { min-height: 44px; }
 [data-tema='cantina'] .filtros-forma { gap: 0; }
 [data-tema='cantina'] .filtros-forma button { font-size: .8125rem; }
-[data-tema='cantina'] .cardapio-grade { grid-template-columns: 1fr; gap: 26px; }
-[data-tema='cantina'] .lanche-card { display: grid; grid-template-columns: minmax(0,1fr) auto;
-  padding: 16px; gap: 8px 12px; border: 1px solid var(--traco);
-  outline: 1px solid var(--traco); outline-offset: -6px; background: var(--fumo); }
-[data-tema='cantina'] .lanche-icone { grid-column: 1 / -1; width: min(100%, 260px); height: 132px; margin: 0; object-fit: cover; justify-self: center; }
-[data-tema='cantina'] .lanche-card h3 { grid-column: 1; min-height: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -.035em; }
-[data-tema='cantina'] .ingredientes-linha { grid-column: 1 / -1; white-space: normal; margin: 0; font-size: .8125rem; line-height: 1.55; }
-[data-tema='cantina'] .lanche-card > [data-preco] { grid-column: 2; grid-row: 2; margin: 0; font-size: 1.45rem; align-self: start; }
-[data-tema='cantina'] .lanche-card > button { grid-column: 1 / -1; }
-[data-tema='cantina'] .lanche-card > .botao-quente { margin-top: 6px; background: transparent; color: var(--latao); border-color: var(--latao); }
+[data-tema='cantina'] .cardapio-grade:not(.monte-grade) { grid-template-columns: 1fr; gap: 0;
+  border-top: 1px solid var(--traco); background: var(--fumo); padding-inline: 10px; }
+[data-tema='cantina'] [data-item-cardapio] { display: grid;
+  grid-template-columns: 64px minmax(0,1fr) 44px; gap: 4px 8px; padding: 10px 0;
+  border: 0; border-bottom: 1px solid var(--traco); border-radius: 0; background: none; }
+/* Nome longo quebra em linhas; preço e espaço mínimo do pontilhado ficam inteiros. */
+[data-tema='cantina'] .menu-nome-preco { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+[data-tema='cantina'] .menu-nome-preco h3 { flex: 0 1 auto; min-width: 0; min-height: 0;
+  font-size: 1.0625rem; font-weight: 600; line-height: 1.25; letter-spacing: -.025em; overflow-wrap: anywhere; }
+[data-tema='cantina'] .menu-pontilhado { flex: 1 0 12px; min-width: 12px; border-bottom: 1px dotted var(--traco); }
+[data-tema='cantina'] .menu-nome-preco [data-preco] { flex: none; font-size: 1.0625rem; line-height: 1.25; }
+[data-tema='cantina'] [data-item-cardapio] .lanche-icone { grid-column: 1; grid-row: 2;
+  width: 64px; height: 64px; margin: 0; object-fit: cover; align-self: center; }
+[data-tema='cantina'] [data-item-cardapio] .ingredientes-linha { grid-column: 2; grid-row: 2;
+  white-space: normal; overflow: visible; text-overflow: clip; margin: 0; font-size: .8125rem; line-height: 1.35; opacity: .85; align-self: center; }
+[data-tema='cantina'] [data-item-cardapio] > [data-add] { grid-column: 3; grid-row: 2;
+  width: 44px; height: 44px; padding: 0; align-self: center; background: transparent; color: var(--latao); border-color: var(--latao); }
+[data-tema='cantina'] [data-item-cardapio] .adicionar-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+[data-tema='cantina'] [data-item-cardapio] .modificar-card { grid-column: 2 / -1; min-height: 44px; margin: 0; justify-self: start; }
 [data-tema='cantina'] #rx-cabeca { border-bottom: 3px double var(--traco); }
 [data-tema='cantina'] #rx-cabeca h2 { font-size: 1.5rem !important; font-weight: 600; }
 [data-tema='cantina'] #rx-painel { box-shadow: inset 8px 0 var(--fumo), inset -8px 0 var(--fumo); }
@@ -159,24 +207,34 @@
 
 @media (min-width: 900px) {
   .hero-texto { justify-content: center; padding-bottom: 0; }
-  [data-tema='diner'] .hero-faixa, [data-tema='cantina'] .hero-faixa { max-width: 1216px; margin-inline: auto; height: 280px; }
+  [data-tema='meia-noite'] .hero-faixa { height: min(270px, 30dvh); }
+  [data-tema='meia-noite'] [data-item-cardapio] { padding: 14px; }
+  [data-tema='meia-noite'] [data-item-cardapio] .lanche-icone { width: 180px; height: 90px; }
+  [data-tema='meia-noite'] [data-item-cardapio] h3 { font-size: 1.5rem; }
+  [data-tema='diner'] .hero-faixa, [data-tema='cantina'] .hero-faixa { max-width: 1216px; margin-inline: auto; }
+  [data-tema='diner'] .hero-faixa { height: 180px; }
   [data-tema='diner'] .hero-texto { padding-left: 224px; padding-bottom: 20px; }
   [data-tema='diner'] .placa-porta { top: 56px; left: 30px; }
   [data-tema='diner'] .hero-texto h1 { max-width: 12ch; font-size: 3.5rem; }
-  [data-tema='diner'] .hero-faixa > img { width: 320px; height: 270px; right: 10%; }
-  [data-tema='diner'] .lanche-icone { height: 150px; }
-  [data-tema='diner'] .lanche-card h3 { font-size: 1.5rem; }
+  [data-tema='diner'] .hero-faixa > img { display: block; inset: auto 10% 0 auto; width: 320px; height: 180px; object-fit: cover; }
+  [data-tema='diner'] .cardapio-grade:not(.monte-grade) { grid-template-columns: repeat(5, minmax(0,1fr)); gap: 16px 10px; padding: 8px; }
+  [data-tema='diner'] [data-item-cardapio] h3 { font-size: 1.125rem; }
+  [data-tema='diner'] [data-item-cardapio] > [data-preco] { font-size: 1.25rem; }
   [data-tema='pratico'] .moldura { max-width: 920px; }
   [data-tema='pratico'] .cardapio-grade:not(.monte-grade) .lanche-card { grid-template-columns: 88px minmax(0, 1fr) 108px; column-gap: 18px; }
   [data-tema='pratico'] .lanche-card > [data-add] { width: 108px; }
   [data-tema='pratico'] .adicionar-label { position: static; width: auto; height: auto; clip-path: none; font-size: .875rem; }
   [data-tema='pratico'] .adicionar-mais { display: none; }
-  [data-tema='cantina'] .hero-texto { padding-left: 40px; }
-  [data-tema='cantina'] .hero-faixa > img { width: 400px; height: 280px; right: 4%; bottom: 0; }
+  [data-tema='cantina'] .hero-faixa { height: 150px; }
+  [data-tema='cantina'] .hero-texto { padding: 40px 32px 26px; }
+  [data-tema='cantina'] .hero-texto h1 { font-size: 2.75rem; }
+  [data-tema='cantina'] .hero-texto p { font-size: .875rem; }
+  [data-tema='cantina'] .toldo { height: 32px; }
   [data-tema='cantina'] .cardapio { max-width: 1120px; }
-  [data-tema='cantina'] .cardapio-grade { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 28px; }
-  [data-tema='cantina'] .lanche-icone { height: 220px; }
-  [data-tema='cantina'] .lanche-card { padding: 24px; }
+  [data-tema='cantina'] .cardapio-grade:not(.monte-grade) { grid-template-columns: repeat(2, minmax(0,1fr)); column-gap: 28px; padding-inline: 20px; }
+  [data-tema='cantina'] [data-item-cardapio] { padding-block: 16px; }
+  [data-tema='cantina'] .menu-nome-preco h3, [data-tema='cantina'] .menu-nome-preco [data-preco] { font-size: 1.3rem; }
+  [data-tema='cantina'] [data-item-cardapio] .ingredientes-linha { font-size: .875rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .placa-balanco, .placa-giro, .toldo-tecido { animation: none !important; transition: none !important; }
