@@ -32,3 +32,6 @@ next-env.d.ts
 
 # qa (capturas locais, não versionadas)
 /qa/
+
+# Pacote derivado; consumidor guarda a versão exportada.
+/dist/

@@ -29,14 +29,12 @@ cardápio (hoje só o sintético de QA bate no teto), avisar antes de corrigir.
 
 ---
 
-## Injeção de tema pelo Radar — após Prompt 24
+## Integração com o Radar — Prompt 26
 
-O parâmetro `?tema=` serve somente à revisão das quatro identidades. O padrão continua
-Meia-Noite. Na fase de portabilidade, Radar seleciona `Tema` no servidor e entrega o
-objeto ao mesmo `ProvedorTema`, com `estiloTema` no contêiner raiz e somente as fontes
-ativas. Não copiar balcão, prensa, dados ou fotos quatro vezes.
+Concluída em pacote único `@radar/lancheria-rx`: `npm run exportar:radar -- /caminho/creatingmk1`.
+O Radar resolve quatro skins no servidor. O parâmetro `?tema=` só é aceito em desenvolvimento
+neste projeto; não controla nenhuma demo publicada. Ver `pacote/README.md` e o relatório.
 
-O repositório creatingmk1 foi consultado nesta rodada. Sua `SkinDefinition`/`Theme`
-não substitui o contrato de temperatura deste motor: a adaptação deve preservar
-`quente` e `frio` como papéis distintos. A publicação das quatro skins no registro do
-Radar pertence à fase de integração, não ao seletor provisório pedido aqui.
+Pendências de produto: decidir o destino da antiga Chapa Burger; pipeline de fotos próprias;
+localização além de pt-BR/BRL e horários semanais calculados (texto importado é preservado,
+mas a placa só calcula o intervalo diário configurado). Não estão escondidos em componentes.

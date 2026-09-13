@@ -1,14 +1,15 @@
 'use client'
 
+import { useNegocio } from '@/components/NegocioAtivo'
+
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MAPA_CAMADAS, urlCamada } from '@/data/camadas'
-import { FIXOS, type Fixo } from '@/data/fixos'
+import { type Fixo } from '@/data/fixos'
 import { espalhaXDe, ESPALHA_Y, PRENSA_ESPACAMENTO, unidadesPilha, visivelPx } from '@/components/raio-x/prensa'
 import { prefersReducedMotion } from '@/lib/motion'
-import { brl, precoDoFixo } from '@/lib/precos'
-import { resumoCamadas } from '@/lib/pedido'
+import { brl } from '@/lib/precos'
 
-const LANCHES = FIXOS.filter(f => f.forma === 'prensado')
+
 
 function Pilha({ fixo }: { fixo: Fixo }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -36,13 +37,16 @@ function Pilha({ fixo }: { fixo: Fixo }) {
 }
 
 export default function TrilhoLanches({ onAdicionar }: { onAdicionar: (f: Fixo, el: HTMLElement) => void }) {
+  const { FIXOS, precoDoFixo, resumoCamadas } = useNegocio()
+  const LANCHES = FIXOS.filter(f => f.forma === 'prensado')
   const ref = useRef<HTMLDivElement>(null)
   const [centro, setCentro] = useState(1)
   const [ativo, setAtivo] = useState(false)
   const centroRef = useRef(1)
   const atualizar = useRef<() => void>(() => {})
   useEffect(() => {
-    const rail = ref.current!
+    const rail = ref.current
+    if (!rail) return
     const io = new IntersectionObserver(entradas => { setAtivo(entradas.some(e => e.isIntersecting)) }, { rootMargin: '120px' })
     io.observe(rail)
     const cards = [...rail.querySelectorAll<HTMLElement>('[data-item-trilho]')]
@@ -75,7 +79,8 @@ export default function TrilhoLanches({ onAdicionar }: { onAdicionar: (f: Fixo, 
     atualizar.current = pedir
     const ro = new ResizeObserver(pedir); ro.observe(rail)
     const mo = new MutationObserver(pedir); mo.observe(rail, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-k'] })
-    rail.scrollLeft = cards[1].offsetLeft + cards[1].offsetWidth / 2 - rail.clientWidth / 2
+    const inicial=cards[Math.min(1,cards.length-1)]
+    if(inicial) rail.scrollLeft = inicial.offsetLeft + inicial.offsetWidth / 2 - rail.clientWidth / 2
     rail.addEventListener('scroll', pedir, { passive: true }); pedir()
     return () => { cancelAnimationFrame(frame); rail.removeEventListener('scroll', pedir); io.disconnect(); ro.disconnect(); mo.disconnect() }
   }, [])
@@ -83,8 +88,10 @@ export default function TrilhoLanches({ onAdicionar }: { onAdicionar: (f: Fixo, 
   const mover = (delta: number) => {
     const rail = ref.current!, cards = rail.querySelectorAll<HTMLElement>('[data-item-trilho]')
     const alvo = cards[Math.max(0, Math.min(cards.length - 1, centro + delta))]
+    if (!alvo) return
     rail.scrollTo({ left: alvo.offsetLeft + alvo.offsetWidth / 2 - rail.clientWidth / 2, behavior: prefersReducedMotion() ? 'instant' : 'smooth' })
   }
+  if (!LANCHES.length) return null
   return <section id="sugestoes" className="secao-trilho" aria-labelledby="titulo-sugestoes">
     <div className="cabecalho-secao moldura"><div><h2 id="titulo-sugestoes">Na prensa</h2><p>O centro fecha. As camadas aparecem ao deslizar.</p></div>
       <div className="setas-trilho"><button aria-label="Lanche anterior" onClick={() => mover(-1)} disabled={centro === 0}>←</button><button aria-label="Próximo lanche" onClick={() => mover(1)} disabled={centro === LANCHES.length - 1}>→</button></div>
@@ -92,7 +99,7 @@ export default function TrilhoLanches({ onAdicionar }: { onAdicionar: (f: Fixo, 
     <div ref={ref} data-trilho="lanches" className="trilho-lanches" role="region" aria-label="Prensados por dentro" onKeyDown={e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); mover(e.key === 'ArrowLeft' ? -1 : 1) } }}>
       {LANCHES.map((f, i) => <article key={f.slug} data-item-trilho={f.slug} data-central={i === centro ? '' : undefined} className="trilho-lanche">
         <div data-palco className="trilho-palco">
-          {ativo && Math.abs(i - centro) <= 1 ? <Pilha fixo={f} /> : <img data-icone src={`/fixos/${f.slug}.webp`} alt="" width={2000} height={2000} loading="lazy" />}
+          {ativo && Math.abs(i - centro) <= 1 ? <Pilha fixo={f} /> : <img data-icone src={f.foto ?? `/fixos/${f.slug}.webp`} alt="" width={2000} height={2000} loading="lazy" />}
         </div>
         <div className="trilho-ficha"><h3>{f.nome}</h3><p className="ingredientes-linha" title={resumoCamadas(f.camadas)}>{resumoCamadas(f.camadas)}</p>
         <div className="trilho-acao"><span data-preco>{brl(precoDoFixo(f))}</span><button className="botao-quente" data-add={f.slug} onClick={e => onAdicionar(f, e.currentTarget.closest('article')!)}>Adicionar</button></div></div>

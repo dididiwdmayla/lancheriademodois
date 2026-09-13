@@ -1,3 +1,4 @@
+import { useNegocio } from '@/components/NegocioAtivo'
 // O trilho de ingredientes disponíveis. Pães não entram: eles são obrigatórios e ficam
 // travados nas extremidades.
 //
@@ -48,9 +49,11 @@ export default function Trilho({
   onArrastar,
   folha,
 }: Props) {
+  const { CAMADAS } = useNegocio()
+  const recheios=CAMADAS.filter(c=>!c.pao).sort((a,b)=>a.ordem-b.ordem)
   return (
     <div id="rx-trilho" data-folha={folha ? '' : undefined} role="group" aria-label="Ingredientes disponíveis">
-      {RECHEIOS.map((c) => {
+      {recheios.map((c) => {
         const n = contarSlug(c.slug)
         const ausente = !!ausentes[c.slug]
         const off = bloqueado || ausente || cheio || n >= MAX_REPETICOES

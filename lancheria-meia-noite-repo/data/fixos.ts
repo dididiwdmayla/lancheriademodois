@@ -7,6 +7,8 @@ export type Fixo = {
   forma: 'prensado' | 'redondo'
   camadas: string[]
   essenciais: string[]
+  precoCent?: number
+  foto?: string
 }
 
 export const FIXOS: Fixo[] = [

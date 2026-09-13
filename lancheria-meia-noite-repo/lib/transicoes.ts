@@ -91,9 +91,10 @@ export function transicionar(nome: NomeTransicao, mutar: () => void, origem?: El
   emCurso = true
   const retomar = pausarMovimento()
   const { ms: padraoMs, sai } = TRANSICOES[nome]
-  const ms = raiz.dataset.tema === 'pratico' ? 120 : padraoMs
+  const config = document.querySelector<HTMLElement>('[data-lancheria-app]') ?? raiz
+  const ms = Number(config.dataset.transicaoMs) || padraoMs
   const doc = document as ComVT
-  const captura = raiz.dataset.tema !== 'pratico' && nome.startsWith('rx-') && window.matchMedia('(min-width: 900px) and (pointer: fine)').matches
+  const captura = config.dataset.captura !== 'false' && nome.startsWith('rx-') && window.matchMedia('(min-width: 900px) and (pointer: fine)').matches
     && typeof doc.startViewTransition === 'function'
   escreverOrigem(raiz, origem instanceof Element ? origem.getBoundingClientRect() : origem ?? null)
   raiz.style.setProperty('--tr-ms', `${ms}ms`)

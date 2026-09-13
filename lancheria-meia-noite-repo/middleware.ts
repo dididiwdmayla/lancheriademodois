@@ -4,7 +4,7 @@ import { selecionarTema } from './temas'
 export function middleware(request: NextRequest) {
   const headers = new Headers(request.headers)
   // Sobrescreve o cabeçalho externo: só os quatro slugs do registro são aceitos.
-  const tema = selecionarTema(request.nextUrl.searchParams.get('tema') ?? process.env.TEMA)
+  const tema = selecionarTema((process.env.NODE_ENV === 'development' ? request.nextUrl.searchParams.get('tema') : null) ?? process.env.TEMA)
   headers.set('x-lancheria-tema', tema.slug)
   return NextResponse.next({ request: { headers } })
 }

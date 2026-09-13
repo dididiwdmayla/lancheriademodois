@@ -32,7 +32,7 @@ const CONTAGEM_MS = 320
 export const ALTURA_BARRA = 'var(--barra-altura)'
 
 export default function BarraPedido({ itens, totalCent, ref, onAbrir, ultimo, onModificar }: Props) {
-  const pratico = useTema().slug === 'pratico'
+  const tema = useTema()
   const totalRef = useRef<HTMLSpanElement>(null)
   const ficha = useRef(0)
   const destinoAnimado = useRef<number | null>(null)
@@ -102,7 +102,7 @@ export default function BarraPedido({ itens, totalCent, ref, onAbrir, ultimo, on
         borderTop: '1px solid var(--traco)',
       }}
     >
-      {ultimo && <div className="barra-modificar"><span>{ultimo.nome}</span><button className="botao-texto" onClick={e => onModificar(ultimo.id, e.currentTarget.closest('.barra-modificar'))}>{pratico ? 'Personalizar' : 'Modificar lanche'}</button></div>}
+      {ultimo && <div className="barra-modificar"><span>{ultimo.nome}</span><button className="botao-texto" onClick={e => onModificar(ultimo.id, e.currentTarget.closest('.barra-modificar'))}>{tema.rotulos.modificar}</button></div>}
       <div
         className="barra-conteudo"
         style={{

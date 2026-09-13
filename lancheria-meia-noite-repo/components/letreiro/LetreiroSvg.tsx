@@ -1,3 +1,6 @@
+import { useNegocio } from '@/components/NegocioAtivo'
+import { horaLegivel } from '@/lib/horario'
+import { linhasMarca } from '@/lib/marca'
 import type { CSSProperties } from 'react'
 import { DesenhoMascote } from './Mascote'
 import { TREMOR_GRUPOS } from './sequencia'
@@ -16,7 +19,7 @@ function animacaoTremor(id: (typeof TREMOR_GRUPOS)[number]['id']): CSSProperties
 // ninguém: contra o fundo aceso ele precisa chegar em --traco cheio.
 const arestaDoCorte: CSSProperties = {
   fill: 'none',
-  stroke: '#33251E',
+  stroke: 'var(--traco)',
   strokeWidth: 1.5,
   strokeOpacity: 1,
 }
@@ -41,19 +44,21 @@ const fonteLetreiro: CSSProperties = {
  * junto com o reator.
  */
 export default function LetreiroSvg() {
+  const { CASA } = useNegocio()
+  const [linha1,linha2] = linhasMarca(CASA.marca)
   return (
     <svg
       id="lt-svg"
       viewBox="0 0 1000 1210"
       role="img"
-      aria-label="Letreiro da Lancheria Meia-Noite. Na tabuleta pintada: das 18h às 4h."
+      aria-label={`Letreiro de ${CASA.nome}. Das ${horaLegivel(CASA.abre)} às ${horaLegivel(CASA.fecha)}.`}
       style={{ width: '100%', height: 'auto', display: 'block' }}
     >
       <defs>
         <radialGradient id="lt-luz" cx="50%" cy="47%" r="70%">
-          <stop offset="0%" stopColor="#A8C6D4" stopOpacity="0.98" />
-          <stop offset="55%" stopColor="#A8C6D4" stopOpacity="0.93" />
-          <stop offset="100%" stopColor="#A8C6D4" stopOpacity="0.82" />
+          <stop offset="0%" stopColor="var(--letreiro)" stopOpacity="0.98" />
+          <stop offset="55%" stopColor="var(--letreiro)" stopOpacity="0.93" />
+          <stop offset="100%" stopColor="var(--letreiro)" stopOpacity="0.82" />
         </radialGradient>
         <radialGradient
           id="lt-luz-face"
@@ -62,23 +67,23 @@ export default function LetreiroSvg() {
           r="62%"
           gradientTransform="translate(0.5 0.5) scale(1 0.80) translate(-0.5 -0.5)"
         >
-          <stop offset="0%" stopColor="#A8C6D4" stopOpacity="0.90" />
-          <stop offset="45%" stopColor="#A8C6D4" stopOpacity="0.54" />
-          <stop offset="78%" stopColor="#A8C6D4" stopOpacity="0.20" />
-          <stop offset="100%" stopColor="#A8C6D4" stopOpacity="0.02" />
+          <stop offset="0%" stopColor="var(--letreiro)" stopOpacity="0.90" />
+          <stop offset="45%" stopColor="var(--letreiro)" stopOpacity="0.54" />
+          <stop offset="78%" stopColor="var(--letreiro)" stopOpacity="0.20" />
+          <stop offset="100%" stopColor="var(--letreiro)" stopOpacity="0.02" />
         </radialGradient>
         <linearGradient id="lt-tubo-luz" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#A8C6D4" stopOpacity="0" />
-          <stop offset="50%" stopColor="#A8C6D4" stopOpacity="1" />
-          <stop offset="100%" stopColor="#A8C6D4" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--letreiro)" stopOpacity="0" />
+          <stop offset="50%" stopColor="var(--letreiro)" stopOpacity="1" />
+          <stop offset="100%" stopColor="var(--letreiro)" stopOpacity="0" />
         </linearGradient>
         <mask id="lt-recorte-acrilico" maskUnits="userSpaceOnUse" x="86" y="66" width="828" height="628">
           <g style={fonteLetreiro}>
             <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#ffffff">
-              MEIA
+              {linha1.toUpperCase()}
             </text>
             <text x="500" y="620" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#ffffff">
-              NOITE
+              {linha2.toUpperCase()}
             </text>
           </g>
         </mask>
@@ -88,10 +93,10 @@ export default function LetreiroSvg() {
             style={fonteLetreiro}
           >
             <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#575757">
-              MEIA
+              {linha1.toUpperCase()}
             </text>
             <text x="500" y="620" textLength="660" lengthAdjust="spacingAndGlyphs" fill="#575757">
-              NOITE
+              {linha2.toUpperCase()}
             </text>
           </g>
         </mask>
@@ -102,9 +107,9 @@ export default function LetreiroSvg() {
           r="58%"
           gradientTransform="translate(0.5 0.5) scale(1 0.78) translate(-0.5 -0.5)"
         >
-          <stop offset="0%" stopColor="#120D0B" stopOpacity="0" />
-          <stop offset="62%" stopColor="#120D0B" stopOpacity="0" />
-          <stop offset="100%" stopColor="#120D0B" stopOpacity="0.92" />
+          <stop offset="0%" stopColor="var(--borra)" stopOpacity="0" />
+          <stop offset="62%" stopColor="var(--borra)" stopOpacity="0" />
+          <stop offset="100%" stopColor="var(--borra)" stopOpacity="0.92" />
         </radialGradient>
         <clipPath id="lt-recorte-painel">
           <rect x="86" y="66" width="828" height="628" rx="3" />
@@ -112,10 +117,10 @@ export default function LetreiroSvg() {
       </defs>
       <g transform="rotate(-0.4 500 400)">
         <g id="lt-caixa">
-          <rect x="60" y="40" width="880" height="680" rx="4" fill="#1C1512" stroke="#33251E" strokeWidth="2" />
-          <path d="M938 42 L938 718" stroke="#33251E" strokeWidth="5" />
-          <rect x="86" y="66" width="828" height="628" rx="3" fill="#120D0B" stroke="#33251E" strokeWidth="1" />
-          <path d="M120 720 L120 766 M880 720 L880 766" stroke="#33251E" strokeWidth="2" />
+          <rect x="60" y="40" width="880" height="680" rx="4" fill="var(--fumo)" stroke="var(--traco)" strokeWidth="2" />
+          <path d="M938 42 L938 718" stroke="var(--traco)" strokeWidth="5" />
+          <rect x="86" y="66" width="828" height="628" rx="3" fill="var(--borra)" stroke="var(--traco)" strokeWidth="1" />
+          <path d="M120 720 L120 766 M880 720 L880 766" stroke="var(--traco)" strokeWidth="2" />
         </g>
         <g id="lt-tabuleta">
           <rect x="60" y="764" width="880" height="430" rx="4" fill="var(--fumo)" stroke="var(--traco)" strokeWidth="2" />
@@ -130,8 +135,8 @@ export default function LetreiroSvg() {
               fontVariationSettings: "'opsz' 96, 'wght' 820, 'SOFT' 14, 'WONK' 1",
             }}
           >
-            <text x="752" y="944" textLength="300" lengthAdjust="spacingAndGlyphs">DAS 18H</text>
-            <text x="752" y="1046" textLength="234" lengthAdjust="spacingAndGlyphs">ÀS 4H</text>
+            <text x="752" y="944" textLength="300" lengthAdjust="spacingAndGlyphs">{CASA.horarioConfirmado===false?'HORÁRIO':`DAS ${horaLegivel(CASA.abre).toUpperCase()}`}</text>
+            <text x="752" y="1046" textLength="234" lengthAdjust="spacingAndGlyphs">{CASA.horarioConfirmado===false?'NA CASA':`ÀS ${horaLegivel(CASA.fecha).toUpperCase()}`}</text>
           </g>
         </g>
         <g id="lt-tremor" style={animacaoTremor('lt-tremor')}>
@@ -156,10 +161,10 @@ export default function LetreiroSvg() {
               textLength="660"
               lengthAdjust="spacingAndGlyphs"
               fill="#171110"
-              stroke="#33251E"
+              stroke="var(--traco)"
               strokeWidth="1.5"
             >
-              MEIA
+              {linha1.toUpperCase()}
             </text>
             <text
               x="500"
@@ -167,10 +172,10 @@ export default function LetreiroSvg() {
               textLength="660"
               lengthAdjust="spacingAndGlyphs"
               fill="#171110"
-              stroke="#33251E"
+              stroke="var(--traco)"
               strokeWidth="1.5"
             >
-              NOITE
+              {linha2.toUpperCase()}
             </text>
           </g>
           <g id="lt-texto" style={animacaoTremor('lt-texto')}>
@@ -187,10 +192,10 @@ export default function LetreiroSvg() {
               <rect x="86" y="66" width="828" height="628" fill="url(#lt-luz)" mask="url(#lt-recorte-acrilico)" />
               <g style={{ ...fonteLetreiro, ...arestaDoCorte }}>
                 <text x="500" y="360" textLength="660" lengthAdjust="spacingAndGlyphs">
-                  MEIA
+                  {linha1.toUpperCase()}
                 </text>
                 <text x="500" y="620" textLength="660" lengthAdjust="spacingAndGlyphs">
-                  NOITE
+                  {linha2.toUpperCase()}
                 </text>
               </g>
             </g>
