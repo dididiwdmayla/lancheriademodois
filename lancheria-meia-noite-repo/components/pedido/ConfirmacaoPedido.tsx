@@ -1,11 +1,14 @@
 'use client'
 
+import { useNegocio } from '@/components/NegocioAtivo'
+
 import { useRef, useState, type FormEvent } from 'react'
-import { CASA } from '@/data/casa'
-import { resumoPedido, urlWhatsApp, validarConfirmacao, type Confirmacao, type ItemPedido } from '@/lib/pedido'
+
+import { type Confirmacao, type ItemPedido } from '@/lib/pedido'
 
 type Props = { pedido: ItemPedido[]; dados: Confirmacao; onDados: (dados: Confirmacao) => void }
 export default function ConfirmacaoPedido({ pedido, dados, onDados }: Props) {
+  const { CASA, validarConfirmacao, resumoPedido, urlWhatsApp } = useNegocio()
   const [erros, setErros] = useState<Partial<Record<keyof Confirmacao, string>>>({})
   const [enviado, setEnviado] = useState(false)
   const form = useRef<HTMLFormElement>(null)
@@ -26,7 +29,7 @@ export default function ConfirmacaoPedido({ pedido, dados, onDados }: Props) {
     setErros(falhas)
     const primeiro = Object.keys(falhas)[0]
     if (primeiro) { form.current?.querySelector<HTMLElement>(`#pedido-${primeiro}`)?.focus(); return }
-    if (!pedido.length) return
+    if (!pedido.length || !CASA.whatsapp) return
     window.open(urlWhatsApp(pedido, dados), '_blank', 'noopener,noreferrer')
     setEnviado(true)
   }
@@ -50,6 +53,6 @@ export default function ConfirmacaoPedido({ pedido, dados, onDados }: Props) {
       <input {...atributos('troco')} inputMode="decimal" placeholder="R$" value={dados.troco} onChange={e => mudar('troco', e.target.value)} />{erro('troco')}
     </label>}
     <label className="campo"><span>Observação do pedido <small>se tiver</small></span><textarea {...atributos('observacao')} rows={3} value={dados.observacao} onChange={e => mudar('observacao', e.target.value)} /></label>
-    <p className="confirmacao-recado" role="status">{enviado ? 'Pedido pronto no WhatsApp. Envie a mensagem para a casa.' : 'A casa confirma o pedido pelo WhatsApp.'}</p>
+    <p className="confirmacao-recado" role="status">{!CASA.whatsapp ? 'WhatsApp da casa não informado.' : enviado ? 'Pedido pronto no WhatsApp. Envie a mensagem para a casa.' : 'A casa confirma o pedido pelo WhatsApp.'}</p>
   </form>
 }

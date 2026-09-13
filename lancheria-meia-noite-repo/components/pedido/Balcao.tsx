@@ -1,5 +1,7 @@
 'use client'
 
+import { useNegocio } from '@/components/NegocioAtivo'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTema } from '@/components/TemaAtivo'
 import Letreiro from '@/components/letreiro/Letreiro'
@@ -8,8 +10,8 @@ import RaioX, { type LancheFechado } from '@/components/raio-x/RaioX'
 import { salto, type Origem } from '@/components/raio-x/salto'
 import type { Forma } from '@/components/raio-x/prensa'
 import { MAPA_CAMADAS, urlCamada } from '@/data/camadas'
-import { FIXOS, type Extra, type Fixo } from '@/data/fixos'
-import { CONFIRMACAO_INICIAL, comBacon, ganchoDoPedido, itemExtra, itemFixo, itemLanche, totalPedido, type Item, type ItemPedido } from '@/lib/pedido'
+import { type Extra, type Fixo } from '@/data/fixos'
+import { CONFIRMACAO_INICIAL, itemExtra, totalPedido, type Item, type ItemPedido } from '@/lib/pedido'
 import { lembrarOrigem, origemAtual, transicionar } from '@/lib/transicoes'
 import Cardapio from '@/components/cardapio/Cardapio'
 import TrilhoLanches from '@/components/cardapio/TrilhoLanches'
@@ -27,13 +29,14 @@ const preparar = (slugs: string[]) => Promise.all(slugs.map(s => {
 }))
 
 export default function Balcao() {
+  const { FIXOS, comBacon, ganchoDoPedido, itemFixo, itemLanche } = useNegocio()
   const tema = useTema()
   const [pedido, setPedido] = useState<ItemPedido[]>([])
   const atual = useRef<ItemPedido[]>([])
   const [editor, setEditor] = useState<Editor | null>(null)
   const [confirmacao, setConfirmacao] = useState(CONFIRMACAO_INICIAL)
   const [carrinho, setCarrinho] = useState(false)
-  const [intro, setIntro] = useState(tema.assinatura === 'letreiro')
+  const [intro, setIntro] = useState(tema.intro)
   const [ultimo, setUltimo] = useState<string | null>(null)
   const [aviso, setAviso] = useState('')
   const [ganchos, setGanchos] = useState<{ vistos: string[]; dispensados: string[] }>({ vistos: [], dispensados: [] })
@@ -137,7 +140,7 @@ export default function Balcao() {
   const ultimoItem = pedido.find(p => p.id === ultimo)
 
   return <RaioXAberto.Provider value={!!editor}>
-    {tema.assinatura === 'letreiro' && <Letreiro onConcluir={() => setIntro(false)} />}
+    {tema.intro && <Letreiro onConcluir={() => setIntro(false)} />}
     <main id="conteudo" inert={!!editor || carrinho || intro} className={ultimoItem ? 'tem-modificar' : undefined}>
       <Hero />
       <Cardapio pedido={pedido} onAdicionar={adicionarFixo} onModificar={modificar} onMontar={montar} />

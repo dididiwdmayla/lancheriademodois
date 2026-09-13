@@ -1,5 +1,7 @@
 'use client'
 
+import { useNegocio } from '@/components/NegocioAtivo'
+
 import { consumirAvisoOrdem, AVISO_ORDEM_MS } from '@/lib/avisoOrdem'
 
 // O raio-x: a pilha explodida, as chamadas, o medidor e o trilho.
@@ -16,9 +18,9 @@ import { consumirAvisoOrdem, AVISO_ORDEM_MS } from '@/lib/avisoOrdem'
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
-import { CAMADAS, MAPA_CAMADAS, urlCamada } from '@/data/camadas'
+import { urlCamada } from '@/data/camadas'
 import { LIMIAR_AVISO_CAMADAS, MAX_CAMADAS, MAX_REPETICOES } from '@/data/casa'
-import { precoDoLanche, camadaFixa } from '@/lib/precos'
+
 import { prefersReducedMotion } from '@/lib/motion'
 import { transicionar } from '@/lib/transicoes'
 import { Camada, Chamada, ChamadaChip, medidas, TOQUE_MIN, TiraDeToque } from './Camada'
@@ -67,6 +69,7 @@ const CURVA_ASSENTA = 'cubic-bezier(.32,.02,.24,1)'
 const CURVA_EXPLODE = 'cubic-bezier(.22,1.24,.36,1)'
 
 export default function RaioX({ nome, forma, camadasIniciais, onFechar, onSair, editando, fixoSlug, observacaoInicial = '' }: Props) {
+  const { CAMADAS, MAPA_CAMADAS, precoDoLanche, camadaFixa } = useNegocio()
   const [observacao, setObservacao] = useState(observacaoInicial.slice(0, 120))
   const fixa = useCallback((slug: string) => camadaFixa(slug, fixoSlug), [fixoSlug])
   const uidRef = useRef(1)

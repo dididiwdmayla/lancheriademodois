@@ -1,3 +1,4 @@
+import { useNegocio } from '@/components/NegocioAtivo'
 // A composição em texto: a lista inteira do lanche, fora do desenho.
 //
 // Existe porque em 390px o rótulo não cabe ao lado da camada — a arte do pão prensado
@@ -10,7 +11,7 @@
 // tem 44px e um controle de tirar do mesmo tamanho — e funciona por toque, teclado e
 // leitor de tela, sem arrastar nada.
 
-import { MAPA_CAMADAS } from '@/data/camadas'
+
 import { brl } from '@/lib/precos'
 import { TOQUE_MIN } from './Camada'
 import type { Instancia } from './RaioX'
@@ -25,6 +26,7 @@ type Props = {
 }
 
 export default function Composicao({ pilha, fixa, onTirar, onMover, onFechar }: Props) {
+  const { MAPA_CAMADAS } = useNegocio()
   // De cima para baixo: é assim que a pilha é vista, e o pão de cima é o primeiro nome
   // que a pessoa procura.
   const linhas = pilha.map((inst, indice) => ({ inst, indice })).reverse()

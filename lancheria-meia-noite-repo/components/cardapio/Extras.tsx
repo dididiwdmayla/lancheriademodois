@@ -1,11 +1,14 @@
 'use client'
 
+import { useNegocio } from '@/components/NegocioAtivo'
+
 import { useEffect, useRef, useState } from 'react'
-import { EXTRAS, type Extra } from '@/data/fixos'
+import { type Extra } from '@/data/fixos'
 import { brl } from '@/lib/precos'
 import { prefersReducedMotion } from '@/lib/motion'
 
 export default function Extras({ grupo, onAdicionar }: { grupo: Extra['grupo']; onAdicionar: (e: Extra) => void }) {
+  const { EXTRAS } = useNegocio()
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState(0)
   const [bordas, setBordas] = useState({ inicio: true, fim: false })

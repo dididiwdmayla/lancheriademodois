@@ -1,21 +1,8 @@
-// O fixo nasce da composição. No editor, vira piso; no montador, cada camada conta.
+// O preço comercial do fixo é seu piso; no montador, cada camada conta.
 
-import { MAPA_CAMADAS } from '@/data/camadas'
-import { PRECO_BASE_CENT } from '@/data/casa'
-import { MAPA_FIXOS, type Fixo } from '@/data/fixos'
-
-/** Preço de uma pilha, em centavos. Pilha vazia não tem preço, tem zero. */
-export function precoDaComposicao(slugs: string[]): number {
-  if (!slugs.length) return 0
-  return slugs
-    .filter((s) => MAPA_CAMADAS[s])
-    .reduce((soma, s) => soma + MAPA_CAMADAS[s].precoCent, PRECO_BASE_CENT)
-}
-
-/** Preço de um lanche do cardápio. Mesma conta — um fixo é só uma composição salva. */
-export function precoDoFixo(f: Fixo): number {
-  return precoDaComposicao(f.camadas)
-}
+import { MAPA_CAMADAS as FISICA } from '@/data/camadas'
+import type { Fixo } from '@/data/fixos'
+import { DADOS_EXEMPLO, type DadosLancheria } from '@/data/negocio'
 
 export function brl(centavos: number): string {
   return `R$ ${(centavos / 100).toFixed(2).replace('.', ',')}`
@@ -33,7 +20,24 @@ export function diferencaCamadas(atual: string[], original: string[]) {
   return { acrescentadas, removidas: saldo }
 }
 
-export function precoDoLanche(camadas: string[], fixoSlug?: string): number {
+export function criarPrecos(dados: DadosLancheria) {
+  const MAPA_CAMADAS = Object.fromEntries(dados.ingredientes.map(c=>[c.slug,{...FISICA[c.slug],slug:c.slug,nome:c.nome,precoCent:c.precoCent}]))
+  const MAPA_FIXOS = Object.fromEntries(dados.lanches.map(f=>[f.slug,f]))
+  const PRECO_BASE_CENT = dados.precoBaseCent
+/** Preço de uma pilha, em centavos. Pilha vazia não tem preço, tem zero. */
+function precoDaComposicao(slugs: string[]): number {
+  if (!slugs.length) return 0
+  return slugs
+    .filter((s) => MAPA_CAMADAS[s])
+    .reduce((soma, s) => soma + MAPA_CAMADAS[s].precoCent, PRECO_BASE_CENT)
+}
+
+/** Preço de catálogo injetado; o exemplo antigo pode derivá-lo da composição. */
+function precoDoFixo(f: Fixo): number {
+  return f.precoCent ?? precoDaComposicao(f.camadas)
+}
+
+function precoDoLanche(camadas: string[], fixoSlug?: string): number {
   const fixo = fixoSlug ? MAPA_FIXOS[fixoSlug] : undefined
   if (!fixo) return precoDaComposicao(camadas)
   return precoDoFixo(fixo) + diferencaCamadas(camadas, fixo.camadas).acrescentadas
@@ -41,6 +45,10 @@ export function precoDoLanche(camadas: string[], fixoSlug?: string): number {
 }
 
 /** Essencial é uma camada fixa no editor; no montador, apenas os pães. */
-export function camadaFixa(slug: string, fixoSlug?: string): boolean {
+function camadaFixa(slug: string, fixoSlug?: string): boolean {
   return !!MAPA_CAMADAS[slug]?.obrigatorio || !!(fixoSlug && MAPA_FIXOS[fixoSlug]?.essenciais.includes(slug))
 }
+  return { precoDaComposicao, precoDoFixo, precoDoLanche, camadaFixa }
+}
+// Compatibilidade de utilitários e testes do exemplo. O app usa a instância do provider.
+export const { precoDaComposicao, precoDoFixo, precoDoLanche, camadaFixa } = criarPrecos(DADOS_EXEMPLO)
