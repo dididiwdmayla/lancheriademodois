@@ -31,7 +31,7 @@ export function Hero() {
     {tema.hero!=='nenhum'&&<section className="hero-faixa" aria-labelledby="titulo-casa">
       {tema.assinatura==='toldo'&&<Toldo/>}
       {tema.assinatura==='placa-de-porta'&&<PlacaDePorta/>}
-      {textos.heroFoto&&<img src={textos.heroFoto} alt={textos.heroAlt} width={2400} height={1600} fetchPriority="high"/>}
+      {tema.heroFoto&&textos.heroFoto&&<img data-demo-slot="imagens.hero" src={textos.heroFoto} alt={textos.heroAlt} width={2400} height={1600} fetchPriority="high"/>}
       {tema.mascote&&<HeroMascote/>}
       <div className="hero-texto moldura"><h1 id="titulo-casa">{textos.heroTitulo.split('\n').map((s,i)=><span key={i}>{i>0&&<br/>}{s}</span>)}</h1><p>{textos.heroDescricao}</p></div>
     </section>}
@@ -44,7 +44,7 @@ export function HistoriaERodape() {
   const [linha1,linha2]=linhasMarca(CASA.marca)
   return <>
     <section id="a-chapa" data-d-secao="historia" className="a-chapa" aria-labelledby="titulo-chapa">
-      {textos.historiaFoto&&<img src={textos.historiaFoto} alt={textos.historiaAlt} width={2400} height={1600} loading="lazy"/>}
+      {textos.historiaFoto&&<img data-demo-slot="imagens.historia" src={textos.historiaFoto} alt={textos.historiaAlt} width={2400} height={1600} loading="lazy"/>}
       <div className="chapa-texto moldura"><div><h2 id="titulo-chapa" style={{whiteSpace:'pre-line'}}>{textos.historiaTitulo}</h2>{textos.historia.map((s,i)=><p key={i}>{s}</p>)}<span data-carimbo>{textos.carimbo}</span></div></div>
     </section>
     <section id="horarios" data-d-secao="horarios" className="horarios-secao moldura"><Horario/><a className="botao-texto" href="#cardapio">Voltar ao cardápio</a></section>
