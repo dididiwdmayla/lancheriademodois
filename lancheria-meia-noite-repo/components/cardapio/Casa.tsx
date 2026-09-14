@@ -22,7 +22,7 @@ export function Hero() {
   const {CASA,dados:{textos}}=useNegocio()
   return <>
     <header className="cabecalho-casa moldura"><span className="marca-texto">{CASA.marca}{textos.registro&&<span className="marca-registro">{textos.registro}</span>}</span><span className="nota">{textos.categoria}{CASA.cidade?` em ${CASA.cidade.split(',')[0]}`:''}</span></header>
-    {tema.hero!=='nenhum'&&<section className="hero-faixa" aria-labelledby="titulo-casa">
+    {tema.hero!=='nenhum'&&<section data-d-secao="hero" className="hero-faixa" aria-labelledby="titulo-casa">
       {tema.assinatura==='toldo'&&<Toldo/>}
       {tema.assinatura==='placa-de-porta'&&<PlacaDePorta/>}
       {textos.heroFoto&&<img src={textos.heroFoto} alt={textos.heroAlt} width={2400} height={1600} fetchPriority="high"/>}
@@ -38,10 +38,10 @@ export function HistoriaERodape() {
   const [linha1,linha2]=linhasMarca(CASA.marca)
   return <>
     <section id="a-chapa" data-d-secao="historia" className="a-chapa" aria-labelledby="titulo-chapa">
-      <img src="/chapa/chapa-vazia.webp" alt="Chapa de ferro vazia, pronta para o próximo lanche" width={2400} height={1600} loading="lazy"/>
+      {textos.historiaFoto&&<img src={textos.historiaFoto} alt={textos.historiaAlt} width={2400} height={1600} loading="lazy"/>}
       <div className="chapa-texto moldura"><div><h2 id="titulo-chapa" style={{whiteSpace:'pre-line'}}>{textos.historiaTitulo}</h2>{textos.historia.map((s,i)=><p key={i}>{s}</p>)}<span data-carimbo>{textos.carimbo}</span></div></div>
     </section>
-    <section id="horarios" className="horarios-secao moldura"><Horario/><a className="botao-texto" href="#cardapio">Voltar ao cardápio</a></section>
+    <section id="horarios" data-d-secao="horarios" className="horarios-secao moldura"><Horario/><a className="botao-texto" href="#cardapio">Voltar ao cardápio</a></section>
     <footer id="rodape" data-d-secao="contato" className="rodape moldura">
       <div className="rodape-dados"><p>{CASA.nome}</p><address>{CASA.endereco}{CASA.endereco&&<br/>}{CASA.cidade}</address>{CASA.telefone&&<a href={`tel:${CASA.telefone.replace(/[^+\d]/g,'')}`}>{CASA.telefone}</a>}{CASA.whatsapp&&<a href={`https://wa.me/${CASA.whatsapp}`}>WhatsApp</a>}{CASA.instagram&&<a href={`https://instagram.com/${CASA.instagram.replace(/^@/,'')}`} rel="noreferrer">{CASA.instagram}</a>}<p className="pagamentos">{CASA.pagamento.join(' / ')}</p></div>
       {tema.assinatura==='letreiro'?<svg className="letreiro-pequeno" viewBox="0 0 470 200" role="img" aria-label={`${CASA.marca}, letreiro aceso com o mascote pintado ao lado`}>

@@ -92,7 +92,7 @@ export default function TrilhoLanches({ onAdicionar }: { onAdicionar: (f: Fixo, 
     rail.scrollTo({ left: alvo.offsetLeft + alvo.offsetWidth / 2 - rail.clientWidth / 2, behavior: prefersReducedMotion() ? 'instant' : 'smooth' })
   }
   if (!LANCHES.length) return null
-  return <section id="sugestoes" className="secao-trilho" aria-labelledby="titulo-sugestoes">
+  return <section id="sugestoes" data-d-secao="sugestoes" className="secao-trilho" aria-labelledby="titulo-sugestoes">
     <div className="cabecalho-secao moldura"><div><h2 id="titulo-sugestoes">Na prensa</h2><p>O centro fecha. As camadas aparecem ao deslizar.</p></div>
       <div className="setas-trilho"><button aria-label="Lanche anterior" onClick={() => mover(-1)} disabled={centro === 0}>←</button><button aria-label="Próximo lanche" onClick={() => mover(1)} disabled={centro === LANCHES.length - 1}>→</button></div>
     </div>

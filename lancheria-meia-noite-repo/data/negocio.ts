@@ -7,7 +7,8 @@ export type Casa = { nome: string; marca: string; cidade: string; endereco: stri
 export type IngredienteComercial = { slug: string; nome: string; precoCent: number }
 export type LancheComercial = Fixo & { precoCent: number; foto: string }
 export type TextosCasa = { registro: string; categoria: string; heroTitulo: string; heroDescricao: string;
-  heroFoto: string; heroAlt: string; historiaTitulo: string; historia: string[]; carimbo: string; rodape: string }
+  heroFoto: string; heroAlt: string; historiaTitulo: string; historia: string[]; historiaFoto: string; historiaAlt: string;
+  carimbo: string; rodape: string }
 export type DadosLancheria = { casa: Casa; precoBaseCent: number; ingredientes: IngredienteComercial[];
   lanches: LancheComercial[]; extras: Extra[]; textos: TextosCasa }
 
@@ -15,17 +16,21 @@ export const TEXTOS_CASA: Record<'chapa' | 'balcao' | 'menu' | 'nenhum', TextosC
   chapa: { registro: '', categoria: 'Lancheria', heroTitulo: 'A noite pede\num prensado.', heroDescricao: 'Pão na chapa. Recheio no lugar.',
     heroFoto: '/chapa/chapa-selagem.webp', heroAlt: 'Prensado fechando na chapa', historiaTitulo: 'Antes do prato,\num carrinho.',
     historia: ['O prensado nasceu em Maringá, dentro de um carrinho de lanches. Alguém instalou uma prensa na chapa e passou a fechar o pão sobre o recheio.', 'Os concorrentes copiaram. Virou prato típico da cidade e saiu do estado.'],
+    historiaFoto: '/chapa/chapa-vazia.webp', historiaAlt: 'Chapa de ferro vazia, pronta para o próximo lanche',
     carimbo: 'MARINGÁ / PÃO / CHAPA / PRENSA', rodape: '' },
   balcao: { registro: 'Lancheria de esquina', categoria: 'Lancheria', heroTitulo: 'Da esquina. Da chapa.', heroDescricao: '',
     heroFoto: '/fixos/prensado-meia-noite.webp', heroAlt: 'Prensado Meia-Noite', historiaTitulo: 'Antes do prato,\num carrinho.',
     historia: ['O prensado nasceu em Maringá, dentro de um carrinho de lanches. Alguém instalou uma prensa na chapa e passou a fechar o pão sobre o recheio.', 'Os concorrentes copiaram. Virou prato típico da cidade e saiu do estado.'],
+    historiaFoto: '/chapa/chapa-vazia.webp', historiaAlt: 'Chapa de ferro vazia, pronta para o próximo lanche',
     carimbo: 'MARINGÁ / PÃO / CHAPA / PRENSA', rodape: '' },
   menu: { registro: '', categoria: 'Sanduicheria', heroTitulo: 'Pão, recheio e boa mesa.', heroDescricao: 'O prensado da casa. Desde o primeiro pão.',
     heroFoto: '', heroAlt: '', historiaTitulo: 'Antes do prato,\num carrinho.',
     historia: ['O prensado nasceu em Maringá, dentro de um carrinho de lanches. Alguém instalou uma prensa na chapa e passou a fechar o pão sobre o recheio.', 'Os concorrentes copiaram. Virou prato típico da cidade e saiu do estado.'],
+    historiaFoto: '/chapa/chapa-vazia.webp', historiaAlt: 'Chapa de ferro vazia, pronta para o próximo lanche',
     carimbo: 'MARINGÁ / PÃO / CHAPA / PRENSA', rodape: 'Da chapa para a mesa.' },
   nenhum: { registro: '', categoria: 'Lancheria', heroTitulo: '', heroDescricao: '', heroFoto: '', heroAlt: '', historiaTitulo: 'Antes do prato,\num carrinho.',
     historia: ['O prensado nasceu em Maringá, dentro de um carrinho de lanches. Alguém instalou uma prensa na chapa e passou a fechar o pão sobre o recheio.', 'Os concorrentes copiaram. Virou prato típico da cidade e saiu do estado.'],
+    historiaFoto: '/chapa/chapa-vazia.webp', historiaAlt: 'Chapa de ferro vazia, pronta para o próximo lanche',
     carimbo: 'MARINGÁ / PÃO / CHAPA / PRENSA', rodape: '' },
 }
 

@@ -27,7 +27,7 @@ export default function Extras({ grupo, onAdicionar }: { grupo: Extra['grupo']; 
     const alvo = cards[Math.max(0, Math.min(cards.length - 1, pos + d))]
     rail.scrollTo({ left: alvo.offsetLeft - cards[0].offsetLeft, behavior: prefersReducedMotion() ? 'instant' : 'smooth' })
   }
-  return <section id={id} className={`extras secao-trilho ${id}`}>
+  return <section id={id} data-d-secao={id} className={`extras secao-trilho ${id}`}>
     <div className="cabecalho-secao moldura"><div><h2>{bebida ? 'Pra beber' : 'Pra dividir'}</h2><p>{bebida ? 'Bebidas da geladeira.' : 'Acompanhamentos para a mesa.'}</p></div>
       <div className="setas-trilho"><button aria-label={`${bebida ? 'Bebida' : 'Acompanhamento'} anterior`} onClick={() => mover(-1)} disabled={bordas.inicio}>←</button><button aria-label={`Próximo ${grupo}`} onClick={() => mover(1)} disabled={bordas.fim}>→</button></div>
     </div>
