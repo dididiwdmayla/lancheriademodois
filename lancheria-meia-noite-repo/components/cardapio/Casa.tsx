@@ -20,9 +20,15 @@ export function Horario({compacto=false}:{compacto?:boolean}) {
 export function Hero() {
   const tema=useTema()
   const {CASA,dados:{textos}}=useNegocio()
-  return <>
+  /* A ABERTURA é uma seção só: marca + faixa + horário compacto. O
+     marcador fica AQUI, e não na .hero-faixa, porque quem consome
+     `[data-d-secao="hero"]` (a captura de identidade da prospecção) precisa
+     do NOME do negócio, que mora no cabeçalho — a faixa sozinha só tem
+     slogan e foto. Div CRUA de propósito: sem classe, sem position, sem
+     transform, pra não criar containing block nem mexer no fluxo. */
+  return <div data-d-secao="hero">
     <header className="cabecalho-casa moldura"><span className="marca-texto">{CASA.marca}{textos.registro&&<span className="marca-registro">{textos.registro}</span>}</span><span className="nota">{textos.categoria}{CASA.cidade?` em ${CASA.cidade.split(',')[0]}`:''}</span></header>
-    {tema.hero!=='nenhum'&&<section data-d-secao="hero" className="hero-faixa" aria-labelledby="titulo-casa">
+    {tema.hero!=='nenhum'&&<section className="hero-faixa" aria-labelledby="titulo-casa">
       {tema.assinatura==='toldo'&&<Toldo/>}
       {tema.assinatura==='placa-de-porta'&&<PlacaDePorta/>}
       {textos.heroFoto&&<img src={textos.heroFoto} alt={textos.heroAlt} width={2400} height={1600} fetchPriority="high"/>}
@@ -30,7 +36,7 @@ export function Hero() {
       <div className="hero-texto moldura"><h1 id="titulo-casa">{textos.heroTitulo.split('\n').map((s,i)=><span key={i}>{i>0&&<br/>}{s}</span>)}</h1><p>{textos.heroDescricao}</p></div>
     </section>}
     <div className="moldura"><Horario compacto/></div>
-  </>
+  </div>
 }
 export function HistoriaERodape() {
   const tema=useTema()
